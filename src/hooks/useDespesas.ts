@@ -7,41 +7,92 @@ export function useDespesas(filters?: DespesaFilters) {
   return useQuery({
     queryKey: ['despesas', filters],
     queryFn: async () => {
-      let query = supabase
-        .from('despesas_politicas')
-        .select('*')
-        .order('ultimo_pagamento', { ascending: false });
+      let allData: Despesa[] = [];
 
-      // Apply filters
-      if (filters?.municipio && filters.municipio !== 'all') {
-        query = query.eq('municipio', filters.municipio);
-      }
-      
-      if (filters?.cargo && filters.cargo !== 'all') {
-        query = query.eq('cargo', filters.cargo);
-      }
-      
-      if (filters?.tipo && filters.tipo !== 'all') {
-        query = query.eq('tipo', filters.tipo);
-      }
-
-      // Filter by month/year if provided
+      // If month/year filter is provided, fetch recurring and extra expenses separately
       if (filters?.month !== undefined && filters?.year !== undefined) {
         const startDate = new Date(filters.year, filters.month, 1);
         const endDate = new Date(filters.year, filters.month + 1, 0);
-        query = query.gte('ultimo_pagamento', startDate.toISOString().split('T')[0])
-                     .lte('ultimo_pagamento', endDate.toISOString().split('T')[0]);
+        const startDateStr = startDate.toISOString().split('T')[0];
+        const endDateStr = endDate.toISOString().split('T')[0];
+
+        // Fetch all recurring expenses (no date filter)
+        let recorrentesQuery = supabase
+          .from('despesas_politicas')
+          .select('*')
+          .eq('tipo', 'Recorrente');
+
+        // Fetch extra expenses only for the selected month
+        let extrasQuery = supabase
+          .from('despesas_politicas')
+          .select('*')
+          .eq('tipo', 'Extra')
+          .gte('ultimo_pagamento', startDateStr)
+          .lte('ultimo_pagamento', endDateStr);
+
+        // Apply municipio filter
+        if (filters?.municipio && filters.municipio !== 'all') {
+          recorrentesQuery = recorrentesQuery.eq('municipio', filters.municipio);
+          extrasQuery = extrasQuery.eq('municipio', filters.municipio);
+        }
+
+        // Apply cargo filter
+        if (filters?.cargo && filters.cargo !== 'all') {
+          recorrentesQuery = recorrentesQuery.eq('cargo', filters.cargo);
+          extrasQuery = extrasQuery.eq('cargo', filters.cargo);
+        }
+
+        // Execute both queries
+        const [recorrentesResult, extrasResult] = await Promise.all([
+          recorrentesQuery,
+          extrasQuery
+        ]);
+
+        if (recorrentesResult.error) throw recorrentesResult.error;
+        if (extrasResult.error) throw extrasResult.error;
+
+        // Combine results based on tipo filter
+        if (filters?.tipo === 'Recorrente') {
+          allData = recorrentesResult.data as Despesa[];
+        } else if (filters?.tipo === 'Extra') {
+          allData = extrasResult.data as Despesa[];
+        } else {
+          // tipo === 'all' or undefined
+          allData = [...(recorrentesResult.data as Despesa[]), ...(extrasResult.data as Despesa[])];
+        }
+      } else {
+        // No month/year filter - use standard query
+        let query = supabase
+          .from('despesas_politicas')
+          .select('*');
+
+        // Apply filters
+        if (filters?.municipio && filters.municipio !== 'all') {
+          query = query.eq('municipio', filters.municipio);
+        }
+        
+        if (filters?.cargo && filters.cargo !== 'all') {
+          query = query.eq('cargo', filters.cargo);
+        }
+        
+        if (filters?.tipo && filters.tipo !== 'all') {
+          query = query.eq('tipo', filters.tipo);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+        allData = data as Despesa[];
       }
 
-      const { data, error } = await query;
-
-      if (error) throw error;
+      // Sort by date descending
+      allData.sort((a, b) => 
+        new Date(b.ultimo_pagamento).getTime() - new Date(a.ultimo_pagamento).getTime()
+      );
 
       // Apply search filter on client side
-      let filteredData = data as Despesa[];
       if (filters?.search) {
         const searchLower = filters.search.toLowerCase();
-        filteredData = filteredData.filter(d => 
+        allData = allData.filter(d => 
           d.municipio.toLowerCase().includes(searchLower) ||
           d.responsavel.toLowerCase().includes(searchLower) ||
           d.cargo.toLowerCase().includes(searchLower) ||
@@ -49,7 +100,7 @@ export function useDespesas(filters?: DespesaFilters) {
         );
       }
 
-      return filteredData;
+      return allData;
     },
   });
 }
