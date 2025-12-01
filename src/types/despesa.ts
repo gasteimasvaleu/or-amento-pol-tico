@@ -21,7 +21,7 @@ export interface DespesaFormData {
   tipo: 'Recorrente' | 'Extra';
   conta_pix: string;
   ultimo_pagamento: Date;
-  pagamento_agendado: Date;
+  pagamento_agendado?: Date;
   valor: number;
   observacao?: string;
 }
