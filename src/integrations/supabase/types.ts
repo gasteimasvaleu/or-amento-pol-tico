@@ -22,6 +22,7 @@ export type Database = {
           id: string
           municipio: string
           observacao: string | null
+          pagamento_agendado: string
           pagamento_feito_em: string | null
           responsavel: string
           tipo: string
@@ -36,6 +37,7 @@ export type Database = {
           id?: string
           municipio: string
           observacao?: string | null
+          pagamento_agendado?: string
           pagamento_feito_em?: string | null
           responsavel: string
           tipo: string
@@ -50,6 +52,7 @@ export type Database = {
           id?: string
           municipio?: string
           observacao?: string | null
+          pagamento_agendado?: string
           pagamento_feito_em?: string | null
           responsavel?: string
           tipo?: string

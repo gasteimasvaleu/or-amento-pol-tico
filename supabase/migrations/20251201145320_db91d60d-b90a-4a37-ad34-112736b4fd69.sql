@@ -1,0 +1,1 @@
+ALTER TABLE despesas_politicas ADD COLUMN pagamento_agendado date NOT NULL DEFAULT CURRENT_DATE
