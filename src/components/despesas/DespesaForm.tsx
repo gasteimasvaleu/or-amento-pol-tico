@@ -24,7 +24,10 @@ const formSchema = z.object({
   conta_pix: z.string().min(3, "Conta/PIX é obrigatório").max(255),
   valor: z.number().min(0.01, "Valor deve ser maior que zero"),
   ultimo_pagamento: z.date({
-    required_error: "Data de pagamento é obrigatória",
+    required_error: "Data do último pagamento é obrigatória",
+  }),
+  pagamento_agendado: z.date({
+    required_error: "Data do próximo pagamento é obrigatória",
   }),
   observacao: z.string().max(1000).optional(),
 });
@@ -182,6 +185,46 @@ export function DespesaForm({ onSubmit, defaultValues, isLoading }: DespesaFormP
                       selected={field.value}
                       onSelect={field.onChange}
                       disabled={(date) => date > new Date()}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="pagamento_agendado"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Próximo Pagamento *</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "pl-3 text-left font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value ? (
+                          format(field.value, "PPP", { locale: ptBR })
+                        ) : (
+                          <span>Selecione a data</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
                       initialFocus
                       className="pointer-events-auto"
                     />

@@ -18,21 +18,27 @@ export const PaymentAlerts = ({ despesas }: PaymentAlertsProps) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // Calculate alerts only for recurring expenses
+  // Calculate alerts only for recurring expenses that haven't been paid yet
   const alertDespesas: AlertDespesa[] = despesas
-    .filter(d => d.tipo === 'Recorrente')
+    .filter(d => {
+      // Only show recorrentes that haven't been paid in the current month
+      if (d.tipo !== 'Recorrente') return false;
+      
+      // If pagamento_feito_em exists and is in the same month as pagamento_agendado, don't show alert
+      if (d.pagamento_feito_em) {
+        const paidDate = new Date(d.pagamento_feito_em);
+        const scheduledDate = new Date(d.pagamento_agendado);
+        if (isSameMonth(paidDate, scheduledDate) && isSameMonth(scheduledDate, today)) {
+          return false;
+        }
+      }
+      
+      return true;
+    })
     .map(despesa => {
-      // Get the day of month from ultimo_pagamento
-      const lastPaymentDate = new Date(despesa.ultimo_pagamento);
-      const dayOfMonth = lastPaymentDate.getDate();
-      
-      // Calculate next due date
-      const currentMonth = new Date(today.getFullYear(), today.getMonth(), dayOfMonth);
-      const nextMonth = addMonths(currentMonth, 1);
-      
-      // If the day hasn't passed this month, due date is this month
-      // Otherwise, it's next month
-      const nextDueDate = currentMonth >= today ? currentMonth : nextMonth;
+      // Use pagamento_agendado as the due date
+      const nextDueDate = new Date(despesa.pagamento_agendado);
+      nextDueDate.setHours(0, 0, 0, 0);
       
       // Calculate days until due
       const daysUntilDue = differenceInDays(nextDueDate, today);
