@@ -2,6 +2,7 @@ import { Despesa } from "@/types/despesa";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, DollarSign, Receipt, AlertCircle } from "lucide-react";
 import { isSameMonth, isSameYear } from "date-fns";
+import { getScheduledPaymentDate } from "@/lib/utils";
 
 interface MonthlyStatsProps {
   despesas: Despesa[];
@@ -26,17 +27,30 @@ export function MonthlyStats({ despesas, selectedMonth, selectedYear }: MonthlyS
   });
   
   const pendingDespesas = despesas.filter(d => {
-    if (!d.pagamento_feito_em) return true;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     
-    // If no month/year filter, consider it paid
+    // If no month/year filter, return false
     if (selectedMonth === undefined || selectedYear === undefined) {
       return false;
     }
     
-    // Check if NOT paid in the selected month/year
-    const paidDate = new Date(d.pagamento_feito_em);
-    const selectedDate = new Date(selectedYear, selectedMonth, 1);
-    return !(isSameMonth(paidDate, selectedDate) && isSameYear(paidDate, selectedDate));
+    // Check if paid in the selected month/year
+    if (d.pagamento_feito_em) {
+      const paidDate = new Date(d.pagamento_feito_em);
+      const selectedDate = new Date(selectedYear, selectedMonth, 1);
+      if (isSameMonth(paidDate, selectedDate) && isSameYear(paidDate, selectedDate)) {
+        return false; // Paid in selected month
+      }
+    }
+    
+    // Calculate due date for the selected month
+    const dueDate = getScheduledPaymentDate(d, selectedMonth, selectedYear);
+    const dueDateNormalized = new Date(dueDate);
+    dueDateNormalized.setHours(0, 0, 0, 0);
+    
+    // Only count as pending if due date has passed
+    return dueDateNormalized <= today;
   });
   
   const totalPaid = paidDespesas.reduce((sum, d) => sum + Number(d.valor), 0);
