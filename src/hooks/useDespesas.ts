@@ -16,11 +16,12 @@ export function useDespesas(filters?: DespesaFilters) {
         const startDateStr = startDate.toISOString().split('T')[0];
         const endDateStr = endDate.toISOString().split('T')[0];
 
-        // Fetch all recurring expenses (no date filter)
+        // Fetch recurring expenses from their registration date onwards
         let recorrentesQuery = supabase
           .from('despesas_politicas')
           .select('*')
-          .eq('tipo', 'Recorrente');
+          .eq('tipo', 'Recorrente')
+          .lte('ultimo_pagamento', endDateStr);
 
         // Fetch extra expenses only for the selected month
         let extrasQuery = supabase
