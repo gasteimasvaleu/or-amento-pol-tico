@@ -7,6 +7,15 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * Parseia uma string de data no formato YYYY-MM-DD de forma segura,
+ * evitando problemas de timezone
+ */
+export function parseLocalDate(dateString: string): Date {
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
+/**
  * Calcula a data de pagamento agendada considerando:
  * - Despesas Extra: retorna a data original
  * - Despesas Recorrentes: calcula dinamicamente baseado no mês/ano selecionado
