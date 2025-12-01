@@ -1,15 +1,43 @@
 import { Despesa } from "@/types/despesa";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, DollarSign, Receipt, AlertCircle } from "lucide-react";
+import { isSameMonth, isSameYear } from "date-fns";
 
 interface MonthlyStatsProps {
   despesas: Despesa[];
+  selectedMonth?: number;
+  selectedYear?: number;
 }
 
-export function MonthlyStats({ despesas }: MonthlyStatsProps) {
-  // Separate paid and pending
-  const paidDespesas = despesas.filter(d => d.pagamento_feito_em);
-  const pendingDespesas = despesas.filter(d => !d.pagamento_feito_em);
+export function MonthlyStats({ despesas, selectedMonth, selectedYear }: MonthlyStatsProps) {
+  // Separate paid and pending based on selected month/year
+  const paidDespesas = despesas.filter(d => {
+    if (!d.pagamento_feito_em) return false;
+    
+    // If no month/year filter, just check if paid
+    if (selectedMonth === undefined || selectedYear === undefined) {
+      return true;
+    }
+    
+    // Check if paid in the selected month/year
+    const paidDate = new Date(d.pagamento_feito_em);
+    const selectedDate = new Date(selectedYear, selectedMonth, 1);
+    return isSameMonth(paidDate, selectedDate) && isSameYear(paidDate, selectedDate);
+  });
+  
+  const pendingDespesas = despesas.filter(d => {
+    if (!d.pagamento_feito_em) return true;
+    
+    // If no month/year filter, consider it paid
+    if (selectedMonth === undefined || selectedYear === undefined) {
+      return false;
+    }
+    
+    // Check if NOT paid in the selected month/year
+    const paidDate = new Date(d.pagamento_feito_em);
+    const selectedDate = new Date(selectedYear, selectedMonth, 1);
+    return !(isSameMonth(paidDate, selectedDate) && isSameYear(paidDate, selectedDate));
+  });
   
   const totalPaid = paidDespesas.reduce((sum, d) => sum + Number(d.valor), 0);
   const totalPending = pendingDespesas.reduce((sum, d) => sum + Number(d.valor), 0);

@@ -8,12 +8,15 @@ import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { useDeleteDespesa, useMarkAsPaid } from "@/hooks/useDespesas";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { getScheduledPaymentDate } from "@/lib/utils";
 
 interface DespesasTableProps {
   despesas: Despesa[];
+  selectedMonth: number;
+  selectedYear: number;
 }
 
-export function DespesasTable({ despesas }: DespesasTableProps) {
+export function DespesasTable({ despesas, selectedMonth, selectedYear }: DespesasTableProps) {
   const navigate = useNavigate();
   const deleteDespesa = useDeleteDespesa();
   const markAsPaid = useMarkAsPaid();
@@ -38,14 +41,15 @@ export function DespesasTable({ despesas }: DespesasTableProps) {
       return { status: 'Pendente', variant: 'secondary' as const, icon: '🔄' };
     }
     
+    // Check if paid in the selected month/year
     const paidDate = new Date(despesa.pagamento_feito_em);
-    const scheduledDate = new Date(despesa.pagamento_agendado);
+    const selectedDate = new Date(selectedYear, selectedMonth, 1);
     
-    if (isSameMonth(paidDate, scheduledDate) && isSameYear(paidDate, scheduledDate)) {
+    if (isSameMonth(paidDate, selectedDate) && isSameYear(paidDate, selectedDate)) {
       return { status: 'Pago', variant: 'default' as const, icon: '✅' };
     }
     
-    return { status: 'Pago', variant: 'default' as const, icon: '✅' };
+    return { status: 'Pendente', variant: 'secondary' as const, icon: '🔄' };
   };
 
   if (despesas.length === 0) {
@@ -74,6 +78,7 @@ export function DespesasTable({ despesas }: DespesasTableProps) {
         <TableBody>
           {despesas.map((despesa) => {
             const paymentStatus = getPaymentStatus(despesa);
+            const displayDate = getScheduledPaymentDate(despesa, selectedMonth, selectedYear);
             
             return (
               <TableRow key={despesa.id}>
@@ -86,7 +91,7 @@ export function DespesasTable({ despesas }: DespesasTableProps) {
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  {format(new Date(despesa.pagamento_agendado), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                  {format(displayDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
                 </TableCell>
                 <TableCell>
                   <Badge variant={paymentStatus.variant}>

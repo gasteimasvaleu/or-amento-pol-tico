@@ -2,7 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Despesa } from "@/types/despesa";
 import { Bell } from "lucide-react";
-import { differenceInDays, isSameMonth, addMonths, setDate } from "date-fns";
+import { differenceInDays, isSameMonth, isSameYear } from "date-fns";
+import { getScheduledPaymentDate } from "@/lib/utils";
 
 interface PaymentAlertsProps {
   despesas: Despesa[];
@@ -17,6 +18,8 @@ interface AlertDespesa extends Despesa {
 export const PaymentAlerts = ({ despesas }: PaymentAlertsProps) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const currentMonth = today.getMonth();
+  const currentYear = today.getFullYear();
 
   // Calculate alerts only for recurring expenses that haven't been paid yet
   const alertDespesas: AlertDespesa[] = despesas
@@ -24,11 +27,10 @@ export const PaymentAlerts = ({ despesas }: PaymentAlertsProps) => {
       // Only show recorrentes that haven't been paid in the current month
       if (d.tipo !== 'Recorrente') return false;
       
-      // If pagamento_feito_em exists and is in the same month as pagamento_agendado, don't show alert
+      // If pagamento_feito_em exists and is in the current month, don't show alert
       if (d.pagamento_feito_em) {
         const paidDate = new Date(d.pagamento_feito_em);
-        const scheduledDate = new Date(d.pagamento_agendado);
-        if (isSameMonth(paidDate, scheduledDate) && isSameMonth(scheduledDate, today)) {
+        if (isSameMonth(paidDate, today) && isSameYear(paidDate, today)) {
           return false;
         }
       }
@@ -36,8 +38,8 @@ export const PaymentAlerts = ({ despesas }: PaymentAlertsProps) => {
       return true;
     })
     .map(despesa => {
-      // Use pagamento_agendado as the due date
-      const nextDueDate = new Date(despesa.pagamento_agendado);
+      // Calculate dynamic due date for current month
+      const nextDueDate = getScheduledPaymentDate(despesa, currentMonth, currentYear);
       nextDueDate.setHours(0, 0, 0, 0);
       
       // Calculate days until due
