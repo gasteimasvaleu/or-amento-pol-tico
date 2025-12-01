@@ -120,6 +120,7 @@ export function useCreateDespesa() {
           tipo: data.tipo,
           conta_pix: data.conta_pix,
           ultimo_pagamento: data.ultimo_pagamento.toISOString().split('T')[0],
+          pagamento_agendado: data.pagamento_agendado.toISOString().split('T')[0],
           valor: data.valor,
           observacao: data.observacao,
         }])
@@ -154,6 +155,9 @@ export function useUpdateDespesa() {
       const updateData: any = { ...data };
       if (data.ultimo_pagamento) {
         updateData.ultimo_pagamento = data.ultimo_pagamento.toISOString().split('T')[0];
+      }
+      if (data.pagamento_agendado) {
+        updateData.pagamento_agendado = data.pagamento_agendado.toISOString().split('T')[0];
       }
 
       const { data: result, error } = await supabase
@@ -226,5 +230,42 @@ export function useDespesa(id: string) {
       return data as Despesa;
     },
     enabled: !!id,
+  });
+}
+
+export function useMarkAsPaid() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const today = new Date().toISOString().split('T')[0];
+      
+      const { data: result, error } = await supabase
+        .from('despesas_politicas')
+        .update({
+          pagamento_feito_em: today,
+          ultimo_pagamento: today,
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['despesas'] });
+      toast({
+        title: "Pagamento registrado",
+        description: "O pagamento foi marcado como realizado.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao registrar pagamento",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 }

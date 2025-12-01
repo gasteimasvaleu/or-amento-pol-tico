@@ -53,6 +53,7 @@ const EditarDespesa = () => {
     conta_pix: despesa.conta_pix,
     valor: Number(despesa.valor),
     ultimo_pagamento: new Date(despesa.ultimo_pagamento),
+    pagamento_agendado: new Date(despesa.pagamento_agendado),
     observacao: despesa.observacao || '',
   };
 

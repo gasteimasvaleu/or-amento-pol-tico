@@ -2,11 +2,11 @@ import { Despesa } from "@/types/despesa";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2 } from "lucide-react";
-import { format } from "date-fns";
+import { Pencil, Trash2, CheckCircle2 } from "lucide-react";
+import { format, isSameMonth, isSameYear } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
-import { useDeleteDespesa } from "@/hooks/useDespesas";
+import { useDeleteDespesa, useMarkAsPaid } from "@/hooks/useDespesas";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 interface DespesasTableProps {
@@ -16,6 +16,7 @@ interface DespesasTableProps {
 export function DespesasTable({ despesas }: DespesasTableProps) {
   const navigate = useNavigate();
   const deleteDespesa = useDeleteDespesa();
+  const markAsPaid = useMarkAsPaid();
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -26,6 +27,25 @@ export function DespesasTable({ despesas }: DespesasTableProps) {
 
   const handleDelete = (id: string) => {
     deleteDespesa.mutate(id);
+  };
+
+  const handleMarkAsPaid = (id: string) => {
+    markAsPaid.mutate(id);
+  };
+
+  const getPaymentStatus = (despesa: Despesa) => {
+    if (!despesa.pagamento_feito_em) {
+      return { status: 'Pendente', variant: 'secondary' as const, icon: '🔄' };
+    }
+    
+    const paidDate = new Date(despesa.pagamento_feito_em);
+    const scheduledDate = new Date(despesa.pagamento_agendado);
+    
+    if (isSameMonth(paidDate, scheduledDate) && isSameYear(paidDate, scheduledDate)) {
+      return { status: 'Pago', variant: 'default' as const, icon: '✅' };
+    }
+    
+    return { status: 'Pago', variant: 'default' as const, icon: '✅' };
   };
 
   if (despesas.length === 0) {
@@ -45,62 +65,82 @@ export function DespesasTable({ despesas }: DespesasTableProps) {
             <TableHead>Responsável</TableHead>
             <TableHead>Cargo</TableHead>
             <TableHead>Tipo</TableHead>
-            <TableHead>Último Pagamento</TableHead>
+            <TableHead>Próximo Pagamento</TableHead>
+            <TableHead>Status</TableHead>
             <TableHead className="text-right">Valor</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {despesas.map((despesa) => (
-            <TableRow key={despesa.id}>
-              <TableCell className="font-medium">{despesa.municipio}</TableCell>
-              <TableCell>{despesa.responsavel}</TableCell>
-              <TableCell>{despesa.cargo}</TableCell>
-              <TableCell>
-                <Badge variant={despesa.tipo === 'Recorrente' ? 'default' : 'secondary'}>
-                  {despesa.tipo}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                {format(new Date(despesa.ultimo_pagamento), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-              </TableCell>
-              <TableCell className="text-right font-semibold">
-                {formatCurrency(Number(despesa.valor))}
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => navigate(`/editar/${despesa.id}`)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <Trash2 className="h-4 w-4 text-destructive" />
+          {despesas.map((despesa) => {
+            const paymentStatus = getPaymentStatus(despesa);
+            
+            return (
+              <TableRow key={despesa.id}>
+                <TableCell className="font-medium">{despesa.municipio}</TableCell>
+                <TableCell>{despesa.responsavel}</TableCell>
+                <TableCell>{despesa.cargo}</TableCell>
+                <TableCell>
+                  <Badge variant={despesa.tipo === 'Recorrente' ? 'default' : 'secondary'}>
+                    {despesa.tipo}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  {format(new Date(despesa.pagamento_agendado), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                </TableCell>
+                <TableCell>
+                  <Badge variant={paymentStatus.variant}>
+                    {paymentStatus.icon} {paymentStatus.status}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right font-semibold">
+                  {formatCurrency(Number(despesa.valor))}
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    {!despesa.pagamento_feito_em && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleMarkAsPaid(despesa.id)}
+                        title="Marcar como pago"
+                      >
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
                       </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Tem certeza que deseja excluir esta despesa? Esta ação não pode ser desfeita.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(despesa.id)}>
-                          Excluir
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => navigate(`/editar/${despesa.id}`)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Tem certeza que deseja excluir esta despesa? Esta ação não pode ser desfeita.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(despesa.id)}>
+                            Excluir
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>
