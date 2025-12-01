@@ -14,7 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      despesas_politicas: {
+        Row: {
+          cargo: string
+          conta_pix: string
+          created_at: string | null
+          id: string
+          municipio: string
+          observacao: string | null
+          responsavel: string
+          tipo: string
+          ultimo_pagamento: string
+          updated_at: string | null
+          valor: number
+        }
+        Insert: {
+          cargo: string
+          conta_pix: string
+          created_at?: string | null
+          id?: string
+          municipio: string
+          observacao?: string | null
+          responsavel: string
+          tipo: string
+          ultimo_pagamento: string
+          updated_at?: string | null
+          valor?: number
+        }
+        Update: {
+          cargo?: string
+          conta_pix?: string
+          created_at?: string | null
+          id?: string
+          municipio?: string
+          observacao?: string | null
+          responsavel?: string
+          tipo?: string
+          ultimo_pagamento?: string
+          updated_at?: string | null
+          valor?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
