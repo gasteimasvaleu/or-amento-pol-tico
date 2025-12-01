@@ -37,7 +37,8 @@ export function MonthlyStats({ despesas, selectedMonth, selectedYear }: MonthlyS
     
     // Check if paid in the selected month/year
     if (d.pagamento_feito_em) {
-      const paidDate = new Date(d.pagamento_feito_em);
+      const [year, month, day] = d.pagamento_feito_em.split('-').map(Number);
+      const paidDate = new Date(year, month - 1, day);
       const selectedDate = new Date(selectedYear, selectedMonth, 1);
       if (isSameMonth(paidDate, selectedDate) && isSameYear(paidDate, selectedDate)) {
         return false; // Paid in selected month

@@ -42,7 +42,8 @@ export function DespesasTable({ despesas, selectedMonth, selectedYear }: Despesa
     
     // 1. Check if paid in the selected month/year
     if (despesa.pagamento_feito_em) {
-      const paidDate = new Date(despesa.pagamento_feito_em);
+      const [year, month, day] = despesa.pagamento_feito_em.split('-').map(Number);
+      const paidDate = new Date(year, month - 1, day);
       const selectedDate = new Date(selectedYear, selectedMonth, 1);
       
       if (isSameMonth(paidDate, selectedDate) && isSameYear(paidDate, selectedDate)) {
@@ -114,7 +115,7 @@ export function DespesasTable({ despesas, selectedMonth, selectedYear }: Despesa
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    {!despesa.pagamento_feito_em && (
+                    {paymentStatus.status !== 'Pago' && (
                       <Button
                         variant="ghost"
                         size="icon"
