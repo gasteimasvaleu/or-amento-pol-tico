@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { MonthlyStats } from "@/components/despesas/MonthlyStats";
+import { PaymentAlerts } from "@/components/despesas/PaymentAlerts";
 import { SearchFilters } from "@/components/despesas/SearchFilters";
 import { DespesasTable } from "@/components/despesas/DespesasTable";
 import { useDespesas } from "@/hooks/useDespesas";
@@ -37,6 +38,8 @@ const Index = () => {
         </div>
 
         <MonthlyStats despesas={despesas} />
+
+        <PaymentAlerts despesas={despesas} />
 
         <SearchFilters
           filters={filters}
