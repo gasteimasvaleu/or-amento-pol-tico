@@ -37,7 +37,11 @@ const Index = () => {
           </p>
         </div>
 
-        <MonthlyStats despesas={despesas} />
+        <MonthlyStats 
+          despesas={despesas} 
+          selectedMonth={filters.month}
+          selectedYear={filters.year}
+        />
 
         <PaymentAlerts despesas={despesas} />
 
@@ -54,7 +58,11 @@ const Index = () => {
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : (
-          <DespesasTable despesas={despesas} />
+          <DespesasTable 
+            despesas={despesas} 
+            selectedMonth={filters.month!}
+            selectedYear={filters.year!}
+          />
         )}
       </div>
     </Layout>
