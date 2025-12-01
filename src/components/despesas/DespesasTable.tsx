@@ -36,20 +36,31 @@ export function DespesasTable({ despesas, selectedMonth, selectedYear }: Despesa
     markAsPaid.mutate(id);
   };
 
-  const getPaymentStatus = (despesa: Despesa) => {
-    if (!despesa.pagamento_feito_em) {
-      return { status: 'Pendente', variant: 'secondary' as const, icon: '🔄' };
+  const getPaymentStatus = (despesa: Despesa, dueDate: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // 1. Check if paid in the selected month/year
+    if (despesa.pagamento_feito_em) {
+      const paidDate = new Date(despesa.pagamento_feito_em);
+      const selectedDate = new Date(selectedYear, selectedMonth, 1);
+      
+      if (isSameMonth(paidDate, selectedDate) && isSameYear(paidDate, selectedDate)) {
+        return { status: 'Pago', variant: 'default' as const, icon: '✅' };
+      }
     }
     
-    // Check if paid in the selected month/year
-    const paidDate = new Date(despesa.pagamento_feito_em);
-    const selectedDate = new Date(selectedYear, selectedMonth, 1);
+    // 2. Compare due date with today
+    const dueDateNormalized = new Date(dueDate);
+    dueDateNormalized.setHours(0, 0, 0, 0);
     
-    if (isSameMonth(paidDate, selectedDate) && isSameYear(paidDate, selectedDate)) {
-      return { status: 'Pago', variant: 'default' as const, icon: '✅' };
+    if (dueDateNormalized > today) {
+      // Due date hasn't arrived yet
+      return { status: 'Aguardando', variant: 'outline' as const, icon: '📅' };
     }
     
-    return { status: 'Pendente', variant: 'secondary' as const, icon: '🔄' };
+    // 3. Due date has passed and not paid
+    return { status: 'Pendente', variant: 'destructive' as const, icon: '🔴' };
   };
 
   if (despesas.length === 0) {
@@ -77,8 +88,8 @@ export function DespesasTable({ despesas, selectedMonth, selectedYear }: Despesa
         </TableHeader>
         <TableBody>
           {despesas.map((despesa) => {
-            const paymentStatus = getPaymentStatus(despesa);
             const displayDate = getScheduledPaymentDate(despesa, selectedMonth, selectedYear);
+            const paymentStatus = getPaymentStatus(despesa, displayDate);
             
             return (
               <TableRow key={despesa.id}>
