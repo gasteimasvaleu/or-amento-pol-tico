@@ -120,7 +120,9 @@ export function useCreateDespesa() {
           tipo: data.tipo,
           conta_pix: data.conta_pix,
           ultimo_pagamento: data.ultimo_pagamento.toISOString().split('T')[0],
-          pagamento_agendado: data.pagamento_agendado.toISOString().split('T')[0],
+          pagamento_agendado: data.pagamento_agendado 
+            ? data.pagamento_agendado.toISOString().split('T')[0]
+            : data.ultimo_pagamento.toISOString().split('T')[0],
           valor: data.valor,
           observacao: data.observacao,
         }])
