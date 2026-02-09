@@ -271,3 +271,35 @@ export function useMarkAsPaid() {
     },
   });
 }
+
+export function useUnmarkAsPaid() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data: result, error } = await supabase
+        .from('despesas_politicas')
+        .update({ pagamento_feito_em: null })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['despesas'] });
+      toast({
+        title: "Pagamento desfeito",
+        description: "O status de pagamento foi revertido.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao desfazer pagamento",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+}

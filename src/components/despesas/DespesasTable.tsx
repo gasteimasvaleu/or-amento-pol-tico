@@ -2,11 +2,11 @@ import { Despesa } from "@/types/despesa";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, CheckCircle2 } from "lucide-react";
+import { Pencil, Trash2, CheckCircle2, XCircle } from "lucide-react";
 import { format, isSameMonth, isSameYear } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
-import { useDeleteDespesa, useMarkAsPaid } from "@/hooks/useDespesas";
+import { useDeleteDespesa, useMarkAsPaid, useUnmarkAsPaid } from "@/hooks/useDespesas";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { getScheduledPaymentDate } from "@/lib/utils";
 
@@ -20,6 +20,7 @@ export function DespesasTable({ despesas, selectedMonth, selectedYear }: Despesa
   const navigate = useNavigate();
   const deleteDespesa = useDeleteDespesa();
   const markAsPaid = useMarkAsPaid();
+  const unmarkAsPaid = useUnmarkAsPaid();
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -34,6 +35,10 @@ export function DespesasTable({ despesas, selectedMonth, selectedYear }: Despesa
 
   const handleMarkAsPaid = (id: string) => {
     markAsPaid.mutate(id);
+  };
+
+  const handleUnmarkAsPaid = (id: string) => {
+    unmarkAsPaid.mutate(id);
   };
 
   const getPaymentStatus = (despesa: Despesa, dueDate: Date) => {
@@ -115,7 +120,7 @@ export function DespesasTable({ despesas, selectedMonth, selectedYear }: Despesa
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    {paymentStatus.status !== 'Pago' && (
+                    {paymentStatus.status !== 'Pago' ? (
                       <Button
                         variant="ghost"
                         size="icon"
@@ -124,6 +129,32 @@ export function DespesasTable({ despesas, selectedMonth, selectedYear }: Despesa
                       >
                         <CheckCircle2 className="h-4 w-4 text-green-600" />
                       </Button>
+                    ) : (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Desfazer pagamento"
+                          >
+                            <XCircle className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Desfazer pagamento</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Tem certeza que deseja desfazer o pagamento desta despesa?
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleUnmarkAsPaid(despesa.id)}>
+                              Desfazer
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     )}
                     <Button
                       variant="ghost"
