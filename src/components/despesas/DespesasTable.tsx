@@ -34,7 +34,7 @@ export function DespesasTable({ despesas, selectedMonth, selectedYear }: Despesa
   };
 
   const handleMarkAsPaid = (id: string) => {
-    markAsPaid.mutate(id);
+    markAsPaid.mutate({ id, month: selectedMonth, year: selectedYear });
   };
 
   const handleUnmarkAsPaid = (id: string) => {
