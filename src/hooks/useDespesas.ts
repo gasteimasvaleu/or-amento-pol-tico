@@ -239,14 +239,15 @@ export function useMarkAsPaid() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: string) => {
-      const today = new Date().toISOString().split('T')[0];
+    mutationFn: async ({ id, month, year }: { id: string; month: number; year: number }) => {
+      // Use the last day of the selected month as the payment date
+      const lastDay = new Date(year, month + 1, 0);
+      const paymentDate = lastDay.toISOString().split('T')[0];
       
       const { data: result, error } = await supabase
         .from('despesas_politicas')
         .update({
-          pagamento_feito_em: today,
-          ultimo_pagamento: today,
+          pagamento_feito_em: paymentDate,
         })
         .eq('id', id)
         .select()
