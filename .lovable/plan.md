@@ -1,42 +1,51 @@
 
 
-## Plano: Restaurar Status de Pagamento
+## Plano: Corrigir Logica de Pagamento + Restaurar Dados
 
-### Situacao Atual
+### Entendimento
 
-Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
+Correto. O mes visualizado na dashboard e a referencia. Se voce esta vendo fevereiro e clica "pago", o pagamento e registrado PARA fevereiro, independente de quando voce clicou.
 
-### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
+### Problema Atual
 
-Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
+O `useMarkAsPaid` faz duas coisas erradas:
+1. Seta `pagamento_feito_em = hoje` (data real) em vez de uma data dentro do mes visualizado
+2. Atualiza `ultimo_pagamento = hoje`, fazendo a despesa sair do filtro do mes
 
-| Municipio | Responsavel | ID |
-|-----------|-------------|-----|
-| Aroeira | Itamar | 5594343a... |
-| Juazeirinho | Bevilacqua | 2bbaa610... |
-| Bonito de Santa Fe | Sabino | 201560a9... |
-| Sume | Ze Mario | 2cec5382... |
-| Joao Pessoa | Jailson | 990001de... |
-| Sousa | Vitor | 51e0080c... |
+### Dados a Corrigir
 
-### Comando SQL
+21 despesas tiveram `ultimo_pagamento` movido para marco (03-05 ou 03-06). Todas precisam ter `ultimo_pagamento` restaurado para `pagamento_agendado` (data original) e `pagamento_feito_em` ajustado para uma data dentro de fevereiro.
+
+Alem disso, 2 despesas (Bevilacqua e Tarcisim) tiveram `pagamento_feito_em` limpo para null - precisam ser verificadas se devem voltar como pagas em fevereiro ou nao.
+
+### Alteracoes
+
+**1. SQL - Restaurar dados (via insert tool)**
 
 ```sql
+-- Restaurar ultimo_pagamento e pagamento_feito_em para fevereiro
 UPDATE despesas_politicas 
-SET pagamento_feito_em = '2026-02-09'
-WHERE id IN (
-  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
-  '2bbaa610-e38e-44e0-9817-356253ef77ed',
-  '201560a9-aa52-4772-93a0-80f842e2a4d0',
-  '2cec5382-26af-4b57-aecc-658593567fe7',
-  '990001de-61c5-452b-b237-039e479e74a0',
-  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
-);
+SET ultimo_pagamento = pagamento_agendado,
+    pagamento_feito_em = '2026-02-28'
+WHERE ultimo_pagamento >= '2026-03-01'
+  AND pagamento_feito_em IS NOT NULL;
+
+-- Restaurar ultimo_pagamento das que foram desmarcadas  
+UPDATE despesas_politicas 
+SET ultimo_pagamento = pagamento_agendado
+WHERE id = 'fc11e20d-5aab-49e6-82ae-903aced7285e'; -- Caiçara/Tarcisim
 ```
 
-Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
+**2. `src/hooks/useDespesas.ts`**
 
-### Resultado
+- `useMarkAsPaid`: receber `{ id, month, year }`. Setar `pagamento_feito_em` como ultimo dia do mes selecionado. NAO alterar `ultimo_pagamento`.
+- `useUnmarkAsPaid`: ja esta correto (so limpa `pagamento_feito_em`).
 
-Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
+**3. `src/components/despesas/DespesasTable.tsx`**
+
+- Passar `selectedMonth` e `selectedYear` ao chamar `markAsPaid.mutate()`
+
+### Pergunta
+
+Preciso confirmar: Bevilacqua (Juazeirinho) e Tarcisim (Caicara) estavam pagos em fevereiro? Devo restaura-los como pagos tambem?
 
