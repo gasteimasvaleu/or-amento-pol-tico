@@ -143,7 +143,6 @@ export default function Noticias() {
                 <CardContent className="flex items-center justify-between p-4">
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-foreground truncate">{site.nome}</p>
-                    <p className="text-xs text-muted-foreground truncate">{site.url}</p>
                   </div>
                   <div className="flex items-center gap-2 ml-2">
                     <Switch
