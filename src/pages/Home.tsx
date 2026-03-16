@@ -57,7 +57,7 @@ const Home = () => {
             <button
               key={card.route}
               onClick={() => navigate(card.route)}
-              className={`${card.bg} rounded-2xl p-5 flex items-center justify-between text-left transition-transform active:scale-[0.98] absolute left-0 right-0 shadow-lg`}
+              className={`${card.bg} rounded-2xl p-5 flex className={`${card.bg} rounded-2xl p-5 flex items-start justify-between text-left transition-transform active:scale-[0.98] absolute left-0 right-0 shadow-lg`} text-left transition-transform active:scale-[0.98] absolute left-0 right-0 shadow-lg`}
               style={{
                 top: index * CARD_OVERLAP,
                 zIndex: index + 1,
