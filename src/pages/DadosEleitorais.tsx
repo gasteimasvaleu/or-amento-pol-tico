@@ -41,6 +41,7 @@ export default function DadosEleitorais() {
   const [ano, setAno] = useState("");
   const [uf, setUf] = useState("");
   const [cargo, setCargo] = useState("");
+  const [municipio, setMunicipio] = useState("");
   const [nomeCandidato, setNomeCandidato] = useState("");
   const [resultados, setResultados] = useState<ResultadoEleitoral[]>([]);
   const [loading, setLoading] = useState(false);
