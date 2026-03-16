@@ -1,42 +1,32 @@
 
 
-## Plano: Restaurar Status de Pagamento
+## Inverter Ordem e Posicionar na Base
 
-### Situacao Atual
+### Alterações em `src/pages/Home.tsx`
 
-Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
+- Inverter `zIndex`: último card na frente (`zIndex: index + 1` em vez de `quickCards.length - index`)
+- Posicionar o container de cards na parte inferior da tela, de forma que o último card fique próximo/atrás da bottom nav
+- Usar `bottom` positioning ou flexbox com `mt-auto` para empurrar os cards para baixo
+- O container pai do conteúdo da Home precisa ocupar altura total (`flex-1 flex flex-col`) para que os cards fiquem no rodapé
 
-### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
+### Resultado visual
 
-Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
+```text
+  Olá, Fulano 👋
+  Acesso rápido
 
-| Municipio | Responsavel | ID |
-|-----------|-------------|-----|
-| Aroeira | Itamar | 5594343a... |
-| Juazeirinho | Bevilacqua | 2bbaa610... |
-| Bonito de Santa Fe | Sabino | 201560a9... |
-| Sume | Ze Mario | 2cec5382... |
-| Joao Pessoa | Jailson | 990001de... |
-| Sousa | Vitor | 51e0080c... |
 
-### Comando SQL
+         (espaço livre)
 
-```sql
-UPDATE despesas_politicas 
-SET pagamento_feito_em = '2026-02-09'
-WHERE id IN (
-  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
-  '2bbaa610-e38e-44e0-9817-356253ef77ed',
-  '201560a9-aa52-4772-93a0-80f842e2a4d0',
-  '2cec5382-26af-4b57-aecc-658593567fe7',
-  '990001de-61c5-452b-b237-039e479e74a0',
-  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
-);
+
+├─────────────────────────┤  ← Card 1 (z-10, mais atrás)
+│  Dashboard Geral        │
+├─────────────────────────┤  ← Card 2 (z-20)
+│  Minhas Despesas        │
+├─────────────────────────┤  ← Card 3 (z-30)
+│  Nova Despesa           │
+├─────────────────────────┤  ← Card 4 (z-40, na frente)
+│  Histórico          [→] │
+┗━━━━━━━━━━━━━━━━━━━━━━━━━┛  ← Bottom Nav (z-50)
 ```
-
-Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
-
-### Resultado
-
-Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
 
