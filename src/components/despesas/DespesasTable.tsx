@@ -95,15 +95,15 @@ export function DespesasTable({ despesas, selectedMonth, selectedYear }: Despesa
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Município</TableHead>
-              <TableHead>Responsável</TableHead>
-              <TableHead>Cargo</TableHead>
+              <TableHead className="p-2 md:p-4">Município</TableHead>
+              <TableHead className="p-2 md:p-4">Responsável</TableHead>
+              <TableHead className="p-2 md:p-4">Cargo</TableHead>
               <TableHead className="hidden md:table-cell">Tipo</TableHead>
               <TableHead className="hidden md:table-cell">Próximo Pagamento</TableHead>
               <TableHead className="hidden md:table-cell">Status</TableHead>
               <TableHead className="hidden md:table-cell text-right">Valor</TableHead>
               <TableHead className="hidden md:table-cell text-right">Ações</TableHead>
-              <TableHead className="md:hidden w-10"></TableHead>
+              <TableHead className="md:hidden w-10 p-0"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
