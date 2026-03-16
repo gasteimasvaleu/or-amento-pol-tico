@@ -14,11 +14,10 @@ function jsonResponse(body: unknown, status = 200) {
   });
 }
 
-// Per-UF URLs are much smaller than the national ZIP
-function buildTseUrl(ano: number, uf: string): string {
-  const ufLower = uf.toLowerCase();
-  return `https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona/votacao_candidato_munzona_${ano}_${ufLower.toUpperCase()}.zip`;
-}
+const CDN_URLS: Record<number, string> = {
+  2024: "https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona/votacao_candidato_munzona_2024.zip",
+  2022: "https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona/votacao_candidato_munzona_2022.zip",
+};
 
 const CARGOS_2022 = ["Presidente", "Governador", "Senador", "Deputado Federal", "Deputado Estadual"];
 const CARGOS_2024 = ["Prefeito", "Vereador"];
@@ -65,7 +64,7 @@ function parseCSVLine(line: string): string[] {
   return fields;
 }
 
-async function fetchWithRetry(url: string, timeoutMs = 60000): Promise<Response> {
+async function fetchWithRetry(url: string, timeoutMs = 120000): Promise<Response> {
   const headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     "Accept": "*/*",
@@ -82,10 +81,10 @@ async function fetchWithRetry(url: string, timeoutMs = 60000): Promise<Response>
       if (resp.ok) return resp;
       if (attempt === 0 && resp.status >= 500) {
         console.log(`TSE returned ${resp.status}, retrying...`);
-        await resp.text(); // consume body
+        await resp.text();
         continue;
       }
-      return resp; // return non-ok for caller to handle
+      return resp;
     } catch (err) {
       clearTimeout(timer);
       if (attempt === 0) {
@@ -110,7 +109,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Campos obrigatórios: ano, uf, cargo" }, 400);
     }
 
-    // Validate ano x cargo combination
+    // Validate ano x cargo
     const validCargos = ano === 2024 ? CARGOS_2024 : CARGOS_2022;
     if (!validCargos.includes(cargo)) {
       return jsonResponse({
@@ -123,7 +122,7 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // 1. Check cache first
+    // 1. Check cache
     let query = supabase
       .from("dados_eleitorais_cache")
       .select("*")
@@ -145,7 +144,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ data: cached, source: "cache" });
     }
 
-    // Check if we have data for this combo but no match for name filter
+    // Check if cache has data for this combo (name filter just didn't match)
     if (nome_candidato && nome_candidato.trim()) {
       const { data: anyData } = await supabase
         .from("dados_eleitorais_cache")
@@ -160,13 +159,17 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 2. Download per-UF file from TSE CDN
-    const cdnUrl = buildTseUrl(ano, uf);
-    console.log(`Downloading per-UF ZIP: ${cdnUrl}`);
+    // 2. Download national ZIP from TSE CDN
+    const cdnUrl = CDN_URLS[ano];
+    if (!cdnUrl) {
+      return jsonResponse({ error: `Ano ${ano} não suportado.`, data: [] });
+    }
+
+    console.log(`Downloading TSE ZIP for ${ano}...`);
 
     let zipResp: Response;
     try {
-      zipResp = await fetchWithRetry(cdnUrl, 90000);
+      zipResp = await fetchWithRetry(cdnUrl);
     } catch (err) {
       console.error("Fetch error:", err.message);
       return jsonResponse({
@@ -184,17 +187,18 @@ Deno.serve(async (req) => {
     }
 
     const zipBuffer = new Uint8Array(await zipResp.arrayBuffer());
-    console.log(`ZIP downloaded: ${(zipBuffer.length / 1024 / 1024).toFixed(1)}MB`);
+    console.log(`ZIP downloaded: ${(zipBuffer.length / 1024 / 1024).toFixed(1)}MB. Decompressing...`);
 
     const unzipped = unzipSync(zipBuffer);
 
-    // Find CSV file
+    // Find per-UF CSV inside the ZIP
     const ufUpper = uf.toUpperCase();
     const cargoValues = cargoMap[cargo] || [cargo.toUpperCase()];
 
     let csvContent: string | null = null;
     for (const [filename, data] of Object.entries(unzipped)) {
-      if (filename.toUpperCase().endsWith(".CSV")) {
+      const fn = filename.toUpperCase();
+      if (fn.endsWith(".CSV") && fn.includes(ufUpper)) {
         csvContent = new TextDecoder("latin1").decode(data as Uint8Array);
         console.log(`Found CSV: ${filename} (${((data as Uint8Array).length / 1024 / 1024).toFixed(1)}MB)`);
         break;
@@ -202,10 +206,21 @@ Deno.serve(async (req) => {
     }
 
     if (!csvContent) {
+      // Fallback to any CSV
+      for (const [filename, data] of Object.entries(unzipped)) {
+        if (filename.toUpperCase().endsWith(".CSV")) {
+          csvContent = new TextDecoder("latin1").decode(data as Uint8Array);
+          console.log(`Using general CSV: ${filename}`);
+          break;
+        }
+      }
+    }
+
+    if (!csvContent) {
       return jsonResponse({ error: "Arquivo CSV não encontrado no ZIP do TSE.", data: [] });
     }
 
-    // 3. Incremental line-by-line parsing
+    // 3. Incremental line parsing
     const voteMap = new Map<string, any>();
     let headersParsed = false;
     let iSgUf = -1, iDsCargo = -1, iNmCandidato = -1, iNmUrna = -1;
@@ -224,8 +239,8 @@ Deno.serve(async (req) => {
       if (!line) continue;
 
       if (!headersParsed) {
-        const headers = parseCSVLine(line).map((h) => h.trim().replace(/^"|"$/g, ""));
-        const idx = (name: string) => headers.findIndex((h) => h === name);
+        const hdrs = parseCSVLine(line).map((h) => h.trim().replace(/^"|"$/g, ""));
+        const idx = (name: string) => hdrs.findIndex((h) => h === name);
         iSgUf = idx("SG_UF");
         iDsCargo = idx("DS_CARGO");
         iNmCandidato = idx("NM_CANDIDATO");
@@ -243,7 +258,6 @@ Deno.serve(async (req) => {
       const fields = parseCSVLine(line);
       const clean = (i: number) => (fields[i] || "").replace(/^"|"$/g, "").trim();
 
-      // Filter by UF (should match since per-UF file, but just in case)
       if (iSgUf >= 0 && clean(iSgUf) !== ufUpper) continue;
 
       const rowCargo = iDsCargo >= 0 ? clean(iDsCargo) : "";
@@ -296,7 +310,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 5. Filter by name and return
+    // 5. Filter and return
     let results = aggregated;
     if (nome_candidato && nome_candidato.trim()) {
       const search = nome_candidato.trim().toUpperCase();
