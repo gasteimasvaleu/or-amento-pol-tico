@@ -1,42 +1,36 @@
 
 
-## Plano: Restaurar Status de Pagamento
+## Plano: Corrigir duplicatas e remover download do TSE
 
-### Situacao Atual
+### Problema
+A edge function, quando não encontra dados no cache (ou encontra só "Todos"), baixa o ZIP do TSE e insere no banco **sem limpar os dados existentes**. Como você importa tudo via CSV, isso gera duplicatas: os mesmos candidatos ficam com registros do CSV + registros do TSE.
 
-Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
+### Solução (3 passos)
 
-### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
-
-Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
-
-| Municipio | Responsavel | ID |
-|-----------|-------------|-----|
-| Aroeira | Itamar | 5594343a... |
-| Juazeirinho | Bevilacqua | 2bbaa610... |
-| Bonito de Santa Fe | Sabino | 201560a9... |
-| Sume | Ze Mario | 2cec5382... |
-| Joao Pessoa | Jailson | 990001de... |
-| Sousa | Vitor | 51e0080c... |
-
-### Comando SQL
+#### 1. Limpar duplicatas existentes no banco
+Executar SQL para desduplicar, mantendo apenas o registro mais recente de cada combinação única (candidato + partido + número + turno + cargo + município):
 
 ```sql
-UPDATE despesas_politicas 
-SET pagamento_feito_em = '2026-02-09'
-WHERE id IN (
-  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
-  '2bbaa610-e38e-44e0-9817-356253ef77ed',
-  '201560a9-aa52-4772-93a0-80f842e2a4d0',
-  '2cec5382-26af-4b57-aecc-658593567fe7',
-  '990001de-61c5-452b-b237-039e479e74a0',
-  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
+DELETE FROM dados_eleitorais_cache
+WHERE id NOT IN (
+  SELECT DISTINCT ON (ano_eleicao, sigla_uf, cargo, nome_candidato, sigla_partido, numero_candidato, turno, nome_municipio)
+    id
+  FROM dados_eleitorais_cache
+  ORDER BY ano_eleicao, sigla_uf, cargo, nome_candidato, sigla_partido, numero_candidato, turno, nome_municipio, created_at DESC
 );
 ```
 
-Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
+#### 2. Edge Function: remover lógica de download do TSE
+Como os dados vêm sempre do CSV importado, a edge function deve **apenas consultar o cache**. Remover toda a seção de download do TSE (linhas 186-348) e a lógica de invalidação de cache com "Todos". A função fica simples: consulta o cache, retorna resultados ou array vazio.
 
-### Resultado
+#### 3. Edge Function: só consultar cache
+A função final faz apenas:
+- Query no cache com filtros de ano/uf/cargo
+- Busca por nome com `or` em `nome_candidato` e `nome_urna`
+- Busca por município com `ilike`
+- Retorna resultados ordenados por votos
 
-Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
+### Arquivos alterados
+- `supabase/functions/consultar-dados-eleitorais/index.ts` — simplificar para apenas consulta ao cache
+- SQL de limpeza de duplicatas existentes
 
