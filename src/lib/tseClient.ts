@@ -98,93 +98,148 @@ export async function importarCSVEleitoral(
 ): Promise<{ candidatos: number; uf: string; ano: number }> {
   onProgress({ phase: "Lendo arquivo...", percent: 0 });
 
-  const buffer = await file.arrayBuffer();
-  const text = new TextDecoder("iso-8859-1").decode(buffer);
-  const lines = text.split("\n");
+  const totalBytes = file.size;
+  let bytesRead = 0;
+  const reader = file.stream().getReader();
+  const decoder = new TextDecoder("iso-8859-1");
 
-  if (lines.length < 2) throw new Error("Arquivo vazio ou inválido.");
+  let remainder = "";
+  let headerParsed = false;
+  let hdrs: string[] = [];
 
-  // Parse header
-  const hdrs = parseCSVLine(lines[0]).map(h => h.trim().replace(/^"|"$/g, ""));
-  const idx = (name: string) => hdrs.findIndex(h => h === name);
+  let iAno = -1, iSgUf = -1, iDsCargo = -1, iNmCandidato = -1, iNmUrna = -1;
+  let iSgPartido = -1, iNrCandidato = -1, iDsSitTot = -1, iQtVotos = -1, iQtVotosAlt = -1, iNrTurno = -1;
 
-  const iAno = idx("ANO_ELEICAO");
-  const iSgUf = idx("SG_UF");
-  const iDsCargo = idx("DS_CARGO");
-  const iNmCandidato = idx("NM_CANDIDATO");
-  const iNmUrna = idx("NM_URNA_CANDIDATO");
-  const iSgPartido = idx("SG_PARTIDO");
-  const iNrCandidato = idx("NR_CANDIDATO");
-  const iDsSitTot = idx("DS_SIT_TOT_TURNO");
-  const iQtVotos = idx("QT_VOTOS_NOMINAIS");
-  const iQtVotosAlt = idx("QT_VOTOS");
-  const iNrTurno = idx("NR_TURNO");
-
-  if (iNmCandidato === -1) throw new Error("Coluna NM_CANDIDATO não encontrada. Verifique se é o CSV correto (Votação nominal por município e zona).");
-
-  onProgress({ phase: "Processando linhas...", percent: 5 });
-
-  // Aggregate votes
   const voteMap = new Map<string, any>();
   let detectedUf = "";
   let detectedAno = 0;
+  let lineCount = 0;
+  let lastProgressUpdate = 0;
 
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
 
-    if (i % 50000 === 0) {
-      onProgress({
-        phase: "Processando linhas...",
-        percent: 5 + Math.round((i / lines.length) * 50),
-        detail: `${i.toLocaleString("pt-BR")} / ${lines.length.toLocaleString("pt-BR")} linhas`,
-      });
-      // yield to UI
-      await new Promise(r => setTimeout(r, 0));
+    bytesRead += value.byteLength;
+    const chunk = decoder.decode(value, { stream: true });
+    remainder += chunk;
+
+    const parts = remainder.split("\n");
+    remainder = parts.pop() || "";
+
+    for (const rawLine of parts) {
+      const line = rawLine.trim();
+      if (!line) continue;
+
+      if (!headerParsed) {
+        hdrs = parseCSVLine(line).map(h => h.trim().replace(/^"|"$/g, ""));
+        const idx = (name: string) => hdrs.findIndex(h => h === name);
+        iAno = idx("ANO_ELEICAO");
+        iSgUf = idx("SG_UF");
+        iDsCargo = idx("DS_CARGO");
+        iNmCandidato = idx("NM_CANDIDATO");
+        iNmUrna = idx("NM_URNA_CANDIDATO");
+        iSgPartido = idx("SG_PARTIDO");
+        iNrCandidato = idx("NR_CANDIDATO");
+        iDsSitTot = idx("DS_SIT_TOT_TURNO");
+        iQtVotos = idx("QT_VOTOS_NOMINAIS");
+        iQtVotosAlt = idx("QT_VOTOS");
+        iNrTurno = idx("NR_TURNO");
+
+        if (iNmCandidato === -1) throw new Error("Coluna NM_CANDIDATO não encontrada. Verifique se é o CSV correto.");
+        headerParsed = true;
+        continue;
+      }
+
+      lineCount++;
+
+      // Update progress every ~100k lines or 2MB
+      const now = bytesRead;
+      if (now - lastProgressUpdate > 2_000_000) {
+        lastProgressUpdate = now;
+        const pct = Math.min(55, Math.round((bytesRead / totalBytes) * 55));
+        onProgress({
+          phase: "Processando linhas...",
+          percent: pct,
+          detail: `${lineCount.toLocaleString("pt-BR")} linhas · ${Math.round(bytesRead / 1_048_576)}MB / ${Math.round(totalBytes / 1_048_576)}MB`,
+        });
+        await new Promise(r => setTimeout(r, 0));
+      }
+
+      const fields = parseCSVLine(line);
+      const clean = (i: number) => (fields[i] || "").replace(/^"|"$/g, "").trim();
+
+      const rawCargo = iDsCargo >= 0 ? clean(iDsCargo).toUpperCase() : "";
+      const cargo = CARGO_MAP[rawCargo];
+      if (!cargo) continue;
+
+      const nomeCand = iNmCandidato >= 0 ? clean(iNmCandidato) : "";
+      const nomeUrna = iNmUrna >= 0 ? clean(iNmUrna) : "";
+      const partido = iSgPartido >= 0 ? clean(iSgPartido) : "";
+      const numero = iNrCandidato >= 0 ? clean(iNrCandidato) : "";
+      const situacao = iDsSitTot >= 0 ? clean(iDsSitTot) : "";
+      const votos = parseInt(iQtVotos >= 0 ? clean(iQtVotos) : (iQtVotosAlt >= 0 ? clean(iQtVotosAlt) : "0")) || 0;
+      const turno = parseInt(iNrTurno >= 0 ? clean(iNrTurno) : "1") || 1;
+      const uf = iSgUf >= 0 ? clean(iSgUf).toUpperCase() : "";
+      const ano = iAno >= 0 ? parseInt(clean(iAno)) : 0;
+
+      if (!detectedUf && uf) detectedUf = uf;
+      if (!detectedAno && ano) detectedAno = ano;
+
+      const key = `${nomeCand}-${partido}-${numero}-${turno}-${cargo}`;
+
+      if (voteMap.has(key)) {
+        const existing = voteMap.get(key);
+        existing.qtd_votos += votos;
+        if (situacao.toUpperCase().includes("ELEIT") && !situacao.toUpperCase().includes("NÃO")) {
+          existing.situacao_eleito = situacao;
+        }
+      } else {
+        voteMap.set(key, {
+          ano_eleicao: ano || detectedAno,
+          sigla_uf: uf || detectedUf,
+          cargo,
+          nome_candidato: nomeCand,
+          nome_urna: nomeUrna,
+          sigla_partido: partido,
+          numero_candidato: numero,
+          situacao_eleito: situacao,
+          qtd_votos: votos,
+          nome_municipio: "Todos",
+          turno,
+        });
+      }
     }
+  }
 
-    const fields = parseCSVLine(line);
-    const clean = (idx: number) => (fields[idx] || "").replace(/^"|"$/g, "").trim();
-
+  // Process any remaining partial line
+  if (remainder.trim() && headerParsed) {
+    const fields = parseCSVLine(remainder.trim());
+    const clean = (i: number) => (fields[i] || "").replace(/^"|"$/g, "").trim();
     const rawCargo = iDsCargo >= 0 ? clean(iDsCargo).toUpperCase() : "";
     const cargo = CARGO_MAP[rawCargo];
-    if (!cargo) continue;
-
-    const nomeCand = iNmCandidato >= 0 ? clean(iNmCandidato) : "";
-    const nomeUrna = iNmUrna >= 0 ? clean(iNmUrna) : "";
-    const partido = iSgPartido >= 0 ? clean(iSgPartido) : "";
-    const numero = iNrCandidato >= 0 ? clean(iNrCandidato) : "";
-    const situacao = iDsSitTot >= 0 ? clean(iDsSitTot) : "";
-    const votos = parseInt(iQtVotos >= 0 ? clean(iQtVotos) : (iQtVotosAlt >= 0 ? clean(iQtVotosAlt) : "0")) || 0;
-    const turno = parseInt(iNrTurno >= 0 ? clean(iNrTurno) : "1") || 1;
-    const uf = iSgUf >= 0 ? clean(iSgUf).toUpperCase() : "";
-    const ano = iAno >= 0 ? parseInt(clean(iAno)) : 0;
-
-    if (!detectedUf && uf) detectedUf = uf;
-    if (!detectedAno && ano) detectedAno = ano;
-
-    const key = `${nomeCand}-${partido}-${numero}-${turno}-${cargo}`;
-
-    if (voteMap.has(key)) {
-      const existing = voteMap.get(key);
-      existing.qtd_votos += votos;
-      if (situacao.toUpperCase().includes("ELEIT") && !situacao.toUpperCase().includes("NÃO")) {
-        existing.situacao_eleito = situacao;
+    if (cargo) {
+      const nomeCand = iNmCandidato >= 0 ? clean(iNmCandidato) : "";
+      const nomeUrna = iNmUrna >= 0 ? clean(iNmUrna) : "";
+      const partido = iSgPartido >= 0 ? clean(iSgPartido) : "";
+      const numero = iNrCandidato >= 0 ? clean(iNrCandidato) : "";
+      const situacao = iDsSitTot >= 0 ? clean(iDsSitTot) : "";
+      const votos = parseInt(iQtVotos >= 0 ? clean(iQtVotos) : (iQtVotosAlt >= 0 ? clean(iQtVotosAlt) : "0")) || 0;
+      const turno = parseInt(iNrTurno >= 0 ? clean(iNrTurno) : "1") || 1;
+      const uf = iSgUf >= 0 ? clean(iSgUf).toUpperCase() : "";
+      const ano = iAno >= 0 ? parseInt(clean(iAno)) : 0;
+      const key = `${nomeCand}-${partido}-${numero}-${turno}-${cargo}`;
+      if (voteMap.has(key)) {
+        voteMap.get(key).qtd_votos += votos;
+      } else {
+        voteMap.set(key, {
+          ano_eleicao: ano || detectedAno, sigla_uf: uf || detectedUf, cargo,
+          nome_candidato: nomeCand, nome_urna: nomeUrna, sigla_partido: partido,
+          numero_candidato: numero, situacao_eleito: situacao, qtd_votos: votos,
+          nome_municipio: "Todos", turno,
+        });
       }
-    } else {
-      voteMap.set(key, {
-        ano_eleicao: ano || detectedAno,
-        sigla_uf: uf || detectedUf,
-        cargo,
-        nome_candidato: nomeCand,
-        nome_urna: nomeUrna,
-        sigla_partido: partido,
-        numero_candidato: numero,
-        situacao_eleito: situacao,
-        qtd_votos: votos,
-        nome_municipio: "Todos",
-        turno,
-      });
     }
   }
 
