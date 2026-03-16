@@ -228,7 +228,7 @@ Deno.serve(async (req) => {
     let headersParsed = false;
     let iSgUf = -1, iDsCargo = -1, iNmCandidato = -1, iNmUrna = -1;
     let iSgPartido = -1, iNrCandidato = -1, iDsSitTot = -1;
-    let iQtVotos = -1, iQtVotosAlt = -1, iNrTurno = -1;
+    let iQtVotos = -1, iQtVotosAlt = -1, iNrTurno = -1, iNmMunicipio = -1;
 
     let lineStart = 0;
     const len = csvContent.length;
@@ -249,6 +249,7 @@ Deno.serve(async (req) => {
         iDsSitTot = idx("DS_SIT_TOT_TURNO");
         iQtVotos = idx("QT_VOTOS_NOMINAIS"); iQtVotosAlt = idx("QT_VOTOS");
         iNrTurno = idx("NR_TURNO");
+        iNmMunicipio = idx("NM_MUNICIPIO");
         headersParsed = true;
         continue;
       }
@@ -267,8 +268,9 @@ Deno.serve(async (req) => {
       const situacao = iDsSitTot >= 0 ? clean(iDsSitTot) : "";
       const votos = parseInt(iQtVotos >= 0 ? clean(iQtVotos) : (iQtVotosAlt >= 0 ? clean(iQtVotosAlt) : "0")) || 0;
       const turno = parseInt(iNrTurno >= 0 ? clean(iNrTurno) : "1") || 1;
+      const nomeMunicipio = iNmMunicipio >= 0 ? clean(iNmMunicipio) : "";
 
-      const key = `${nomeCand}-${partido}-${numero}-${turno}`;
+      const key = `${nomeCand}-${partido}-${numero}-${turno}-${nomeMunicipio}`;
 
       if (voteMap.has(key)) {
         const existing = voteMap.get(key);
@@ -287,7 +289,7 @@ Deno.serve(async (req) => {
           numero_candidato: numero,
           situacao_eleito: situacao,
           qtd_votos: votos,
-          nome_municipio: "Todos",
+          nome_municipio: nomeMunicipio || "Todos",
           turno,
         });
       }
