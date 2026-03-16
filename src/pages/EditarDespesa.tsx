@@ -19,7 +19,7 @@ const EditarDespesa = () => {
       { id, data },
       {
         onSuccess: () => {
-          navigate('/');
+          navigate('/despesas');
         },
       }
     );
