@@ -12,7 +12,7 @@ const NovaDespesa = () => {
   const handleSubmit = (data: DespesaFormData) => {
     createDespesa.mutate(data, {
       onSuccess: () => {
-        navigate('/');
+        navigate('/despesas');
       },
     });
   };
