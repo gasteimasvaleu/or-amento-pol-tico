@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import Login from "./pages/Login";
-import ResetPassword from "./pages/ResetPassword";
+import Cadastro from "./pages/Cadastro";
 import Home from "./pages/Home";
 import DashboardGeral from "./pages/DashboardGeral";
 import Despesas from "./pages/Despesas";
