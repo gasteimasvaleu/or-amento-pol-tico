@@ -30,8 +30,8 @@ const Despesas = () => {
     <Layout>
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Controle de Despesas</h2>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl font-bold text-foreground">Controle de Despesas</h1>
+          <p className="text-sm text-muted-foreground">
             Gerenciamento de despesas mensais para mandatos políticos
           </p>
         </div>

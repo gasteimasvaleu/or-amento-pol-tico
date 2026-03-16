@@ -53,7 +53,7 @@ const Home = () => {
           className="w-full aspect-video object-cover rounded-2xl mb-4 border border-border"
         />
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold text-foreground">Olá, {firstName} 👋</h1>
+          <h1 className="text-xl font-bold text-foreground">Olá, {firstName} 👋</h1>
           <p className="text-sm text-muted-foreground">Acesso rápido</p>
         </div>
 

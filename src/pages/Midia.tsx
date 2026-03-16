@@ -102,7 +102,7 @@ const MidiaPage = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-foreground">Mídia</h1>
-            <p className="text-xs text-muted-foreground">Galeria de mídias e artes</p>
+            <p className="text-sm text-muted-foreground">Galeria de mídias e artes</p>
           </div>
           <Button size="sm" onClick={() => setUploadOpen(true)}>
             <Plus className="h-4 w-4 mr-1" /> Adicionar

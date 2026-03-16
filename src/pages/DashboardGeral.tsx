@@ -152,8 +152,8 @@ const DashboardGeral = () => {
     <Layout>
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Meu Perfil</h2>
-          <p className="text-muted-foreground">Gerencie suas informações pessoais</p>
+          <h1 className="text-xl font-bold text-foreground">Meu Perfil</h1>
+          <p className="text-sm text-muted-foreground">Gerencie suas informações pessoais</p>
         </div>
 
         {/* Avatar & Identity */}
