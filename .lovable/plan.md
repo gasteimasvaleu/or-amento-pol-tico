@@ -1,42 +1,33 @@
 
 
-## Plano: Restaurar Status de Pagamento
+## Plano: Gerador de Posts para Redes Sociais com Leonardo AI
 
-### Situacao Atual
+### Visão Geral
+Adicionar uma nova ferramenta "Gerador de Mídia" no hub do Suporte que permite criar imagens para posts de redes sociais usando a API do Leonardo AI. O fluxo segue o mesmo padrão visual dos outros geradores (Discurso, Análise, Projeto de Lei).
 
-Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
+### Alterações
 
-### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
+1. **Configurar secret da API**
+   - Solicitar a chave `LEONARDO_API_KEY` via ferramenta de secrets do Supabase
 
-Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
+2. **Edge Function `gerar-midia/index.ts`**
+   - Recebe: prompt (descrição do post), formato (story, feed quadrado, feed paisagem), estilo (moderno, minimalista, político, institucional)
+   - Chama a API do Leonardo AI (`https://cloud.leonardo.ai/api/rest/v1/generations`) para gerar a imagem
+   - Aguarda a geração (polling no endpoint de status) e retorna a URL da imagem
+   - Adicionar ao `supabase/config.toml` com `verify_jwt = false`
 
-| Municipio | Responsavel | ID |
-|-----------|-------------|-----|
-| Aroeira | Itamar | 5594343a... |
-| Juazeirinho | Bevilacqua | 2bbaa610... |
-| Bonito de Santa Fe | Sabino | 201560a9... |
-| Sume | Ze Mario | 2cec5382... |
-| Joao Pessoa | Jailson | 990001de... |
-| Sousa | Vitor | 51e0080c... |
+3. **Componente `src/components/suporte/GeradorMidia.tsx`**
+   - Formulário com: prompt de texto, seleção de formato (Story 1080x1920, Feed Quadrado 1080x1080, Feed Paisagem 1200x628), seleção de estilo
+   - Botão "Gerar Imagem" que chama a edge function
+   - Exibe a imagem gerada com opções de: baixar e salvar na galeria de mídias (bucket `midias`)
+   - Padrão visual igual ao GeradorDiscurso (Card, botão voltar, loading state)
 
-### Comando SQL
+4. **`src/pages/Suporte.tsx`**
+   - Adicionar card "Gerador de Mídia" com ícone `ImagePlus` no hub
+   - Adicionar estado `"gerador-midia"` ao tipo `Tool` e renderizar o componente
 
-```sql
-UPDATE despesas_politicas 
-SET pagamento_feito_em = '2026-02-09'
-WHERE id IN (
-  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
-  '2bbaa610-e38e-44e0-9817-356253ef77ed',
-  '201560a9-aa52-4772-93a0-80f842e2a4d0',
-  '2cec5382-26af-4b57-aecc-658593567fe7',
-  '990001de-61c5-452b-b237-039e479e74a0',
-  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
-);
-```
-
-Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
-
-### Resultado
-
-Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
+### Formatos de imagem
+- **Story**: 1080x1920 (9:16)
+- **Feed Quadrado**: 1080x1080 (1:1)
+- **Feed Paisagem**: 1200x628 (~1.91:1)
 
