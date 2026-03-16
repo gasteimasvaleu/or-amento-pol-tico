@@ -16,6 +16,7 @@ import Historico from "./pages/Historico";
 import Agenda from "./pages/Agenda";
 import Midia from "./pages/Midia";
 import Suporte from "./pages/Suporte";
+import Equipe from "./pages/Equipe";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
