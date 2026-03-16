@@ -120,7 +120,7 @@ export default function DadosEleitorais() {
       <div className="space-y-6">
         <div>
           <h1 className="text-xl font-bold text-foreground">Dados Eleitorais</h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Consulte resultados de eleições do TSE
           </p>
         </div>

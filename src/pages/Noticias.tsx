@@ -60,7 +60,7 @@ export default function Noticias() {
         {/* Header */}
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Notícias</h1>
+            <h1 className="text-xl font-bold text-foreground">Notícias</h1>
             <p className="text-sm text-muted-foreground">
               Monitore sites de notícias com resumos automáticos
             </p>
