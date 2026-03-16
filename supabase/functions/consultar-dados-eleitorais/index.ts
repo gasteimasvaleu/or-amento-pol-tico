@@ -65,11 +65,18 @@ function parseCSVLine(line: string): string[] {
 }
 
 async function fetchWithRetry(url: string, timeoutMs = 120000): Promise<Response> {
+  const headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "*/*",
+    "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
+    "Referer": "https://dadosabertos.tse.jus.br/",
+  };
+
   for (let attempt = 0; attempt < 2; attempt++) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const resp = await fetch(url, { signal: controller.signal });
+      const resp = await fetch(url, { headers, signal: controller.signal });
       clearTimeout(timer);
       if (resp.ok) return resp;
       if (attempt === 0 && resp.status >= 500) {
