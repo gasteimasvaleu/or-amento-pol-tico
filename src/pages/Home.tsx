@@ -1,7 +1,9 @@
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { LayoutDashboard, Receipt, CalendarDays, ArrowRight, ImageIcon, LifeBuoy } from "lucide-react";
+import { Receipt, CalendarDays, ArrowRight, ImageIcon, LifeBuoy } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const quickCards = [
   {
