@@ -17,6 +17,8 @@ import Agenda from "./pages/Agenda";
 import Midia from "./pages/Midia";
 import Suporte from "./pages/Suporte";
 import Equipe from "./pages/Equipe";
+import Assessores from "./pages/Assessores";
+import Apoiadores from "./pages/Apoiadores";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,6 +43,8 @@ const App = () => (
             <Route path="/midia" element={<ProtectedRoute><Midia /></ProtectedRoute>} />
             <Route path="/suporte" element={<ProtectedRoute><Suporte /></ProtectedRoute>} />
             <Route path="/equipe" element={<ProtectedRoute><Equipe /></ProtectedRoute>} />
+            <Route path="/assessores" element={<ProtectedRoute><Assessores /></ProtectedRoute>} />
+            <Route path="/apoiadores" element={<ProtectedRoute><Apoiadores /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
