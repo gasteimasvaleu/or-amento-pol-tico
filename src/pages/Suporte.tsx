@@ -1,22 +1,56 @@
+import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
-import { LifeBuoy } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Sparkles, LifeBuoy } from "lucide-react";
+import GeradorDiscurso from "@/components/suporte/GeradorDiscurso";
+
+type Tool = "hub" | "gerador-discurso";
 
 const Suporte = () => {
+  const [activeTool, setActiveTool] = useState<Tool>("hub");
+
   return (
     <Layout>
-      <div className="space-y-1 mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Suporte</h1>
-        <p className="text-sm text-muted-foreground">Central de ajuda e recursos</p>
-      </div>
+      {activeTool === "hub" && (
+        <>
+          <div className="space-y-1 mb-6">
+            <h1 className="text-2xl font-bold text-foreground">Suporte</h1>
+            <p className="text-sm text-muted-foreground">Ferramentas inteligentes para o seu mandato</p>
+          </div>
 
-      <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-        <div className="bg-muted rounded-full p-6">
-          <LifeBuoy className="h-10 w-10 text-muted-foreground" />
-        </div>
-        <p className="text-muted-foreground text-sm max-w-xs">
-          Em breve novas funcionalidades estarão disponíveis aqui.
-        </p>
-      </div>
+          <div className="grid gap-4">
+            <Card
+              className="cursor-pointer hover:shadow-md transition-shadow border-primary/20"
+              onClick={() => setActiveTool("gerador-discurso")}
+            >
+              <CardContent className="flex items-center gap-4 p-4">
+                <div className="bg-primary/10 rounded-xl p-3">
+                  <Sparkles className="h-6 w-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-foreground">Gerador de Discurso</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Crie discursos personalizados com inteligência artificial
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="flex flex-col items-center py-10 text-center space-y-3">
+              <div className="bg-muted rounded-full p-4">
+                <LifeBuoy className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <p className="text-muted-foreground text-xs max-w-xs">
+                Mais ferramentas em breve.
+              </p>
+            </div>
+          </div>
+        </>
+      )}
+
+      {activeTool === "gerador-discurso" && (
+        <GeradorDiscurso onBack={() => setActiveTool("hub")} />
+      )}
     </Layout>
   );
 };
