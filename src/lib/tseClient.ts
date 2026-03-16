@@ -210,7 +210,7 @@ export async function importarCSVEleitoral(
           numero_candidato: numero,
           situacao_eleito: situacao,
           qtd_votos: votos,
-          nome_municipio: "Todos",
+          nome_municipio: municipio || "Todos",
           turno,
         });
       }
