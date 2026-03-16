@@ -1,42 +1,37 @@
 
 
-## Plano: Restaurar Status de Pagamento
+## Plano: Corrigir importação de CSV grande
 
-### Situacao Atual
+### Problema
+O arquivo `votacao_candidato_munzona_2022_BRASIL.csv` é muito grande (provavelmente 500MB+). O `file.arrayBuffer()` tenta carregar tudo na memória de uma vez, causando `NotReadableError` no navegador.
 
-Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
+### Solução
+Trocar a leitura completa (`file.arrayBuffer()`) por **streaming com `FileReader` + leitura em chunks** ou usar a **Streams API** (`file.stream()`), processando o CSV linha a linha sem carregar tudo na memória.
 
-### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
+### Alterações em `src/lib/tseClient.ts`
 
-Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
+Na função `importarCSVEleitoral`:
 
-| Municipio | Responsavel | ID |
-|-----------|-------------|-----|
-| Aroeira | Itamar | 5594343a... |
-| Juazeirinho | Bevilacqua | 2bbaa610... |
-| Bonito de Santa Fe | Sabino | 201560a9... |
-| Sume | Ze Mario | 2cec5382... |
-| Joao Pessoa | Jailson | 990001de... |
-| Sousa | Vitor | 51e0080c... |
+1. **Substituir** `file.arrayBuffer()` por `file.stream().getReader()` (ReadableStream API)
+2. **Processar em chunks**: ler pedaços do arquivo, decodificar com `TextDecoder` incremental (encoding `iso-8859-1`), e acumular linhas parciais
+3. **Parsear linha a linha** conforme chunks chegam, mantendo a lógica de agregação existente
+4. **Atualizar progresso** baseado em bytes lidos vs `file.size`
 
-### Comando SQL
+### Estrutura do streaming
 
-```sql
-UPDATE despesas_politicas 
-SET pagamento_feito_em = '2026-02-09'
-WHERE id IN (
-  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
-  '2bbaa610-e38e-44e0-9817-356253ef77ed',
-  '201560a9-aa52-4772-93a0-80f842e2a4d0',
-  '2cec5382-26af-4b57-aecc-658593567fe7',
-  '990001de-61c5-452b-b237-039e479e74a0',
-  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
-);
+```text
+file.stream().getReader()
+  → read() chunks (Uint8Array)
+  → TextDecoder.decode(chunk, {stream: true})
+  → acumular buffer de texto
+  → extrair linhas completas (split \n)
+  → parsear cada linha com parseCSVLine()
+  → agregar no voteMap
+  → repetir até done
 ```
 
-Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
-
 ### Resultado
-
-Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
+- Arquivos de qualquer tamanho funcionam sem estouro de memória
+- Progresso mais granular (baseado em bytes lidos)
+- Lógica de agregação e inserção no Supabase permanece inalterada
 
