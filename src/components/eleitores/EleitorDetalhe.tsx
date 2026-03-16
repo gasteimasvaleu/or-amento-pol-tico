@@ -32,7 +32,7 @@ export function EleitorDetalhe({ eleitor, open, onOpenChange }: EleitorDetalhePr
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+        <SheetContent side="bottom" className="rounded-t-2xl max-h-[85vh] overflow-y-auto">
           <SheetHeader>
             <SheetTitle className="text-lg">{eleitor.nome}</SheetTitle>
           </SheetHeader>
