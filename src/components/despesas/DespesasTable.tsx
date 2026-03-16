@@ -197,10 +197,11 @@ export function DespesasTable({ despesas, selectedMonth, selectedYear }: Despesa
                     </div>
                   </TableCell>
                   {/* Mobile: botão ver detalhes */}
-                  <TableCell className="md:hidden">
+                  <TableCell className="md:hidden w-10 p-0">
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="h-8 w-8"
                       onClick={() => openDetails(despesa)}
                     >
                       <Eye className="h-4 w-4" />
