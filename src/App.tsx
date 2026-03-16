@@ -16,6 +16,7 @@ import Historico from "./pages/Historico";
 import Agenda from "./pages/Agenda";
 import Midia from "./pages/Midia";
 import Suporte from "./pages/Suporte";
+import Noticias from "./pages/Noticias";
 import Equipe from "./pages/Equipe";
 import Assessores from "./pages/Assessores";
 import Apoiadores from "./pages/Apoiadores";
