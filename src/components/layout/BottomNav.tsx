@@ -1,4 +1,4 @@
-import { Home, LayoutDashboard, Receipt, Menu, X, History, Plus, LogOut } from "lucide-react";
+import { Home, LayoutDashboard, Receipt, Menu, X, LogOut } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,11 +8,6 @@ const mainItems = [
   { title: "Início", url: "/", icon: Home },
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Despesas", url: "/despesas", icon: Receipt },
-];
-
-const moreItems = [
-  { title: "Nova Despesa", url: "/despesas/nova", icon: Plus },
-  { title: "Histórico", url: "/despesas/historico", icon: History },
 ];
 
 export function BottomNav() {
@@ -28,22 +23,6 @@ export function BottomNav() {
 
       {moreOpen && (
         <div className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-0 right-0 z-50 bg-card border-t border-border rounded-t-2xl p-4 space-y-1 animate-in slide-in-from-bottom-4">
-          {moreItems.map((item) => (
-            <NavLink
-              key={item.url}
-              to={item.url}
-              onClick={() => setMoreOpen(false)}
-              className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors",
-                location.pathname === item.url
-                  ? "bg-accent text-primary"
-                  : "text-muted-foreground hover:bg-muted"
-              )}
-            >
-              <item.icon className="h-5 w-5" />
-              <span>{item.title}</span>
-            </NavLink>
-          ))}
           <button
             onClick={() => { setMoreOpen(false); signOut(); }}
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-destructive hover:bg-muted transition-colors w-full"
