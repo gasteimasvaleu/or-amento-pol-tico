@@ -15,6 +15,7 @@ import EditarDespesa from "./pages/EditarDespesa";
 import Historico from "./pages/Historico";
 import Agenda from "./pages/Agenda";
 import Midia from "./pages/Midia";
+import Suporte from "./pages/Suporte";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
