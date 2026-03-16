@@ -1,4 +1,6 @@
 import { ReactNode } from "react";
+import { NavLink } from "react-router-dom";
+import { Landmark } from "lucide-react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { BottomNav } from "./BottomNav";
