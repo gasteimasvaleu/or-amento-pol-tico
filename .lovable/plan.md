@@ -1,54 +1,42 @@
 
 
-## Criar Pagina /agenda - Agenda de Compromissos
+## Plano: Restaurar Status de Pagamento
 
-### 1. Migration - Tabela `compromissos`
+### Situacao Atual
 
-Criar tabela no Supabase:
+Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
+
+### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
+
+Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
+
+| Municipio | Responsavel | ID |
+|-----------|-------------|-----|
+| Aroeira | Itamar | 5594343a... |
+| Juazeirinho | Bevilacqua | 2bbaa610... |
+| Bonito de Santa Fe | Sabino | 201560a9... |
+| Sume | Ze Mario | 2cec5382... |
+| Joao Pessoa | Jailson | 990001de... |
+| Sousa | Vitor | 51e0080c... |
+
+### Comando SQL
 
 ```sql
-CREATE TABLE public.compromissos (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL,
-  titulo text NOT NULL,
-  descricao text,
-  data_inicio timestamptz NOT NULL,
-  data_fim timestamptz,
-  local text,
-  tipo text NOT NULL DEFAULT 'reuniao',
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now()
+UPDATE despesas_politicas 
+SET pagamento_feito_em = '2026-02-09'
+WHERE id IN (
+  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
+  '2bbaa610-e38e-44e0-9817-356253ef77ed',
+  '201560a9-aa52-4772-93a0-80f842e2a4d0',
+  '2cec5382-26af-4b57-aecc-658593567fe7',
+  '990001de-61c5-452b-b237-039e479e74a0',
+  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
 );
-
-ALTER TABLE public.compromissos ENABLE ROW LEVEL SECURITY;
-
--- RLS: usuarios veem/editam apenas seus compromissos
-CREATE POLICY "Users can view own compromissos" ON public.compromissos FOR SELECT TO authenticated USING (auth.uid() = user_id);
-CREATE POLICY "Users can insert own compromissos" ON public.compromissos FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update own compromissos" ON public.compromissos FOR UPDATE TO authenticated USING (auth.uid() = user_id);
-CREATE POLICY "Users can delete own compromissos" ON public.compromissos FOR DELETE TO authenticated USING (auth.uid() = user_id);
-
-CREATE TRIGGER update_compromissos_updated_at BEFORE UPDATE ON public.compromissos FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 ```
 
-### 2. Nova pagina `src/pages/Agenda.tsx`
+Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
 
-- Layout com calendario mensal (usando `Calendar` do shadcn) no topo/lateral
-- Dias com compromissos marcados com indicador visual (dot)
-- Ao clicar num dia, lista os compromissos daquele dia abaixo
-- Dialog/Sheet para cadastrar novo compromisso com campos: titulo, descricao, data/hora inicio, data/hora fim, local, tipo (reuniao, audiencia, evento, visita, outro)
-- Botao de adicionar compromisso
-- Possibilidade de editar e excluir compromissos existentes
-- Hook `useCompromissos` para CRUD via Supabase
+### Resultado
 
-### 3. Rota e Navegacao
-
-- Adicionar rota `/agenda` no `App.tsx` com `ProtectedRoute`
-- Adicionar item "Agenda" no `BottomNav` (entre Dashboard e Despesas)
-- Adicionar item "Agenda" no `AppSidebar`
-- Adicionar card "Agenda" na Home
-
-### 4. Tipos
-
-- Criar `src/types/compromisso.ts` com a interface
+Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
 

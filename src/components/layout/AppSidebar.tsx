@@ -7,6 +7,7 @@ import {
   LogOut,
   Landmark,
   ChevronDown,
+  CalendarDays,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -94,6 +95,20 @@ export function AppSidebar() {
                   >
                     <LayoutDashboard className="mr-2 h-4 w-4" />
                     {!collapsed && <span>Dashboard</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink
+                    to="/agenda"
+                    end
+                    className="hover:bg-sidebar-accent/50"
+                    activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                  >
+                    <CalendarDays className="mr-2 h-4 w-4" />
+                    {!collapsed && <span>Agenda</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>

@@ -1,4 +1,4 @@
-import { Home, LayoutDashboard, Receipt, Menu, X, LogOut } from "lucide-react";
+import { Home, LayoutDashboard, Receipt, CalendarDays, Menu, X, LogOut } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,6 +8,7 @@ const mainItems = [
   { title: "Início", url: "/", icon: Home },
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Despesas", url: "/despesas", icon: Receipt },
+  { title: "Agenda", url: "/agenda", icon: CalendarDays },
 ];
 
 export function BottomNav() {

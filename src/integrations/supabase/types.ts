@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      compromissos: {
+        Row: {
+          created_at: string | null
+          data_fim: string | null
+          data_inicio: string
+          descricao: string | null
+          id: string
+          local: string | null
+          tipo: string
+          titulo: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          data_fim?: string | null
+          data_inicio: string
+          descricao?: string | null
+          id?: string
+          local?: string | null
+          tipo?: string
+          titulo: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          data_fim?: string | null
+          data_inicio?: string
+          descricao?: string | null
+          id?: string
+          local?: string | null
+          tipo?: string
+          titulo?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       despesas_politicas: {
         Row: {
           cargo: string
