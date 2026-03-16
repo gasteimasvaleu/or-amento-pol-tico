@@ -1,29 +1,42 @@
 
 
-Sim, exatamente. O botão de importação é temporário — serve apenas para popular o banco. Depois que todos os estados de 2022 e 2024 estiverem importados, basta remover o card/botão de importação do `DadosEleitorais.tsx` e a função `importarCSVEleitoral` do `tseClient.ts`. As consultas continuarão funcionando normalmente via cache.
+## Plano: Restaurar Status de Pagamento
 
-Vou implementar a ferramenta de importação agora, e quando você confirmar que todos os dados foram importados, eu removo.
+### Situacao Atual
 
-## Plano: Importação temporária de CSV do TSE
+Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
 
-### Alterações
+### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
 
-**`src/lib/tseClient.ts`**
-- Adicionar função `importarCSVEleitoral(file: File, onProgress)`:
-  - Lê com `TextDecoder("iso-8859-1")`, separador `;`
-  - Identifica colunas pelo header automaticamente
-  - Agrega votos por candidato (chave composta: nome+partido+numero+turno+uf+cargo+ano)
-  - Deleta dados existentes para mesmo `ano_eleicao + sigla_uf` antes de inserir
-  - Insere em lotes de 500 via `supabase.from("dados_eleitorais_cache").insert()`
+Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
 
-**`src/pages/DadosEleitorais.tsx`**
-- Adicionar card colapsável "Importar CSV do TSE" com:
-  - Input file múltiplo (`.csv`)
-  - Barra de progresso (arquivo X de Y, registros processados)
-  - Link para download dos CSVs no site do TSE
-- Card será removido após importação completa
+| Municipio | Responsavel | ID |
+|-----------|-------------|-----|
+| Aroeira | Itamar | 5594343a... |
+| Juazeirinho | Bevilacqua | 2bbaa610... |
+| Bonito de Santa Fe | Sabino | 201560a9... |
+| Sume | Ze Mario | 2cec5382... |
+| Joao Pessoa | Jailson | 990001de... |
+| Sousa | Vitor | 51e0080c... |
 
-### Após importação concluída
-- Remover card de importação e função `importarCSVEleitoral`
-- Consultas continuam funcionando via cache existente
+### Comando SQL
+
+```sql
+UPDATE despesas_politicas 
+SET pagamento_feito_em = '2026-02-09'
+WHERE id IN (
+  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
+  '2bbaa610-e38e-44e0-9817-356253ef77ed',
+  '201560a9-aa52-4772-93a0-80f842e2a4d0',
+  '2cec5382-26af-4b57-aecc-658593567fe7',
+  '990001de-61c5-452b-b237-039e479e74a0',
+  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
+);
+```
+
+Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
+
+### Resultado
+
+Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
 
