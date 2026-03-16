@@ -1,24 +1,42 @@
 
 
-## Plano: Bottom Navigation Mobile-First
+## Plano: Restaurar Status de Pagamento
 
-### Abordagem
+### Situacao Atual
 
-Criar uma barra de navegação inferior estilo app nativo para mobile, mantendo a sidebar apenas para desktop. O Layout será adaptado para detectar mobile/desktop e renderizar o componente adequado.
+Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
 
-### Alterações
+### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
 
-**1. Criar `src/components/layout/BottomNav.tsx`**
-- Barra fixa no rodapé com ícones + labels para: Início (`/`), Dashboard (`/dashboard`), Despesas (`/despesas`), Mais (menu expandido)
-- Estilo nativo: ícone ativo com cor primária, fundo `bg-card`, borda superior, safe-area padding (iOS)
-- Usa `useLocation` para highlight do item ativo
+Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
 
-**2. Atualizar `src/components/layout/Layout.tsx`**
-- Mobile: esconder sidebar, mostrar BottomNav, remover header com SidebarTrigger
-- Desktop: manter sidebar como está
-- Usar `useIsMobile()` hook existente
-- Adicionar `pb-16` no main para não sobrepor conteúdo no mobile
+| Municipio | Responsavel | ID |
+|-----------|-------------|-----|
+| Aroeira | Itamar | 5594343a... |
+| Juazeirinho | Bevilacqua | 2bbaa610... |
+| Bonito de Santa Fe | Sabino | 201560a9... |
+| Sume | Ze Mario | 2cec5382... |
+| Joao Pessoa | Jailson | 990001de... |
+| Sousa | Vitor | 51e0080c... |
 
-**3. Atualizar `src/index.css`**
-- Adicionar safe-area inset support para dispositivos com notch
+### Comando SQL
+
+```sql
+UPDATE despesas_politicas 
+SET pagamento_feito_em = '2026-02-09'
+WHERE id IN (
+  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
+  '2bbaa610-e38e-44e0-9817-356253ef77ed',
+  '201560a9-aa52-4772-93a0-80f842e2a4d0',
+  '2cec5382-26af-4b57-aecc-658593567fe7',
+  '990001de-61c5-452b-b237-039e479e74a0',
+  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
+);
+```
+
+Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
+
+### Resultado
+
+Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
 
