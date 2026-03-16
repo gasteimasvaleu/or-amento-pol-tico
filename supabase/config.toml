@@ -2,3 +2,6 @@ project_id = "wrriittiqsmzbapbrcwm"
 
 [functions.gerar-discurso]
 verify_jwt = false
+
+[functions.analisar-noticia]
+verify_jwt = false
