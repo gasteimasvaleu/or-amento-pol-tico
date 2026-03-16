@@ -1,42 +1,38 @@
 
 
-## Plano: Restaurar Status de Pagamento
+## Analise de Noticia - Pagina Suporte
 
-### Situacao Atual
+### Fluxo
 
-Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
+1. Parlamentar cola o link da noticia
+2. Edge function busca o conteudo da URL (fetch server-side + extrai texto)
+3. IA analisa a noticia (streaming) - pontos-chave, impacto politico, oportunidades
+4. Apos analise, parlamentar escolhe um tom e gera um comentario baseado na analise (streaming)
 
-### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
+### Arquivos
 
-Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
+| Arquivo | Acao |
+|---------|------|
+| `supabase/functions/analisar-noticia/index.ts` | Criar - edge function com 2 modos: `analisar` (fetch URL + analise IA) e `comentar` (gera comentario a partir da analise) |
+| `src/components/suporte/AnaliseNoticia.tsx` | Criar - componente com input de URL, area de analise, selecao de tom, area de comentario |
+| `src/pages/Suporte.tsx` | Adicionar card "Analise de Noticia" no hub e rota para o componente |
+| `supabase/config.toml` | Registrar nova function |
 
-| Municipio | Responsavel | ID |
-|-----------|-------------|-----|
-| Aroeira | Itamar | 5594343a... |
-| Juazeirinho | Bevilacqua | 2bbaa610... |
-| Bonito de Santa Fe | Sabino | 201560a9... |
-| Sume | Ze Mario | 2cec5382... |
-| Joao Pessoa | Jailson | 990001de... |
-| Sousa | Vitor | 51e0080c... |
+### Edge Function `analisar-noticia`
 
-### Comando SQL
+- **Modo `analisar`**: Recebe `{ tipo: "analisar", url }`. Faz fetch da URL no servidor (extrai HTML, limpa tags para obter texto). Envia o texto para a IA com prompt de analise politica (streaming SSE). Analise inclui: resumo, pontos-chave, impacto politico, possiveis posicionamentos, oportunidades para o parlamentar.
+- **Modo `comentar`**: Recebe `{ tipo: "comentar", analise, tom }`. Gera comentario politico baseado na analise com o tom escolhido (streaming SSE).
+- Modelo: `google/gemini-3-flash-preview`
 
-```sql
-UPDATE despesas_politicas 
-SET pagamento_feito_em = '2026-02-09'
-WHERE id IN (
-  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
-  '2bbaa610-e38e-44e0-9817-356253ef77ed',
-  '201560a9-aa52-4772-93a0-80f842e2a4d0',
-  '2cec5382-26af-4b57-aecc-658593567fe7',
-  '990001de-61c5-452b-b237-039e479e74a0',
-  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
-);
-```
+### Componente `AnaliseNoticia`
 
-Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
+- **Etapa 1**: Input de URL + botao "Analisar". Mostra analise com streaming (ReactMarkdown).
+- **Etapa 2** (apos analise concluida): Select de tom (Apoio, Critico, Neutro, Cauteloso, Indignado, Propositivo) + botao "Gerar Comentario". Mostra comentario com streaming. Botao copiar.
+- Segue mesmo padrao visual do GeradorDiscurso (Card, botao voltar, etc.)
 
-### Resultado
+### Detalhes Tecnicos
 
-Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
+- Scraping server-side via fetch + regex para remover tags HTML (sem dependencia externa)
+- Mesmo padrao de streaming SSE do GeradorDiscurso
+- Reutiliza `react-markdown` ja instalado
 
