@@ -40,6 +40,14 @@ export function BottomNav() {
             <LifeBuoy className="h-5 w-5" />
             <span>Suporte</span>
           </NavLink>
+          <NavLink
+            to="/noticias"
+            onClick={() => setMoreOpen(false)}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-foreground hover:bg-muted transition-colors w-full"
+          >
+            <Newspaper className="h-5 w-5" />
+            <span>Notícias</span>
+          </NavLink>
           <button
             onClick={() => { setMoreOpen(false); signOut(); }}
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-destructive hover:bg-muted transition-colors w-full"

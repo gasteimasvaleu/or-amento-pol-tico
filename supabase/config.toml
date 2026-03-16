@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.analisar-noticia]
 verify_jwt = false
+
+[functions.extrair-noticias]
+verify_jwt = false
