@@ -95,15 +95,15 @@ export function DespesasTable({ despesas, selectedMonth, selectedYear }: Despesa
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Município</TableHead>
-              <TableHead>Responsável</TableHead>
-              <TableHead>Cargo</TableHead>
+              <TableHead className="p-2 md:p-4">Município</TableHead>
+              <TableHead className="p-2 md:p-4">Responsável</TableHead>
+              <TableHead className="p-2 md:p-4">Cargo</TableHead>
               <TableHead className="hidden md:table-cell">Tipo</TableHead>
               <TableHead className="hidden md:table-cell">Próximo Pagamento</TableHead>
               <TableHead className="hidden md:table-cell">Status</TableHead>
               <TableHead className="hidden md:table-cell text-right">Valor</TableHead>
               <TableHead className="hidden md:table-cell text-right">Ações</TableHead>
-              <TableHead className="md:hidden w-10"></TableHead>
+              <TableHead className="md:hidden w-10 p-0"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -113,9 +113,9 @@ export function DespesasTable({ despesas, selectedMonth, selectedYear }: Despesa
               
               return (
                 <TableRow key={despesa.id}>
-                  <TableCell className="font-medium">{despesa.municipio}</TableCell>
-                  <TableCell>{despesa.responsavel}</TableCell>
-                  <TableCell>{despesa.cargo}</TableCell>
+                  <TableCell className="font-medium p-2 md:p-4 max-w-[100px] md:max-w-none truncate">{despesa.municipio}</TableCell>
+                  <TableCell className="p-2 md:p-4 max-w-[100px] md:max-w-none truncate">{despesa.responsavel}</TableCell>
+                  <TableCell className="p-2 md:p-4 max-w-[80px] md:max-w-none truncate">{despesa.cargo}</TableCell>
                   <TableCell className="hidden md:table-cell">
                     <Badge variant={despesa.tipo === 'Recorrente' ? 'default' : 'secondary'}>
                       {despesa.tipo}
@@ -197,10 +197,11 @@ export function DespesasTable({ despesas, selectedMonth, selectedYear }: Despesa
                     </div>
                   </TableCell>
                   {/* Mobile: botão ver detalhes */}
-                  <TableCell className="md:hidden">
+                  <TableCell className="md:hidden w-10 p-0">
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="h-8 w-8"
                       onClick={() => openDetails(despesa)}
                     >
                       <Eye className="h-4 w-4" />
