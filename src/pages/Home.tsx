@@ -41,43 +41,45 @@ const Home = () => {
 
   return (
     <Layout>
-      <div className="space-y-1">
-        <h1 className="text-2xl font-bold text-foreground">Olá, {firstName} 👋</h1>
-        <p className="text-sm text-muted-foreground">Acesso rápido</p>
-      </div>
+      <div className="flex flex-col flex-1 h-full">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold text-foreground">Olá, {firstName} 👋</h1>
+          <p className="text-sm text-muted-foreground">Acesso rápido</p>
+        </div>
 
-      <div className="mt-5 relative" style={{ height: `${(quickCards.length - 1) * 80 + 160}px` }}>
-        {quickCards.map((card, index) => (
-          <button
-            key={card.route}
-            onClick={() => navigate(card.route)}
-            className={`${card.bg} rounded-2xl p-5 flex items-center justify-between text-left transition-transform active:scale-[0.98] absolute left-0 right-0 h-[160px] shadow-lg`}
-            style={{
-              top: `${index * 80}px`,
-              zIndex: quickCards.length - index,
-            }}
-          >
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <card.icon className="h-5 w-5 text-white/90" />
-                <span className="text-lg font-bold text-white">{card.title}</span>
+        <div className="mt-auto relative" style={{ height: `${(quickCards.length - 1) * 80 + 160}px` }}>
+          {quickCards.map((card, index) => (
+            <button
+              key={card.route}
+              onClick={() => navigate(card.route)}
+              className={`${card.bg} rounded-2xl p-5 flex items-center justify-between text-left transition-transform active:scale-[0.98] absolute left-0 right-0 h-[160px] shadow-lg`}
+              style={{
+                top: `${index * 80}px`,
+                zIndex: index + 1,
+              }}
+            >
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <card.icon className="h-5 w-5 text-white/90" />
+                  <span className="text-lg font-bold text-white">{card.title}</span>
+                </div>
+                <div className="flex gap-2">
+                  {card.badges.map((badge) => (
+                    <span
+                      key={badge}
+                      className="text-[11px] font-medium text-white/90 border border-white/40 rounded-full px-2.5 py-0.5"
+                    >
+                      {badge}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <div className="flex gap-2">
-                {card.badges.map((badge) => (
-                  <span
-                    key={badge}
-                    className="text-[11px] font-medium text-white/90 border border-white/40 rounded-full px-2.5 py-0.5"
-                  >
-                    {badge}
-                  </span>
-                ))}
+              <div className="bg-black/80 rounded-full h-10 w-10 flex items-center justify-center shrink-0">
+                <ArrowRight className="h-5 w-5 text-white" />
               </div>
-            </div>
-            <div className="bg-black/80 rounded-full h-10 w-10 flex items-center justify-center shrink-0">
-              <ArrowRight className="h-5 w-5 text-white" />
-            </div>
-          </button>
-        ))}
+            </button>
+          ))}
+        </div>
       </div>
     </Layout>
   );
