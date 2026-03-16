@@ -15,6 +15,7 @@ import EditarDespesa from "./pages/EditarDespesa";
 import Historico from "./pages/Historico";
 import Agenda from "./pages/Agenda";
 import Midia from "./pages/Midia";
+import Suporte from "./pages/Suporte";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/despesas/historico" element={<ProtectedRoute><Historico /></ProtectedRoute>} />
             <Route path="/agenda" element={<ProtectedRoute><Agenda /></ProtectedRoute>} />
             <Route path="/midia" element={<ProtectedRoute><Midia /></ProtectedRoute>} />
+            <Route path="/suporte" element={<ProtectedRoute><Suporte /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

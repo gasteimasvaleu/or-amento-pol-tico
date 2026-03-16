@@ -1,7 +1,7 @@
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { LayoutDashboard, Receipt, CalendarDays, ArrowRight, ImageIcon } from "lucide-react";
+import { LayoutDashboard, Receipt, CalendarDays, ArrowRight, ImageIcon, LifeBuoy } from "lucide-react";
 
 const quickCards = [
   {
@@ -31,6 +31,13 @@ const quickCards = [
     icon: ImageIcon,
     route: "/midia",
     bg: "bg-amber-500",
+  },
+  {
+    title: "Suporte",
+    badges: ["Ajuda", "Recursos"],
+    icon: LifeBuoy,
+    route: "/suporte",
+    bg: "bg-rose-500",
   },
 ];
 
