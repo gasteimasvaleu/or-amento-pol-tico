@@ -5,13 +5,6 @@ import { LayoutDashboard, Receipt, CalendarDays, ArrowRight, ImageIcon, LifeBuoy
 
 const quickCards = [
   {
-    title: "Dashboard Geral",
-    badges: ["Visão geral", "Gráficos"],
-    icon: LayoutDashboard,
-    route: "/dashboard",
-    bg: "bg-emerald-500",
-  },
-  {
     title: "Minhas Despesas",
     badges: ["Listagem", "Filtros"],
     icon: Receipt,
