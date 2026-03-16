@@ -37,6 +37,60 @@ async function pollGeneration(generationId: string, apiKey: string, maxAttempts 
   throw new Error("Tempo limite excedido aguardando geração da imagem");
 }
 
+async function uploadInitImage(base64Data: string, apiKey: string): Promise<string> {
+  // Step 1: Get presigned URL
+  const initRes = await fetch(`${LEONARDO_API}/init-image`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ extension: "png" }),
+  });
+
+  if (!initRes.ok) {
+    const errText = await initRes.text();
+    console.error("Init image error:", initRes.status, errText);
+    throw new Error("Erro ao inicializar upload de imagem de referência");
+  }
+
+  const initData = await initRes.json();
+  const { url: presignedUrl, fields, id: initImageId } = initData.uploadInitImage;
+
+  console.log("Got presigned URL for init image:", initImageId);
+
+  // Step 2: Upload image via presigned URL
+  // Decode base64 to binary
+  const rawBase64 = base64Data.includes(",") ? base64Data.split(",")[1] : base64Data;
+  const binaryStr = atob(rawBase64);
+  const bytes = new Uint8Array(binaryStr.length);
+  for (let i = 0; i < binaryStr.length; i++) {
+    bytes[i] = binaryStr.charCodeAt(i);
+  }
+
+  const formData = new FormData();
+  // Add all fields from presigned URL response
+  const parsedFields = typeof fields === "string" ? JSON.parse(fields) : fields;
+  for (const [key, value] of Object.entries(parsedFields)) {
+    formData.append(key, value as string);
+  }
+  formData.append("file", new Blob([bytes], { type: "image/png" }), "reference.png");
+
+  const uploadRes = await fetch(presignedUrl, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!uploadRes.ok && uploadRes.status !== 204) {
+    const errText = await uploadRes.text();
+    console.error("Upload error:", uploadRes.status, errText);
+    throw new Error("Erro ao fazer upload da imagem de referência");
+  }
+
+  console.log("Reference image uploaded successfully:", initImageId);
+  return initImageId;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -48,7 +102,7 @@ serve(async (req) => {
       throw new Error("LEONARDO_API_KEY não configurada");
     }
 
-    const { prompt, formato, estilo } = await req.json();
+    const { prompt, formato, estilo, referenceImageBase64, strength } = await req.json();
 
     if (!prompt) {
       return new Response(
@@ -77,7 +131,31 @@ serve(async (req) => {
     const styleText = estiloMap[estilo] || estiloMap.moderno;
     const enhancedPrompt = `${prompt}. Style: ${styleText}. High quality, suitable for social media post.`;
 
-    console.log("Generating image with Leonardo AI:", { prompt: enhancedPrompt, ...dim });
+    // Handle reference image upload if provided
+    let initImageId: string | undefined;
+    if (referenceImageBase64) {
+      console.log("Uploading reference image...");
+      initImageId = await uploadInitImage(referenceImageBase64, LEONARDO_API_KEY);
+    }
+
+    console.log("Generating image with Leonardo AI:", { prompt: enhancedPrompt, ...dim, hasReference: !!initImageId });
+
+    // Build generation body
+    const generationBody: Record<string, any> = {
+      prompt: enhancedPrompt,
+      width: dim.width,
+      height: dim.height,
+      num_images: 1,
+      modelId: "6b645e3a-d64f-4341-a6d8-7a3690fbf042", // Leonardo Phoenix
+      alchemy: true,
+      photoReal: false,
+      presetStyle: "DYNAMIC",
+    };
+
+    if (initImageId) {
+      generationBody.init_image_id = initImageId;
+      generationBody.init_strength = strength ?? 0.5;
+    }
 
     // Create generation
     const createRes = await fetch(`${LEONARDO_API}/generations`, {
@@ -86,16 +164,7 @@ serve(async (req) => {
         Authorization: `Bearer ${LEONARDO_API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        prompt: enhancedPrompt,
-        width: dim.width,
-        height: dim.height,
-        num_images: 1,
-        modelId: "6b645e3a-d64f-4341-a6d8-7a3690fbf042", // Leonardo Phoenix
-        alchemy: true,
-        photoReal: false,
-        presetStyle: "DYNAMIC",
-      }),
+      body: JSON.stringify(generationBody),
     });
 
     if (!createRes.ok) {
