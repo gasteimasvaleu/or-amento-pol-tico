@@ -50,7 +50,7 @@ const Home = () => {
         <img
           src="https://wrriittiqsmzbapbrcwm.supabase.co/storage/v1/object/public/criativos/banner1.png"
           alt="Banner"
-          className="w-full aspect-video object-cover rounded-2xl mb-4"
+          className="w-full aspect-video object-cover rounded-2xl mb-4 border border-border"
         />
         <div className="space-y-1">
           <h1 className="text-2xl font-bold text-foreground">Olá, {firstName} 👋</h1>
