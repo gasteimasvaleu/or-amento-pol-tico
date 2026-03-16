@@ -1,7 +1,9 @@
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { LayoutDashboard, Receipt, CalendarDays, ArrowRight, ImageIcon, LifeBuoy } from "lucide-react";
+import { Receipt, CalendarDays, ArrowRight, ImageIcon, LifeBuoy } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const quickCards = [
   {
@@ -40,8 +42,39 @@ const CARD_OVERLAP = 80;
 const Home = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  const [showSplash, setShowSplash] = useState(false);
   const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "Usuário";
 
+  useEffect(() => {
+    if (isMobile && !sessionStorage.getItem("splashShown")) {
+      setShowSplash(true);
+      sessionStorage.setItem("splashShown", "1");
+      const timer = setTimeout(() => setShowSplash(false), 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [isMobile]);
+
+  if (showSplash) {
+    return (
+      <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center">
+        <video
+          src="https://wrriittiqsmzbapbrcwm.supabase.co/storage/v1/object/public/criativos/splash1.mp4"
+          autoPlay
+          muted
+          playsInline
+          onEnded={() => setShowSplash(false)}
+          className="w-full h-full object-cover"
+        />
+        <button
+          onClick={() => setShowSplash(false)}
+          className="absolute bottom-8 right-6 text-white/60 text-sm border border-white/30 rounded-full px-4 py-1.5 backdrop-blur-sm"
+        >
+          Pular
+        </button>
+      </div>
+    );
+  }
   const stackHeight = CARD_HEIGHT + (quickCards.length - 1) * CARD_OVERLAP;
 
   return (
