@@ -127,7 +127,14 @@ Deno.serve(async (req) => {
 
     console.log(`Downloading TSE ZIP for ${ano}...`);
 
-    const zipResp = await fetch(cdnUrl);
+    const zipResp = await fetch(cdnUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "*/*",
+        "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
+        "Referer": "https://dadosabertos.tse.jus.br/",
+      },
+    });
     if (!zipResp.ok) {
       return new Response(
         JSON.stringify({ error: `Falha ao baixar dados do TSE (status ${zipResp.status}). Tente novamente.`, data: [] }),
