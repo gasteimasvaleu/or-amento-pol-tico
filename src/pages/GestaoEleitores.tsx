@@ -41,7 +41,7 @@ export default function GestaoEleitores() {
 
   return (
     <Layout>
-      <div className="p-4 md:p-6 space-y-4">
+      <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-foreground">Gestão de Eleitores</h1>
