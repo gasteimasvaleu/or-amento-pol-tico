@@ -319,6 +319,12 @@ Deno.serve(async (req) => {
           (r.nome_urna && r.nome_urna.toUpperCase().includes(search))
       );
     }
+    if (municipio?.trim()) {
+      const searchMun = municipio.trim().toUpperCase();
+      results = results.filter(
+        (r) => r.nome_municipio?.toUpperCase().includes(searchMun)
+      );
+    }
 
     results.sort((a, b) => b.qtd_votos - a.qtd_votos);
     return jsonResponse({ data: results.slice(0, 500), source: "tse" });
