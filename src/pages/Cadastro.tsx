@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,11 +10,11 @@ import { Loader2, Landmark } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 
-const Login = () => {
+const Cadastro = () => {
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
   const { toast } = useToast();
   const { session, loading: authLoading } = useAuth();
 
@@ -30,16 +30,23 @@ const Login = () => {
     return <Navigate to="/" replace />;
   }
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: fullName },
+        emailRedirectTo: window.location.origin,
+      },
+    });
 
     if (error) {
-      toast({ title: "Erro ao entrar", description: error.message, variant: "destructive" });
+      toast({ title: "Erro ao cadastrar", description: error.message, variant: "destructive" });
     } else {
-      navigate("/");
+      toast({ title: "Cadastro realizado", description: "Verifique seu e-mail para confirmar a conta." });
     }
     setLoading(false);
   };
@@ -51,11 +58,15 @@ const Login = () => {
           <div className="mx-auto bg-primary p-3 rounded-xl w-fit mb-4">
             <Landmark className="h-8 w-8 text-primary-foreground" />
           </div>
-          <CardTitle className="text-2xl">Unale</CardTitle>
-          <CardDescription>Gestão Parlamentar</CardDescription>
+          <CardTitle className="text-2xl">Criar Conta</CardTitle>
+          <CardDescription>Preencha os dados para se cadastrar</CardDescription>
         </CardHeader>
-        <form onSubmit={handleLogin}>
+        <form onSubmit={handleSignUp}>
           <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome completo</Label>
+              <Input id="name" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="email">E-mail</Label>
               <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
@@ -68,10 +79,10 @@ const Login = () => {
           <CardFooter className="flex-col gap-3">
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              Entrar
+              Cadastrar
             </Button>
-            <Link to="/cadastro" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-              Criar nova conta
+            <Link to="/login" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              Já tem conta? Entrar
             </Link>
           </CardFooter>
         </form>
@@ -80,4 +91,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Cadastro;
