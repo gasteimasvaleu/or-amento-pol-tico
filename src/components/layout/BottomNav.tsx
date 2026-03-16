@@ -8,6 +8,7 @@ const mainItems = [
   { title: "Início", url: "/", icon: Home },
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Despesas", url: "/despesas", icon: Receipt },
+  { title: "Agenda", url: "/agenda", icon: CalendarDays },
 ];
 
 export function BottomNav() {

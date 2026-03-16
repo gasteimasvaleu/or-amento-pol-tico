@@ -32,6 +32,13 @@ const quickCards = [
     route: "/despesas/historico",
     bg: "bg-red-500",
   },
+  {
+    title: "Agenda",
+    badges: ["Compromissos", "Calendário"],
+    icon: CalendarDays,
+    route: "/agenda",
+    bg: "bg-purple-500",
+  },
 ];
 
 const CARD_HEIGHT = 160;
