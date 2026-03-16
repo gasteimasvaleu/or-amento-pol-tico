@@ -8,6 +8,7 @@ import {
   Landmark,
   ChevronDown,
   CalendarDays,
+  ImageIcon,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -109,6 +110,20 @@ export function AppSidebar() {
                   >
                     <CalendarDays className="mr-2 h-4 w-4" />
                     {!collapsed && <span>Agenda</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink
+                    to="/midia"
+                    end
+                    className="hover:bg-sidebar-accent/50"
+                    activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                  >
+                    <ImageIcon className="mr-2 h-4 w-4" />
+                    {!collapsed && <span>Mídia</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
