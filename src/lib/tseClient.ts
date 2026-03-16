@@ -148,6 +148,7 @@ export async function importarCSVEleitoral(
         iQtVotos = idx("QT_VOTOS_NOMINAIS");
         iQtVotosAlt = idx("QT_VOTOS");
         iNrTurno = idx("NR_TURNO");
+        iNmMunicipio = idx("NM_MUNICIPIO");
 
         if (iNmCandidato === -1) throw new Error("Coluna NM_CANDIDATO não encontrada. Verifique se é o CSV correto.");
         headerParsed = true;
