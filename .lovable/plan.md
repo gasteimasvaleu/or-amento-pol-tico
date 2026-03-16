@@ -1,17 +1,42 @@
 
 
-## Plano de Implementação: Gerador de Mídia com Leonardo AI
+## Plano: Restaurar Status de Pagamento
 
-O plano já foi aprovado anteriormente. Agora preciso da sua API key do Leonardo AI para configurar o secret e prosseguir com a implementação.
+### Situacao Atual
 
-### Ordem de execução
+Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
 
-1. **Adicionar secret `LEONARDO_API_KEY`** — vou solicitar a chave via ferramenta de secrets
-2. **Criar edge function `supabase/functions/gerar-midia/index.ts`** — chamada à API do Leonardo AI com polling para aguardar geração
-3. **Criar componente `src/components/suporte/GeradorMidia.tsx`** — formulário com prompt, formato e estilo + preview da imagem gerada
-4. **Atualizar `src/pages/Suporte.tsx`** — adicionar card "Gerador de Mídia" ao hub
-5. **Atualizar `supabase/config.toml`** — registrar a nova function
+### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
 
-### Próximo passo
-Preciso que você forneça a API key do Leonardo AI para eu configurar o secret e iniciar a implementação.
+Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
+
+| Municipio | Responsavel | ID |
+|-----------|-------------|-----|
+| Aroeira | Itamar | 5594343a... |
+| Juazeirinho | Bevilacqua | 2bbaa610... |
+| Bonito de Santa Fe | Sabino | 201560a9... |
+| Sume | Ze Mario | 2cec5382... |
+| Joao Pessoa | Jailson | 990001de... |
+| Sousa | Vitor | 51e0080c... |
+
+### Comando SQL
+
+```sql
+UPDATE despesas_politicas 
+SET pagamento_feito_em = '2026-02-09'
+WHERE id IN (
+  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
+  '2bbaa610-e38e-44e0-9817-356253ef77ed',
+  '201560a9-aa52-4772-93a0-80f842e2a4d0',
+  '2cec5382-26af-4b57-aecc-658593567fe7',
+  '990001de-61c5-452b-b237-039e479e74a0',
+  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
+);
+```
+
+Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
+
+### Resultado
+
+Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
 

@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.consultar-dados-eleitorais]
 verify_jwt = false
+
+[functions.gerar-midia]
+verify_jwt = false
