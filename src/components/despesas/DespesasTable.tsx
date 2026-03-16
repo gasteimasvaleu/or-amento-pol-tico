@@ -94,7 +94,7 @@ export function DespesasTable({ despesas, selectedMonth, selectedYear }: Despesa
       <div className="rounded-md border">
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="bg-background dark:bg-card">
               <TableHead className="p-2 md:p-4">Município</TableHead>
               <TableHead className="p-2 md:p-4">Responsável</TableHead>
               <TableHead className="p-2 md:p-4">Cargo</TableHead>
