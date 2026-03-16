@@ -74,6 +74,7 @@ export default function DadosEleitorais() {
         uf,
         cargo,
         nomeCandidato || undefined,
+        municipio || undefined,
         setProgressMsg,
       );
 
