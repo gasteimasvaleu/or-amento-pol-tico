@@ -161,8 +161,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 2. Download per-UF ZIP from TSE CDN (much smaller than national file)
-    const cdnUrl = buildTseUrl(ano, ufUpper);
+    // 2. Download national ZIP from TSE CDN
+    const cdnUrl = CDN_URLS[ano];
+    if (!cdnUrl) {
+      return jsonResponse({ error: `Ano ${ano} não suportado.`, data: [] });
+    }
     console.log(`Downloading TSE ZIP: ${cdnUrl}`);
 
     let zipResp: Response;
