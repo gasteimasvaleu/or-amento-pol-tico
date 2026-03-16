@@ -14,11 +14,6 @@ function jsonResponse(body: unknown, status = 200) {
   });
 }
 
-const CDN_URLS: Record<number, string> = {
-  2024: "https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona/votacao_candidato_munzona_2024.zip",
-  2022: "https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona/votacao_candidato_munzona_2022.zip",
-};
-
 const CARGOS_2022 = ["Presidente", "Governador", "Senador", "Deputado Federal", "Deputado Estadual"];
 const CARGOS_2024 = ["Prefeito", "Vereador"];
 
@@ -30,6 +25,11 @@ const cargoMap: Record<string, string[]> = {
   "Deputado Estadual": ["DEPUTADO ESTADUAL", "DEPUTADO DISTRITAL"],
   "Prefeito": ["PREFEITO"],
   "Vereador": ["VEREADOR"],
+};
+
+const CDN_URLS: Record<number, string> = {
+  2024: "https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona/votacao_candidato_munzona_2024.zip",
+  2022: "https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona/votacao_candidato_munzona_2022.zip",
 };
 
 function parseCSVLine(line: string): string[] {
@@ -88,7 +88,7 @@ async function fetchWithRetry(url: string, timeoutMs = 120000): Promise<Response
     } catch (err) {
       clearTimeout(timer);
       if (attempt === 0) {
-        console.log(`Fetch failed (${err.message}), retrying...`);
+        console.log(`Fetch attempt failed: ${err.message}, retrying...`);
         continue;
       }
       throw err;
@@ -122,15 +122,17 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+    const ufUpper = uf.toUpperCase();
+
     // 1. Check cache
     let query = supabase
       .from("dados_eleitorais_cache")
       .select("*")
       .eq("ano_eleicao", ano)
-      .eq("sigla_uf", uf.toUpperCase())
+      .eq("sigla_uf", ufUpper)
       .eq("cargo", cargo);
 
-    if (nome_candidato && nome_candidato.trim()) {
+    if (nome_candidato?.trim()) {
       query = query.ilike("nome_candidato", `%${nome_candidato.trim()}%`);
     }
 
@@ -144,13 +146,13 @@ Deno.serve(async (req) => {
       return jsonResponse({ data: cached, source: "cache" });
     }
 
-    // Check if cache has data for this combo (name filter just didn't match)
-    if (nome_candidato && nome_candidato.trim()) {
+    // If name filter didn't match but cache exists for this combo
+    if (nome_candidato?.trim()) {
       const { data: anyData } = await supabase
         .from("dados_eleitorais_cache")
         .select("id")
         .eq("ano_eleicao", ano)
-        .eq("sigla_uf", uf.toUpperCase())
+        .eq("sigla_uf", ufUpper)
         .eq("cargo", cargo)
         .limit(1);
 
@@ -164,8 +166,7 @@ Deno.serve(async (req) => {
     if (!cdnUrl) {
       return jsonResponse({ error: `Ano ${ano} não suportado.`, data: [] });
     }
-
-    console.log(`Downloading TSE ZIP for ${ano}...`);
+    console.log(`Downloading TSE ZIP: ${cdnUrl}`);
 
     let zipResp: Response;
     try {
@@ -173,13 +174,13 @@ Deno.serve(async (req) => {
     } catch (err) {
       console.error("Fetch error:", err.message);
       return jsonResponse({
-        error: "Timeout ao baixar dados do TSE. O servidor pode estar lento. Tente novamente em alguns minutos.",
+        error: "Timeout ao baixar dados do TSE. Tente novamente em alguns minutos.",
         data: [],
       });
     }
 
     if (!zipResp.ok) {
-      console.error(`TSE returned ${zipResp.status}`);
+      console.error(`TSE returned ${zipResp.status} for ${cdnUrl}`);
       return jsonResponse({
         error: `Falha ao baixar dados do TSE (status ${zipResp.status}). Tente novamente.`,
         data: [],
@@ -187,14 +188,12 @@ Deno.serve(async (req) => {
     }
 
     const zipBuffer = new Uint8Array(await zipResp.arrayBuffer());
-    console.log(`ZIP downloaded: ${(zipBuffer.length / 1024 / 1024).toFixed(1)}MB. Decompressing...`);
+    console.log(`ZIP downloaded: ${(zipBuffer.length / 1024 / 1024).toFixed(1)}MB`);
 
     const unzipped = unzipSync(zipBuffer);
-
-    // Find per-UF CSV inside the ZIP
-    const ufUpper = uf.toUpperCase();
     const cargoValues = cargoMap[cargo] || [cargo.toUpperCase()];
 
+    // Find per-UF CSV inside the ZIP (national ZIP contains one CSV per state)
     let csvContent: string | null = null;
     for (const [filename, data] of Object.entries(unzipped)) {
       const fn = filename.toUpperCase();
@@ -205,19 +204,19 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Fallback to any CSV
     if (!csvContent) {
-      // Fallback to any CSV
       for (const [filename, data] of Object.entries(unzipped)) {
         if (filename.toUpperCase().endsWith(".CSV")) {
           csvContent = new TextDecoder("latin1").decode(data as Uint8Array);
-          console.log(`Using general CSV: ${filename}`);
+          console.log(`Using fallback CSV: ${filename}`);
           break;
         }
       }
     }
 
     if (!csvContent) {
-      return jsonResponse({ error: "Arquivo CSV não encontrado no ZIP do TSE.", data: [] });
+      return jsonResponse({ error: "CSV não encontrado no arquivo ZIP do TSE.", data: [] });
     }
 
     // 3. Incremental line parsing
@@ -235,21 +234,16 @@ Deno.serve(async (req) => {
       if (lineEnd === -1) lineEnd = len;
       const line = csvContent.substring(lineStart, lineEnd).trim();
       lineStart = lineEnd + 1;
-
       if (!line) continue;
 
       if (!headersParsed) {
         const hdrs = parseCSVLine(line).map((h) => h.trim().replace(/^"|"$/g, ""));
         const idx = (name: string) => hdrs.findIndex((h) => h === name);
-        iSgUf = idx("SG_UF");
-        iDsCargo = idx("DS_CARGO");
-        iNmCandidato = idx("NM_CANDIDATO");
-        iNmUrna = idx("NM_URNA_CANDIDATO");
-        iSgPartido = idx("SG_PARTIDO");
-        iNrCandidato = idx("NR_CANDIDATO");
+        iSgUf = idx("SG_UF"); iDsCargo = idx("DS_CARGO");
+        iNmCandidato = idx("NM_CANDIDATO"); iNmUrna = idx("NM_URNA_CANDIDATO");
+        iSgPartido = idx("SG_PARTIDO"); iNrCandidato = idx("NR_CANDIDATO");
         iDsSitTot = idx("DS_SIT_TOT_TURNO");
-        iQtVotos = idx("QT_VOTOS_NOMINAIS");
-        iQtVotosAlt = idx("QT_VOTOS");
+        iQtVotos = idx("QT_VOTOS_NOMINAIS"); iQtVotosAlt = idx("QT_VOTOS");
         iNrTurno = idx("NR_TURNO");
         headersParsed = true;
         continue;
@@ -258,8 +252,7 @@ Deno.serve(async (req) => {
       const fields = parseCSVLine(line);
       const clean = (i: number) => (fields[i] || "").replace(/^"|"$/g, "").trim();
 
-      if (iSgUf >= 0 && clean(iSgUf) !== ufUpper) continue;
-
+      // Filter by cargo early
       const rowCargo = iDsCargo >= 0 ? clean(iDsCargo) : "";
       if (!cargoValues.includes(rowCargo.toUpperCase())) continue;
 
@@ -310,9 +303,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 5. Filter and return
+    // 5. Filter by name and return
     let results = aggregated;
-    if (nome_candidato && nome_candidato.trim()) {
+    if (nome_candidato?.trim()) {
       const search = nome_candidato.trim().toUpperCase();
       results = results.filter(
         (r) =>
@@ -322,7 +315,6 @@ Deno.serve(async (req) => {
     }
 
     results.sort((a, b) => b.qtd_votos - a.qtd_votos);
-
     return jsonResponse({ data: results.slice(0, 500), source: "tse" });
   } catch (error) {
     console.error("Error:", error);
