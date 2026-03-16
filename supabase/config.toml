@@ -1,1 +1,4 @@
 project_id = "wrriittiqsmzbapbrcwm"
+
+[functions.gerar-discurso]
+verify_jwt = false
