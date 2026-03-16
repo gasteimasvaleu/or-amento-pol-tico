@@ -110,6 +110,7 @@ export async function importarCSVEleitoral(
 
   let iAno = -1, iSgUf = -1, iDsCargo = -1, iNmCandidato = -1, iNmUrna = -1;
   let iSgPartido = -1, iNrCandidato = -1, iDsSitTot = -1, iQtVotos = -1, iQtVotosAlt = -1, iNrTurno = -1;
+  let iNmMunicipio = -1;
 
   const voteMap = new Map<string, any>();
   let detectedUf = "";
@@ -147,6 +148,7 @@ export async function importarCSVEleitoral(
         iQtVotos = idx("QT_VOTOS_NOMINAIS");
         iQtVotosAlt = idx("QT_VOTOS");
         iNrTurno = idx("NR_TURNO");
+        iNmMunicipio = idx("NM_MUNICIPIO");
 
         if (iNmCandidato === -1) throw new Error("Coluna NM_CANDIDATO não encontrada. Verifique se é o CSV correto.");
         headerParsed = true;
@@ -184,11 +186,12 @@ export async function importarCSVEleitoral(
       const turno = parseInt(iNrTurno >= 0 ? clean(iNrTurno) : "1") || 1;
       const uf = iSgUf >= 0 ? clean(iSgUf).toUpperCase() : "";
       const ano = iAno >= 0 ? parseInt(clean(iAno)) : 0;
+      const municipio = iNmMunicipio >= 0 ? clean(iNmMunicipio) : "";
 
       if (!detectedUf && uf) detectedUf = uf;
       if (!detectedAno && ano) detectedAno = ano;
 
-      const key = `${nomeCand}-${partido}-${numero}-${turno}-${cargo}`;
+      const key = `${nomeCand}-${partido}-${numero}-${turno}-${cargo}-${municipio}`;
 
       if (voteMap.has(key)) {
         const existing = voteMap.get(key);
@@ -207,7 +210,7 @@ export async function importarCSVEleitoral(
           numero_candidato: numero,
           situacao_eleito: situacao,
           qtd_votos: votos,
-          nome_municipio: "Todos",
+          nome_municipio: municipio || "Todos",
           turno,
         });
       }
@@ -230,7 +233,8 @@ export async function importarCSVEleitoral(
       const turno = parseInt(iNrTurno >= 0 ? clean(iNrTurno) : "1") || 1;
       const uf = iSgUf >= 0 ? clean(iSgUf).toUpperCase() : "";
       const ano = iAno >= 0 ? parseInt(clean(iAno)) : 0;
-      const key = `${nomeCand}-${partido}-${numero}-${turno}-${cargo}`;
+      const municipio = iNmMunicipio >= 0 ? clean(iNmMunicipio) : "";
+      const key = `${nomeCand}-${partido}-${numero}-${turno}-${cargo}-${municipio}`;
       if (voteMap.has(key)) {
         voteMap.get(key).qtd_votos += votos;
       } else {
@@ -238,7 +242,7 @@ export async function importarCSVEleitoral(
           ano_eleicao: ano || detectedAno, sigla_uf: uf || detectedUf, cargo,
           nome_candidato: nomeCand, nome_urna: nomeUrna, sigla_partido: partido,
           numero_candidato: numero, situacao_eleito: situacao, qtd_votos: votos,
-          nome_municipio: "Todos", turno,
+          nome_municipio: municipio || "Todos", turno,
         });
       }
     }
