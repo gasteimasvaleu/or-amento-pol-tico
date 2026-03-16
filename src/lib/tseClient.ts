@@ -17,6 +17,7 @@ export async function consultarDadosEleitorais(
   uf: string,
   cargo: string,
   nomeCandidato?: string,
+  municipio?: string,
   onProgress?: (msg: string) => void,
 ): Promise<{ data: ResultadoEleitoral[]; source: string }> {
   const progress = onProgress || (() => {});
@@ -24,7 +25,7 @@ export async function consultarDadosEleitorais(
   progress("Consultando dados eleitorais...");
 
   const { data, error } = await supabase.functions.invoke("consultar-dados-eleitorais", {
-    body: { ano, uf, cargo, nome_candidato: nomeCandidato },
+    body: { ano, uf, cargo, nome_candidato: nomeCandidato, municipio },
   });
 
   if (error) {

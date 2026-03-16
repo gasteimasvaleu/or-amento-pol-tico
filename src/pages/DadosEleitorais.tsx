@@ -41,6 +41,7 @@ export default function DadosEleitorais() {
   const [ano, setAno] = useState("");
   const [uf, setUf] = useState("");
   const [cargo, setCargo] = useState("");
+  const [municipio, setMunicipio] = useState("");
   const [nomeCandidato, setNomeCandidato] = useState("");
   const [resultados, setResultados] = useState<ResultadoEleitoral[]>([]);
   const [loading, setLoading] = useState(false);
@@ -73,6 +74,7 @@ export default function DadosEleitorais() {
         uf,
         cargo,
         nomeCandidato || undefined,
+        municipio || undefined,
         setProgressMsg,
       );
 
@@ -176,6 +178,15 @@ export default function DadosEleitorais() {
               </div>
 
               <div className="space-y-2">
+                <Label>Município</Label>
+                <Input
+                  placeholder="Filtrar por município (opcional)"
+                  value={municipio}
+                  onChange={(e) => setMunicipio(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
                 <Label>Nome do Candidato</Label>
                 <Input
                   placeholder="Buscar por nome (opcional)"
@@ -226,6 +237,7 @@ export default function DadosEleitorais() {
                       <TableHead>Candidato</TableHead>
                       <TableHead>Partido</TableHead>
                       <TableHead>Nº</TableHead>
+                      <TableHead>Município</TableHead>
                       <TableHead className="text-right">Votos</TableHead>
                       <TableHead>Situação</TableHead>
                       <TableHead>Turno</TableHead>
@@ -244,6 +256,7 @@ export default function DadosEleitorais() {
                         </TableCell>
                         <TableCell>{r.sigla_partido}</TableCell>
                         <TableCell>{r.numero_candidato}</TableCell>
+                        <TableCell>{r.nome_municipio}</TableCell>
                         <TableCell className="text-right font-mono">
                           {formatVotes(r.qtd_votos)}
                         </TableCell>
