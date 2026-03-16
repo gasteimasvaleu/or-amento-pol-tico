@@ -58,16 +58,12 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="p-4">
-        <NavLink to="/" className="flex items-center gap-3 group">
-          <div className="bg-primary p-2 rounded-lg shrink-0">
-            <Landmark className="h-5 w-5 text-primary-foreground" />
-          </div>
-          {!collapsed && (
-            <div>
-              <h1 className="text-base font-bold text-sidebar-foreground leading-tight">Unale</h1>
-              <p className="text-xs text-muted-foreground">Gestão Parlamentar</p>
-            </div>
-          )}
+        <NavLink to="/" className="flex items-center group">
+          <img
+            src="https://wrriittiqsmzbapbrcwm.supabase.co/storage/v1/object/public/criativos/logonavbar.png"
+            alt="Unale"
+            className={collapsed ? "h-8" : "h-10"}
+          />
         </NavLink>
       </SidebarHeader>
 
