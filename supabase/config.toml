@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.extrair-noticias]
 verify_jwt = false
+
+[functions.gerar-projeto-lei]
+verify_jwt = false
