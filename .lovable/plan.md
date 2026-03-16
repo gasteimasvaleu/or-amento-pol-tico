@@ -1,42 +1,51 @@
 
+Diagnóstico objetivo:
+- O erro no front (`FunctionsFetchError: Failed to fetch`) está acontecendo porque a função está instável em runtime.
+- Nos logs de gateway há chamadas `POST /consultar-dados-eleitorais` com `504` (150s) e `502`, além de `OPTIONS` com `502`.
+- A tabela `dados_eleitorais_cache` está vazia, então toda consulta cai no caminho pesado (download + parse completo).
+- O código atual baixa `votacao_candidato_munzona_YYYY.zip` (Brasil inteiro) e usa `unzipSync` + `split("\n")`, o que é muito caro para Edge Function.
 
-## Plano: Restaurar Status de Pagamento
+Plano de correção:
+1) Trocar fonte para arquivo por UF (bem menor)
+- Arquivo: `supabase/functions/consultar-dados-eleitorais/index.ts`
+- Em vez de ZIP nacional, montar URL por UF:
+  - `https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_secao/votacao_secao_${ano}_${UF}.zip`
+- Isso reduz drasticamente tempo e memória por consulta.
 
-### Situacao Atual
+2) Otimizar parsing para não explodir memória
+- Remover `csvContent.split("\n")`.
+- Processar linha a linha (buffer incremental), agregando votos no `Map` durante a leitura.
+- Manter apenas agregados finais em memória.
 
-Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
+3) Validar combinação Ano x Cargo antes de baixar arquivo
+- 2022: Presidente, Governador, Senador, Deputado Federal, Deputado Estadual.
+- 2024: Prefeito, Vereador.
+- Se combinação inválida, retornar 400 com mensagem clara (evita trabalho desnecessário e falhas).
 
-### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
+4) Melhorar robustez de rede na função
+- Adicionar timeout explícito no fetch ao TSE (AbortController).
+- Retentativa curta (1 retry) para falha transitória.
+- Respostas de erro sempre com CORS + mensagem específica (status TSE / timeout).
 
-Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
+5) Ajustar UX no frontend
+- Arquivo: `src/pages/DadosEleitorais.tsx`
+- Filtrar lista de cargos conforme ano selecionado.
+- Exibir mensagem do backend quando existir (não só “tente novamente”), para facilitar diagnóstico real.
 
-| Municipio | Responsavel | ID |
-|-----------|-------------|-----|
-| Aroeira | Itamar | 5594343a... |
-| Juazeirinho | Bevilacqua | 2bbaa610... |
-| Bonito de Santa Fe | Sabino | 201560a9... |
-| Sume | Ze Mario | 2cec5382... |
-| Joao Pessoa | Jailson | 990001de... |
-| Sousa | Vitor | 51e0080c... |
+Detalhes técnicos (implementação):
+- `consultar-dados-eleitorais`:
+  - `buildTseUrl(ano, uf)` + validações de entrada.
+  - Fetch com headers browser-like + timeout.
+  - Unzip do arquivo de UF e parser incremental.
+  - Agregação por candidato (nome/partido/número/turno) como já existe.
+  - Persistência em `dados_eleitorais_cache` em lote.
+- `DadosEleitorais.tsx`:
+  - `CARGOS_POR_ANO` e reset de cargo ao trocar ano se ficar inválido.
+  - Tratamento de erro para mostrar `data.error`/mensagem real quando possível.
 
-### Comando SQL
-
-```sql
-UPDATE despesas_politicas 
-SET pagamento_feito_em = '2026-02-09'
-WHERE id IN (
-  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
-  '2bbaa610-e38e-44e0-9817-356253ef77ed',
-  '201560a9-aa52-4772-93a0-80f842e2a4d0',
-  '2cec5382-26af-4b57-aecc-658593567fe7',
-  '990001de-61c5-452b-b237-039e479e74a0',
-  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
-);
-```
-
-Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
-
-### Resultado
-
-Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
-
+Validação após implementar:
+- Testar via edge function:
+  - 2022 + PB + Deputado Estadual
+  - 2024 + PB + Prefeito
+- Confirmar no analytics/logs que não há novos `504/502`.
+- Confirmar segunda consulta com mesmo filtro vindo de `source: "cache"` (rápida).
