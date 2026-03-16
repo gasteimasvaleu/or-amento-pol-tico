@@ -24,7 +24,7 @@ const assessorSchema = z.object({
 interface AssessorModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: { nome: string; cargo: string; telefone: string; email: string }) => Promise<void>;
+  onSubmit: (data: { nome: string; cargo: string; telefone: string; email: string }) => Promise<any>;
   isSubmitting: boolean;
   defaultValues?: { nome: string; cargo: string; telefone: string; email: string };
   title?: string;
