@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { ano, uf, cargo, nome_candidato } = await req.json();
+    const { ano, uf, cargo, nome_candidato, municipio } = await req.json();
 
     if (!ano || !uf || !cargo) {
       return jsonResponse({ error: "Campos obrigatórios: ano, uf, cargo" }, 400);
