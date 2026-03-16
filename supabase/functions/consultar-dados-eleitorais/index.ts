@@ -193,13 +193,25 @@ Deno.serve(async (req) => {
     const unzipped = unzipSync(zipBuffer);
     const cargoValues = cargoMap[cargo] || [cargo.toUpperCase()];
 
-    // Find CSV inside ZIP
+    // Find per-UF CSV inside the ZIP (national ZIP contains one CSV per state)
     let csvContent: string | null = null;
     for (const [filename, data] of Object.entries(unzipped)) {
-      if (filename.toUpperCase().endsWith(".CSV")) {
+      const fn = filename.toUpperCase();
+      if (fn.endsWith(".CSV") && fn.includes(ufUpper)) {
         csvContent = new TextDecoder("latin1").decode(data as Uint8Array);
         console.log(`Found CSV: ${filename} (${((data as Uint8Array).length / 1024 / 1024).toFixed(1)}MB)`);
         break;
+      }
+    }
+
+    // Fallback to any CSV
+    if (!csvContent) {
+      for (const [filename, data] of Object.entries(unzipped)) {
+        if (filename.toUpperCase().endsWith(".CSV")) {
+          csvContent = new TextDecoder("latin1").decode(data as Uint8Array);
+          console.log(`Using fallback CSV: ${filename}`);
+          break;
+        }
       }
     }
 
