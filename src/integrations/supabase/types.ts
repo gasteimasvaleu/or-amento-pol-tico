@@ -104,6 +104,51 @@ export type Database = {
         }
         Relationships: []
       }
+      midias: {
+        Row: {
+          arquivo_nome: string
+          arquivo_tamanho: number | null
+          arquivo_tipo: string | null
+          arquivo_url: string
+          categoria: string
+          created_at: string | null
+          descricao: string | null
+          id: string
+          tags: string[] | null
+          titulo: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          arquivo_nome: string
+          arquivo_tamanho?: number | null
+          arquivo_tipo?: string | null
+          arquivo_url: string
+          categoria?: string
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          tags?: string[] | null
+          titulo: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          arquivo_nome?: string
+          arquivo_tamanho?: number | null
+          arquivo_tipo?: string | null
+          arquivo_url?: string
+          categoria?: string
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          tags?: string[] | null
+          titulo?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
