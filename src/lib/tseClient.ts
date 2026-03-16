@@ -233,7 +233,8 @@ export async function importarCSVEleitoral(
       const turno = parseInt(iNrTurno >= 0 ? clean(iNrTurno) : "1") || 1;
       const uf = iSgUf >= 0 ? clean(iSgUf).toUpperCase() : "";
       const ano = iAno >= 0 ? parseInt(clean(iAno)) : 0;
-      const key = `${nomeCand}-${partido}-${numero}-${turno}-${cargo}`;
+      const municipio = iNmMunicipio >= 0 ? clean(iNmMunicipio) : "";
+      const key = `${nomeCand}-${partido}-${numero}-${turno}-${cargo}-${municipio}`;
       if (voteMap.has(key)) {
         voteMap.get(key).qtd_votos += votos;
       } else {
@@ -241,7 +242,7 @@ export async function importarCSVEleitoral(
           ano_eleicao: ano || detectedAno, sigla_uf: uf || detectedUf, cargo,
           nome_candidato: nomeCand, nome_urna: nomeUrna, sigla_partido: partido,
           numero_candidato: numero, situacao_eleito: situacao, qtd_votos: votos,
-          nome_municipio: "Todos", turno,
+          nome_municipio: municipio || "Todos", turno,
         });
       }
     }
