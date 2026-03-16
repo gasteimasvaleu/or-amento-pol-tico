@@ -186,11 +186,12 @@ export async function importarCSVEleitoral(
       const turno = parseInt(iNrTurno >= 0 ? clean(iNrTurno) : "1") || 1;
       const uf = iSgUf >= 0 ? clean(iSgUf).toUpperCase() : "";
       const ano = iAno >= 0 ? parseInt(clean(iAno)) : 0;
+      const municipio = iNmMunicipio >= 0 ? clean(iNmMunicipio) : "";
 
       if (!detectedUf && uf) detectedUf = uf;
       if (!detectedAno && ano) detectedAno = ano;
 
-      const key = `${nomeCand}-${partido}-${numero}-${turno}-${cargo}`;
+      const key = `${nomeCand}-${partido}-${numero}-${turno}-${cargo}-${municipio}`;
 
       if (voteMap.has(key)) {
         const existing = voteMap.get(key);
