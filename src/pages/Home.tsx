@@ -46,12 +46,16 @@ const Home = () => {
         <p className="text-sm text-muted-foreground">Acesso rápido</p>
       </div>
 
-      <div className="mt-5 flex flex-col gap-3">
-        {quickCards.map((card) => (
+      <div className="mt-5 relative" style={{ height: `${(quickCards.length - 1) * 80 + 160}px` }}>
+        {quickCards.map((card, index) => (
           <button
             key={card.route}
             onClick={() => navigate(card.route)}
-            className={`${card.bg} rounded-2xl p-5 flex items-center justify-between text-left transition-transform active:scale-[0.98]`}
+            className={`${card.bg} rounded-2xl p-5 flex items-center justify-between text-left transition-transform active:scale-[0.98] absolute left-0 right-0 h-[160px] shadow-lg`}
+            style={{
+              top: `${index * 80}px`,
+              zIndex: quickCards.length - index,
+            }}
           >
             <div className="space-y-3">
               <div className="flex items-center gap-2">
