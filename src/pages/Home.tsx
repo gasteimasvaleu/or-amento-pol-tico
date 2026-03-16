@@ -1,7 +1,7 @@
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { LayoutDashboard, Receipt, Plus, History, ArrowRight } from "lucide-react";
+import { LayoutDashboard, Receipt, Plus, History, CalendarDays, ArrowRight } from "lucide-react";
 
 const quickCards = [
   {
