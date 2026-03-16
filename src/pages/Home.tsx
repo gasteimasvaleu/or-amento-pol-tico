@@ -32,6 +32,13 @@ const quickCards = [
     route: "/midia",
     bg: "bg-amber-500",
   },
+  {
+    title: "Suporte",
+    badges: ["Ajuda", "Recursos"],
+    icon: LifeBuoy,
+    route: "/suporte",
+    bg: "bg-rose-500",
+  },
 ];
 
 const CARD_HEIGHT = 160;
