@@ -125,7 +125,7 @@ export default function DadosEleitorais() {
           </p>
         </div>
 
-        
+        <ImportCSV />
 
         <Card>
           <CardHeader>
