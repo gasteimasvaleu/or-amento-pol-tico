@@ -1,42 +1,42 @@
 
 
-## Plano: Restaurar Status de Pagamento
+## Fix: Consulta de Dados Eleitorais via Download Direto do CDN do TSE
 
-### Situacao Atual
+### Problema Atual
 
-Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
+A edge function tenta usar a API CKAN `datastore_search` do TSE, que não funciona (retorna dados vazios ou timeout). A função então falha sem fallback funcional.
 
-### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
+### Por que NÃO colocar CSVs no GitHub
 
-Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
+Os arquivos ZIP do TSE contêm CSVs de **100-500MB** cada. O GitHub tem limite de 100MB por arquivo e repositórios pesados deixam o projeto lento. Não é viável.
 
-| Municipio | Responsavel | ID |
-|-----------|-------------|-----|
-| Aroeira | Itamar | 5594343a... |
-| Juazeirinho | Bevilacqua | 2bbaa610... |
-| Bonito de Santa Fe | Sabino | 201560a9... |
-| Sume | Ze Mario | 2cec5382... |
-| Joao Pessoa | Jailson | 990001de... |
-| Sousa | Vitor | 51e0080c... |
+### Solução: Download direto do CDN + parsing na Edge Function
 
-### Comando SQL
+Os URLs do CDN do TSE são previsíveis e estáveis:
+- `https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona/votacao_candidato_munzona_2024.zip`
+- `https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona/votacao_candidato_munzona_2022.zip`
 
-```sql
-UPDATE despesas_politicas 
-SET pagamento_feito_em = '2026-02-09'
-WHERE id IN (
-  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
-  '2bbaa610-e38e-44e0-9817-356253ef77ed',
-  '201560a9-aa52-4772-93a0-80f842e2a4d0',
-  '2cec5382-26af-4b57-aecc-658593567fe7',
-  '990001de-61c5-452b-b237-039e479e74a0',
-  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
-);
-```
+A edge function vai:
+1. Baixar o ZIP diretamente do CDN (URL hardcoded, sem depender do CKAN)
+2. Descompactar usando a lib `fflate` (disponível no Deno)
+3. Parsear o CSV linha a linha, filtrando apenas o UF e cargo solicitados
+4. Agregar votos por candidato
+5. Salvar no cache do Supabase
 
-Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
+### Limitação e Mitigação
 
-### Resultado
+Edge functions têm timeout de ~60s. Os ZIPs são grandes. Para mitigar:
+- Processar o CSV em streaming (não carregar tudo na memória)
+- Se timeout ocorrer, retornar mensagem clara ao usuário
+- Consultas subsequentes serão instantâneas (cache)
 
-Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
+### Alterações
+
+| Arquivo | Mudança |
+|---------|---------|
+| `supabase/functions/consultar-dados-eleitorais/index.ts` | Reescrever: usar URLs diretos do CDN, descompactar ZIP com fflate, parsear CSV filtrando por UF/cargo, remover dependência do CKAN API |
+
+### Anos suportados
+
+Apenas 2022 e 2024, conforme solicitado. Remover anos anteriores dos filtros no frontend (`src/pages/DadosEleitorais.tsx`).
 
