@@ -5,7 +5,6 @@ import {
   Plus,
   History,
   LogOut,
-  Landmark,
   ChevronDown,
   CalendarDays,
   ImageIcon,
