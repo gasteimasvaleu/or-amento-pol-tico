@@ -14,7 +14,7 @@ const equipeCards = [
     title: "Apoiadores",
     description: "Gerencie seus apoiadores e colaboradores",
     icon: Heart,
-    url: "/apoiadores",
+    url: "/equipe/apoiadores",
   },
 ];
 
