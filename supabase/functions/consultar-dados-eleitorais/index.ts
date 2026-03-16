@@ -28,8 +28,8 @@ const cargoMap: Record<string, string[]> = {
 };
 
 const CDN_URLS: Record<number, string> = {
-  2024: "https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona/votacao_candidato_munzona_2024.zip",
-  2022: "https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona/votacao_candidato_munzona_2022.zip",
+  2024: "https://dadosabertos.tse.jus.br/dataset/0d672aac-5b5c-4f58-a95f-12078b567703/resource/c5e1bff9-98f1-4d3b-b944-37cd22c84112/download/votacao_candidato_munzona_2024.zip",
+  2022: "https://dadosabertos.tse.jus.br/dataset/resultados-2022/resource/08a743ad-91f0-468b-aaab-23b06bbb244b/download/votacao_candidato_munzona_2022.zip",
 };
 
 function parseCSVLine(line: string): string[] {
