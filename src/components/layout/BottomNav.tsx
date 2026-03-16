@@ -1,4 +1,4 @@
-import { Home, LayoutDashboard, Receipt, Menu, X, History, Plus, LogOut } from "lucide-react";
+import { Home, LayoutDashboard, Receipt, Menu, X, LogOut } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,11 +8,6 @@ const mainItems = [
   { title: "Início", url: "/", icon: Home },
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Despesas", url: "/despesas", icon: Receipt },
-];
-
-const moreItems = [
-  { title: "Nova Despesa", url: "/despesas/nova", icon: Plus },
-  { title: "Histórico", url: "/despesas/historico", icon: History },
 ];
 
 export function BottomNav() {
