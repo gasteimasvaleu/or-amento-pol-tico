@@ -1,42 +1,31 @@
 
 
-## Plano: Restaurar Status de Pagamento
+## Cards Empilhados Estilo Baralho
 
-### Situacao Atual
+Alterar o layout dos cards na Home para que fiquem sobrepostos como cartas de baralho, igual ao screenshot do Runna — cada card começa um pouco abaixo do anterior, com o restante escondido por trás.
 
-Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
+### Alteração em `src/pages/Home.tsx`
 
-### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
+- Trocar o container de `flex flex-col gap-3` para `relative` com altura fixa
+- Cada card recebe `absolute` positioning com `top` incremental (~80px entre cada)
+- Cards empilhados com `z-index` decrescente (primeiro card no topo, último atrás) — ou crescente para que o primeiro fique na frente
+- Cada card tem altura fixa (~120px) e `rounded-2xl`
+- O efeito visual: só o topo de cada card aparece, mostrando título e badges, com o próximo card "por trás"
+- Manter click navegável em cada card
 
-Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
-
-| Municipio | Responsavel | ID |
-|-----------|-------------|-----|
-| Aroeira | Itamar | 5594343a... |
-| Juazeirinho | Bevilacqua | 2bbaa610... |
-| Bonito de Santa Fe | Sabino | 201560a9... |
-| Sume | Ze Mario | 2cec5382... |
-| Joao Pessoa | Jailson | 990001de... |
-| Sousa | Vitor | 51e0080c... |
-
-### Comando SQL
-
-```sql
-UPDATE despesas_politicas 
-SET pagamento_feito_em = '2026-02-09'
-WHERE id IN (
-  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
-  '2bbaa610-e38e-44e0-9817-356253ef77ed',
-  '201560a9-aa52-4772-93a0-80f842e2a4d0',
-  '2cec5382-26af-4b57-aecc-658593567fe7',
-  '990001de-61c5-452b-b237-039e479e74a0',
-  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
-);
+```text
+┌─────────────────────────┐  ← Card 1 (z-40, top: 0)
+│  Dashboard Geral    [→] │
+│  badges                 │
+├─────────────────────────┤  ← Card 2 (z-30, top: 80px)
+│  Minhas Despesas    [→] │
+│  badges                 │
+├─────────────────────────┤  ← Card 3 (z-20, top: 160px)
+│  Nova Despesa       [→] │
+│  badges                 │
+├─────────────────────────┤  ← Card 4 (z-10, top: 240px)
+│  Histórico          [→] │
+│  badges                 │
+└─────────────────────────┘
 ```
-
-Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
-
-### Resultado
-
-Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
 
