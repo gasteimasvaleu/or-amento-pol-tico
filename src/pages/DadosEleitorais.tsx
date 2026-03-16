@@ -24,7 +24,7 @@ import { Search, Vote, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-const ANOS = ["2024", "2022", "2020", "2018", "2016", "2014"];
+const ANOS = ["2024", "2022"];
 
 const UFS = [
   "AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG","MS","MT",

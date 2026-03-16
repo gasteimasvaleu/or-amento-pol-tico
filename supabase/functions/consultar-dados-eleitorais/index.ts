@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { unzipSync } from "https://esm.sh/fflate@0.8.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,7 +7,11 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Mapping of cargo names to TSE CSV codes
+const CDN_URLS: Record<number, string> = {
+  2024: "https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona/votacao_candidato_munzona_2024.zip",
+  2022: "https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona/votacao_candidato_munzona_2022.zip",
+};
+
 const cargoMap: Record<string, string[]> = {
   "Presidente": ["PRESIDENTE"],
   "Governador": ["GOVERNADOR"],
@@ -17,9 +22,36 @@ const cargoMap: Record<string, string[]> = {
   "Vereador": ["VEREADOR"],
 };
 
-// TSE CKAN dataset slug patterns
-function getDatasetSlug(ano: number): string {
-  return `resultados-${ano}`;
+function parseCSVLine(line: string): string[] {
+  const fields: string[] = [];
+  let current = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (i + 1 < line.length && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        current += ch;
+      }
+    } else {
+      if (ch === '"') {
+        inQuotes = true;
+      } else if (ch === ";") {
+        fields.push(current);
+        current = "";
+      } else {
+        current += ch;
+      }
+    }
+  }
+  fields.push(current);
+  return fields;
 }
 
 Deno.serve(async (req) => {
@@ -53,13 +85,12 @@ Deno.serve(async (req) => {
       query = query.ilike("nome_candidato", `%${nome_candidato.trim()}%`);
     }
 
-    const { data: cached, error: cacheError } = await query.order("qtd_votos", { ascending: false }).limit(500);
+    const { data: cached, error: cacheError } = await query
+      .order("qtd_votos", { ascending: false })
+      .limit(500);
 
-    if (cacheError) {
-      console.error("Cache query error:", cacheError);
-    }
+    if (cacheError) console.error("Cache query error:", cacheError);
 
-    // If we have cached data for this ano/uf/cargo combo, return it
     if (cached && cached.length > 0) {
       return new Response(
         JSON.stringify({ data: cached, source: "cache" }),
@@ -67,7 +98,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // If searching by name and no results, check if we have ANY data for this ano/uf/cargo
+    // Check if we have data for this combo but no match for name filter
     if (nome_candidato && nome_candidato.trim()) {
       const { data: anyData } = await supabase
         .from("dados_eleitorais_cache")
@@ -78,7 +109,6 @@ Deno.serve(async (req) => {
         .limit(1);
 
       if (anyData && anyData.length > 0) {
-        // Data exists but no match for this name
         return new Response(
           JSON.stringify({ data: [], source: "cache" }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -86,167 +116,169 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 2. No cache — fetch from TSE CKAN
-    console.log(`Fetching TSE data for ${ano}/${uf}/${cargo}...`);
-
-    const datasetSlug = getDatasetSlug(ano);
-    const ckanUrl = `https://dadosabertos.tse.jus.br/api/3/action/package_show?id=${datasetSlug}`;
-
-    const ckanResp = await fetch(ckanUrl);
-    if (!ckanResp.ok) {
+    // 2. Download from TSE CDN
+    const cdnUrl = CDN_URLS[ano];
+    if (!cdnUrl) {
       return new Response(
-        JSON.stringify({ error: `Dataset não encontrado no TSE para o ano ${ano}. Verifique se o ano é válido.`, data: [] }),
+        JSON.stringify({ error: `Ano ${ano} não suportado. Use 2022 ou 2024.`, data: [] }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const ckanData = await ckanResp.json();
-    const resources = ckanData?.result?.resources || [];
+    console.log(`Downloading TSE ZIP for ${ano}...`);
 
-    // Find the CSV resource for "votação nominal por município e zona"
-    const csvResource = resources.find((r: any) => {
-      const name = (r.name || "").toLowerCase();
-      const desc = (r.description || "").toLowerCase();
-      const format = (r.format || "").toUpperCase();
-      return (
-        format === "CSV" &&
-        (name.includes("votacao_candidato_munzona") ||
-          name.includes("votação nominal") ||
-          desc.includes("votação nominal") ||
-          name.includes("votacao_secao") ||
-          name.includes("candidato_munzona"))
+    const zipResp = await fetch(cdnUrl);
+    if (!zipResp.ok) {
+      return new Response(
+        JSON.stringify({ error: `Falha ao baixar dados do TSE (status ${zipResp.status}). Tente novamente.`, data: [] }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
-    });
-
-    if (!csvResource) {
-      // Try to find any CSV with "candidato" in name
-      const altResource = resources.find((r: any) => {
-        const name = (r.name || "").toLowerCase();
-        const format = (r.format || "").toUpperCase();
-        return format === "CSV" && (name.includes("candidat") || name.includes("votacao"));
-      });
-
-      if (!altResource) {
-        return new Response(
-          JSON.stringify({
-            error: `Recurso CSV de votação não encontrado para ${ano}. Recursos disponíveis: ${resources.map((r: any) => r.name).join(", ")}`,
-            data: [],
-          }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
     }
 
-    const resourceToUse = csvResource || resources.find((r: any) => {
-      const name = (r.name || "").toLowerCase();
-      const format = (r.format || "").toUpperCase();
-      return format === "CSV" && (name.includes("candidat") || name.includes("votacao"));
-    });
+    const zipBuffer = new Uint8Array(await zipResp.arrayBuffer());
+    console.log(`ZIP downloaded: ${(zipBuffer.length / 1024 / 1024).toFixed(1)}MB. Decompressing...`);
 
-    // Try datastore_search first (structured query without downloading full CSV)
+    const unzipped = unzipSync(zipBuffer);
+
+    // Find the CSV file for the requested UF
+    const ufUpper = uf.toUpperCase();
     const cargoValues = cargoMap[cargo] || [cargo.toUpperCase()];
-    
-    if (resourceToUse?.id) {
-      try {
-        const filters = JSON.stringify({
-          SG_UF: uf.toUpperCase(),
-          DS_CARGO: cargoValues[0],
-        });
-        const datastoreUrl = `https://dadosabertos.tse.jus.br/api/3/action/datastore_search?resource_id=${resourceToUse.id}&filters=${encodeURIComponent(filters)}&limit=500`;
-        
-        console.log("Trying datastore_search...", datastoreUrl);
-        const dsResp = await fetch(datastoreUrl);
-        
-        if (dsResp.ok) {
-          const dsData = await dsResp.json();
-          if (dsData?.result?.records && dsData.result.records.length > 0) {
-            const records = dsData.result.records;
-            
-            // Map TSE fields to our schema
-            const mappedData = records.map((r: any) => ({
-              ano_eleicao: ano,
-              sigla_uf: r.SG_UF || uf.toUpperCase(),
-              cargo: cargo,
-              nome_candidato: r.NM_CANDIDATO || r.NM_VOTAVEL || "",
-              nome_urna: r.NM_URNA_CANDIDATO || r.NM_CANDIDATO || "",
-              sigla_partido: r.SG_PARTIDO || "",
-              numero_candidato: String(r.NR_CANDIDATO || r.NR_VOTAVEL || ""),
-              situacao_eleito: r.DS_SIT_TOT_TURNO || r.DS_SITUACAO || "",
-              qtd_votos: parseInt(r.QT_VOTOS_NOMINAIS || r.QT_VOTOS || "0"),
-              nome_municipio: r.NM_MUNICIPIO || "",
-              turno: parseInt(r.NR_TURNO || "1"),
-            }));
 
-            // Aggregate votes by candidate (sum across municipalities/zones)
-            const aggregated = aggregateVotes(mappedData);
-
-            // Save to cache
-            if (aggregated.length > 0) {
-              const { error: insertError } = await supabase
-                .from("dados_eleitorais_cache")
-                .insert(aggregated);
-              if (insertError) {
-                console.error("Cache insert error:", insertError);
-              }
-            }
-
-            // Filter by name if provided
-            let results = aggregated;
-            if (nome_candidato && nome_candidato.trim()) {
-              const search = nome_candidato.trim().toUpperCase();
-              results = results.filter(
-                (r: any) =>
-                  r.nome_candidato.toUpperCase().includes(search) ||
-                  (r.nome_urna && r.nome_urna.toUpperCase().includes(search))
-              );
-            }
-
-            results.sort((a: any, b: any) => b.qtd_votos - a.qtd_votos);
-
-            return new Response(
-              JSON.stringify({ data: results.slice(0, 500), source: "tse" }),
-              { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-            );
-          }
-        }
-      } catch (e) {
-        console.log("Datastore search failed, will try CSV download:", e);
+    let csvContent: string | null = null;
+    for (const [filename, data] of Object.entries(unzipped)) {
+      const fn = filename.toUpperCase();
+      // TSE ZIPs contain per-state CSVs like "votacao_candidato_munzona_2024_PB.csv"
+      if (fn.endsWith(".CSV") && fn.includes(ufUpper)) {
+        csvContent = new TextDecoder("latin1").decode(data as Uint8Array);
+        console.log(`Found CSV: ${filename} (${((data as Uint8Array).length / 1024 / 1024).toFixed(1)}MB)`);
+        break;
       }
     }
 
-    // Fallback: return message that data is not available via API
+    // If no state-specific file, try the general one
+    if (!csvContent) {
+      for (const [filename, data] of Object.entries(unzipped)) {
+        if (filename.toUpperCase().endsWith(".CSV")) {
+          csvContent = new TextDecoder("latin1").decode(data as Uint8Array);
+          console.log(`Using general CSV: ${filename}`);
+          break;
+        }
+      }
+    }
+
+    if (!csvContent) {
+      return new Response(
+        JSON.stringify({ error: "Arquivo CSV não encontrado no ZIP do TSE.", data: [] }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // 3. Parse CSV
+    const lines = csvContent.split("\n");
+    const headerLine = lines[0];
+    const headers = parseCSVLine(headerLine).map((h) => h.trim().replace(/^"|"$/g, ""));
+
+    // Find column indices
+    const idx = (name: string) => headers.findIndex((h) => h === name);
+    const iSgUf = idx("SG_UF");
+    const iDsCargo = idx("DS_CARGO");
+    const iNmCandidato = idx("NM_CANDIDATO");
+    const iNmUrna = idx("NM_URNA_CANDIDATO");
+    const iSgPartido = idx("SG_PARTIDO");
+    const iNrCandidato = idx("NR_CANDIDATO");
+    const iDsSitTot = idx("DS_SIT_TOT_TURNO");
+    const iQtVotos = idx("QT_VOTOS_NOMINAIS");
+    const iQtVotosAlt = idx("QT_VOTOS");
+    const iNmMunicipio = idx("NM_MUNICIPIO");
+    const iNrTurno = idx("NR_TURNO");
+
+    console.log(`Parsing ${lines.length} lines. Key indices: UF=${iSgUf}, Cargo=${iDsCargo}, Votos=${iQtVotos}/${iQtVotosAlt}`);
+
+    const voteMap = new Map<string, any>();
+
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+
+      const fields = parseCSVLine(line);
+      const clean = (idx: number) => (fields[idx] || "").replace(/^"|"$/g, "").trim();
+
+      const rowUf = iSgUf >= 0 ? clean(iSgUf) : "";
+      if (rowUf !== ufUpper) continue;
+
+      const rowCargo = iDsCargo >= 0 ? clean(iDsCargo) : "";
+      if (!cargoValues.includes(rowCargo.toUpperCase())) continue;
+
+      const nomeCand = iNmCandidato >= 0 ? clean(iNmCandidato) : "";
+      const nomeUrna = iNmUrna >= 0 ? clean(iNmUrna) : "";
+      const partido = iSgPartido >= 0 ? clean(iSgPartido) : "";
+      const numero = iNrCandidato >= 0 ? clean(iNrCandidato) : "";
+      const situacao = iDsSitTot >= 0 ? clean(iDsSitTot) : "";
+      const votos = parseInt(iQtVotos >= 0 ? clean(iQtVotos) : (iQtVotosAlt >= 0 ? clean(iQtVotosAlt) : "0")) || 0;
+      const turno = parseInt(iNrTurno >= 0 ? clean(iNrTurno) : "1") || 1;
+
+      const key = `${nomeCand}-${partido}-${numero}-${turno}`;
+
+      if (voteMap.has(key)) {
+        const existing = voteMap.get(key);
+        existing.qtd_votos += votos;
+        if (situacao.toUpperCase().includes("ELEIT") && !situacao.toUpperCase().includes("NÃO")) {
+          existing.situacao_eleito = situacao;
+        }
+      } else {
+        voteMap.set(key, {
+          ano_eleicao: ano,
+          sigla_uf: ufUpper,
+          cargo,
+          nome_candidato: nomeCand,
+          nome_urna: nomeUrna,
+          sigla_partido: partido,
+          numero_candidato: numero,
+          situacao_eleito: situacao,
+          qtd_votos: votos,
+          nome_municipio: "Todos",
+          turno,
+        });
+      }
+    }
+
+    const aggregated = Array.from(voteMap.values());
+    console.log(`Parsed ${aggregated.length} candidates for ${ufUpper}/${cargo}`);
+
+    // 4. Save to cache (batch insert)
+    if (aggregated.length > 0) {
+      // Insert in batches of 500
+      for (let i = 0; i < aggregated.length; i += 500) {
+        const batch = aggregated.slice(i, i + 500);
+        const { error: insertError } = await supabase
+          .from("dados_eleitorais_cache")
+          .insert(batch);
+        if (insertError) console.error("Cache insert error:", insertError);
+      }
+    }
+
+    // 5. Filter by name and return
+    let results = aggregated;
+    if (nome_candidato && nome_candidato.trim()) {
+      const search = nome_candidato.trim().toUpperCase();
+      results = results.filter(
+        (r) =>
+          r.nome_candidato.toUpperCase().includes(search) ||
+          (r.nome_urna && r.nome_urna.toUpperCase().includes(search))
+      );
+    }
+
+    results.sort((a, b) => b.qtd_votos - a.qtd_votos);
+
     return new Response(
-      JSON.stringify({
-        error: `Não foi possível consultar os dados do TSE para ${ano}/${uf}. O portal pode estar indisponível ou o formato dos dados mudou. Tente novamente mais tarde.`,
-        data: [],
-      }),
+      JSON.stringify({ data: results.slice(0, 500), source: "tse" }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
     console.error("Error:", error);
     return new Response(
-      JSON.stringify({ error: "Erro interno ao consultar dados eleitorais" }),
+      JSON.stringify({ error: `Erro ao consultar dados eleitorais: ${error.message || "erro desconhecido"}` }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
-
-function aggregateVotes(records: any[]): any[] {
-  const map = new Map<string, any>();
-
-  for (const r of records) {
-    const key = `${r.nome_candidato}-${r.sigla_partido}-${r.numero_candidato}-${r.turno}`;
-    if (map.has(key)) {
-      const existing = map.get(key);
-      existing.qtd_votos += r.qtd_votos;
-      // Keep the "best" situacao (ELEITO > others)
-      if (r.situacao_eleito && r.situacao_eleito.includes("ELEIT")) {
-        existing.situacao_eleito = r.situacao_eleito;
-      }
-    } else {
-      map.set(key, { ...r, nome_municipio: "Todos" });
-    }
-  }
-
-  return Array.from(map.values());
-}
