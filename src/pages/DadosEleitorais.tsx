@@ -23,7 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Vote, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { consultarDadosEleitorais, type ResultadoEleitoral } from "@/lib/tseClient";
-import { ImportCSV } from "@/components/dados-eleitorais/ImportCSV";
+
 
 const ANOS = ["2024", "2022"];
 
@@ -122,7 +122,7 @@ export default function DadosEleitorais() {
           </p>
         </div>
 
-        <ImportCSV />
+        
 
         <Card>
           <CardHeader>
