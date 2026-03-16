@@ -178,6 +178,15 @@ export default function DadosEleitorais() {
               </div>
 
               <div className="space-y-2">
+                <Label>Município</Label>
+                <Input
+                  placeholder="Filtrar por município (opcional)"
+                  value={municipio}
+                  onChange={(e) => setMunicipio(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
                 <Label>Nome do Candidato</Label>
                 <Input
                   placeholder="Buscar por nome (opcional)"

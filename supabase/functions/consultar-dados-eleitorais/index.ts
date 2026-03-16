@@ -136,6 +136,10 @@ Deno.serve(async (req) => {
       query = query.ilike("nome_candidato", `%${nome_candidato.trim()}%`);
     }
 
+    if (municipio?.trim()) {
+      query = query.ilike("nome_municipio", `%${municipio.trim()}%`);
+    }
+
     const { data: cached, error: cacheError } = await query
       .order("qtd_votos", { ascending: false })
       .limit(500);
