@@ -14,6 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      apoiadores: {
+        Row: {
+          avatar_url: string | null
+          bairro: string | null
+          cargo_pretendido: string | null
+          cidade: string | null
+          created_at: string | null
+          email: string | null
+          facebook: string | null
+          id: string
+          instagram: string | null
+          lideranca_comunitaria: boolean | null
+          nome: string
+          observacoes: string | null
+          partido: string | null
+          telefone: string | null
+          updated_at: string | null
+          user_id: string
+          whatsapp: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bairro?: string | null
+          cargo_pretendido?: string | null
+          cidade?: string | null
+          created_at?: string | null
+          email?: string | null
+          facebook?: string | null
+          id?: string
+          instagram?: string | null
+          lideranca_comunitaria?: boolean | null
+          nome: string
+          observacoes?: string | null
+          partido?: string | null
+          telefone?: string | null
+          updated_at?: string | null
+          user_id: string
+          whatsapp?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bairro?: string | null
+          cargo_pretendido?: string | null
+          cidade?: string | null
+          created_at?: string | null
+          email?: string | null
+          facebook?: string | null
+          id?: string
+          instagram?: string | null
+          lideranca_comunitaria?: boolean | null
+          nome?: string
+          observacoes?: string | null
+          partido?: string | null
+          telefone?: string | null
+          updated_at?: string | null
+          user_id?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       assessores: {
         Row: {
           avatar_url: string | null
