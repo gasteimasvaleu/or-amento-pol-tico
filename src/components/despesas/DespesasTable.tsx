@@ -113,9 +113,9 @@ export function DespesasTable({ despesas, selectedMonth, selectedYear }: Despesa
               
               return (
                 <TableRow key={despesa.id}>
-                  <TableCell className="font-medium">{despesa.municipio}</TableCell>
-                  <TableCell>{despesa.responsavel}</TableCell>
-                  <TableCell>{despesa.cargo}</TableCell>
+                  <TableCell className="font-medium p-2 md:p-4 max-w-[100px] md:max-w-none truncate">{despesa.municipio}</TableCell>
+                  <TableCell className="p-2 md:p-4 max-w-[100px] md:max-w-none truncate">{despesa.responsavel}</TableCell>
+                  <TableCell className="p-2 md:p-4 max-w-[80px] md:max-w-none truncate">{despesa.cargo}</TableCell>
                   <TableCell className="hidden md:table-cell">
                     <Badge variant={despesa.tipo === 'Recorrente' ? 'default' : 'secondary'}>
                       {despesa.tipo}
