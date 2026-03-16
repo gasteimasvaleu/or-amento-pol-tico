@@ -1,58 +1,42 @@
 
 
-## Página /noticias — Monitoramento de Sites de Notícias
+## Plano: Restaurar Status de Pagamento
 
-### Visão Geral
+### Situacao Atual
 
-Criar uma página onde o parlamentar cadastra sites de notícias. Uma edge function busca as últimas 5 notícias de cada site, gera resumos via IA e armazena no banco. Um cron job executa isso diariamente às 5h.
+Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
 
-### Banco de Dados
+### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
 
-**Tabela `sites_noticias`** — sites cadastrados pelo usuário:
-- `id`, `user_id`, `nome` (nome do site), `url` (URL base), `ativo` (boolean), `created_at`, `updated_at`
-- RLS: CRUD vinculado ao `user_id`
+Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
 
-**Tabela `noticias_resumos`** — notícias extraídas com resumo:
-- `id`, `user_id`, `site_id` (FK para sites_noticias), `titulo`, `url`, `resumo`, `data_extracao`, `created_at`
-- RLS: SELECT/DELETE vinculado ao `user_id`
+| Municipio | Responsavel | ID |
+|-----------|-------------|-----|
+| Aroeira | Itamar | 5594343a... |
+| Juazeirinho | Bevilacqua | 2bbaa610... |
+| Bonito de Santa Fe | Sabino | 201560a9... |
+| Sume | Ze Mario | 2cec5382... |
+| Joao Pessoa | Jailson | 990001de... |
+| Sousa | Vitor | 51e0080c... |
 
-### Edge Function `extrair-noticias`
-
-1. Busca todos os sites ativos na tabela `sites_noticias`
-2. Para cada site, faz fetch do HTML, extrai links de notícias (tags `<a>` com padrões de artigos)
-3. Para as 5 primeiras notícias, faz fetch do conteúdo e usa o Lovable AI Gateway para gerar um resumo curto
-4. Salva os resumos na tabela `noticias_resumos`
-5. Trata erros 429/402 do gateway
-
-### Cron Job
-
-Usar `pg_cron` + `pg_net` para chamar a edge function diariamente às 5:00 AM (UTC-3 = 08:00 UTC):
+### Comando SQL
 
 ```sql
-select cron.schedule('extrair-noticias-diario', '0 8 * * *', $$...$$);
+UPDATE despesas_politicas 
+SET pagamento_feito_em = '2026-02-09'
+WHERE id IN (
+  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
+  '2bbaa610-e38e-44e0-9817-356253ef77ed',
+  '201560a9-aa52-4772-93a0-80f842e2a4d0',
+  '2cec5382-26af-4b57-aecc-658593567fe7',
+  '990001de-61c5-452b-b237-039e479e74a0',
+  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
+);
 ```
 
-Será executado via SQL insert tool (não migration, pois contém dados específicos do projeto).
+Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
 
-### Frontend — Página `/noticias`
+### Resultado
 
-| Componente | Descrição |
-|-----------|-----------|
-| Lista de sites | Cards com nome, URL e toggle ativo/inativo |
-| Modal de cadastro | Nome do site + URL |
-| Lista de notícias | Cards com título, resumo e data, agrupados por site |
-| Botão "Atualizar agora" | Chama a edge function manualmente |
-
-### Arquivos
-
-| Arquivo | Ação |
-|---------|------|
-| Migration SQL | Criar tabelas `sites_noticias` e `noticias_resumos` |
-| `supabase/functions/extrair-noticias/index.ts` | Edge function de extração + resumo |
-| `supabase/config.toml` | Adicionar `[functions.extrair-noticias]` |
-| `src/pages/Noticias.tsx` | Página principal |
-| `src/hooks/useNoticias.ts` | Hook para sites e resumos |
-| `src/App.tsx` | Adicionar rota `/noticias` |
-| `src/components/layout/AppSidebar.tsx` | Adicionar link Notícias |
-| `src/components/layout/BottomNav.tsx` | Adicionar no menu "Mais" |
+Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
 

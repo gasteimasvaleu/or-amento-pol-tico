@@ -10,6 +10,7 @@ import {
   CalendarDays,
   ImageIcon,
   LifeBuoy,
+  Newspaper,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -139,6 +140,20 @@ export function AppSidebar() {
                   >
                     <LifeBuoy className="mr-2 h-4 w-4" />
                     {!collapsed && <span>Suporte</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink
+                    to="/noticias"
+                    end
+                    className="hover:bg-sidebar-accent/50"
+                    activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                  >
+                    <Newspaper className="mr-2 h-4 w-4" />
+                    {!collapsed && <span>Notícias</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>

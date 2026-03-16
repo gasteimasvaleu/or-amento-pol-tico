@@ -245,6 +245,47 @@ export type Database = {
         }
         Relationships: []
       }
+      noticias_resumos: {
+        Row: {
+          created_at: string | null
+          data_extracao: string
+          id: string
+          resumo: string
+          site_id: string
+          titulo: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          data_extracao?: string
+          id?: string
+          resumo: string
+          site_id: string
+          titulo: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          data_extracao?: string
+          id?: string
+          resumo?: string
+          site_id?: string
+          titulo?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "noticias_resumos_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites_noticias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -290,6 +331,36 @@ export type Database = {
           id?: string
           phone?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      sites_noticias: {
+        Row: {
+          ativo: boolean
+          created_at: string | null
+          id: string
+          nome: string
+          updated_at: string | null
+          url: string
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string | null
+          id?: string
+          nome: string
+          updated_at?: string | null
+          url: string
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string | null
+          id?: string
+          nome?: string
+          updated_at?: string | null
+          url?: string
+          user_id?: string
         }
         Relationships: []
       }

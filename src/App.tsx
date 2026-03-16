@@ -16,6 +16,7 @@ import Historico from "./pages/Historico";
 import Agenda from "./pages/Agenda";
 import Midia from "./pages/Midia";
 import Suporte from "./pages/Suporte";
+import Noticias from "./pages/Noticias";
 import Equipe from "./pages/Equipe";
 import Assessores from "./pages/Assessores";
 import Apoiadores from "./pages/Apoiadores";
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/agenda" element={<ProtectedRoute><Agenda /></ProtectedRoute>} />
             <Route path="/midia" element={<ProtectedRoute><Midia /></ProtectedRoute>} />
             <Route path="/suporte" element={<ProtectedRoute><Suporte /></ProtectedRoute>} />
+            <Route path="/noticias" element={<ProtectedRoute><Noticias /></ProtectedRoute>} />
             <Route path="/equipe" element={<ProtectedRoute><Equipe /></ProtectedRoute>} />
             <Route path="/equipe/assessores" element={<ProtectedRoute><Assessores /></ProtectedRoute>} />
             <Route path="/equipe/apoiadores" element={<ProtectedRoute><Apoiadores /></ProtectedRoute>} />
