@@ -27,10 +27,10 @@ const cargoMap: Record<string, string[]> = {
   "Vereador": ["VEREADOR"],
 };
 
-// Use votacao_candidato_munzona per-UF files (smaller than national ZIP)
-function buildTseUrl(ano: number, uf: string): string {
-  return `https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona/votacao_candidato_munzona_${ano}_${uf}.zip`;
-}
+const CDN_URLS: Record<number, string> = {
+  2024: "https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona/votacao_candidato_munzona_2024.zip",
+  2022: "https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona/votacao_candidato_munzona_2022.zip",
+};
 
 function parseCSVLine(line: string): string[] {
   const fields: string[] = [];
