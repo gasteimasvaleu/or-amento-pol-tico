@@ -52,7 +52,7 @@ const Home = () => {
           <p className="text-sm text-muted-foreground">Acesso rápido</p>
         </div>
 
-        <div className="mt-auto relative" style={{ height: stackHeight }}>
+        <div className="mt-auto relative mb-[-5rem]" style={{ height: stackHeight }}>
           {quickCards.map((card, index) => (
             <button
               key={card.route}
