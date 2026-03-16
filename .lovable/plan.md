@@ -1,42 +1,35 @@
 
 
-## Plano: Restaurar Status de Pagamento
+## Gerador de Projetos de Lei — Página Suporte
 
-### Situacao Atual
+Seguir o mesmo padrão do Gerador de Discurso: componente frontend com streaming SSE + edge function usando Lovable AI Gateway.
 
-Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
+### Campos de configuração
 
-### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
+| Campo | Tipo | Opções |
+|-------|------|--------|
+| Título do projeto | Textarea | Livre |
+| Esfera | Select | Municipal, Estadual, Federal |
+| Tipo | Select | Lei Ordinária, Lei Complementar, Emenda, Resolução, Decreto Legislativo |
+| Área temática | Select | Saúde, Educação, Segurança, Meio Ambiente, Infraestrutura, Social, Economia, Cultura |
+| Justificativa/contexto | Textarea | Livre (opcional) |
 
-Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
+### Arquivos
 
-| Municipio | Responsavel | ID |
-|-----------|-------------|-----|
-| Aroeira | Itamar | 5594343a... |
-| Juazeirinho | Bevilacqua | 2bbaa610... |
-| Bonito de Santa Fe | Sabino | 201560a9... |
-| Sume | Ze Mario | 2cec5382... |
-| Joao Pessoa | Jailson | 990001de... |
-| Sousa | Vitor | 51e0080c... |
+| Arquivo | Ação |
+|---------|------|
+| `src/components/suporte/GeradorProjetoLei.tsx` | Novo componente (padrão do GeradorDiscurso com streaming + Markdown) |
+| `src/pages/Suporte.tsx` | Adicionar card + tipo "gerador-projeto-lei" |
+| `supabase/functions/gerar-projeto-lei/index.ts` | Edge function com prompt especializado em redação legislativa |
+| `supabase/config.toml` | Adicionar `[functions.gerar-projeto-lei]` |
 
-### Comando SQL
+### Edge Function
 
-```sql
-UPDATE despesas_politicas 
-SET pagamento_feito_em = '2026-02-09'
-WHERE id IN (
-  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
-  '2bbaa610-e38e-44e0-9817-356253ef77ed',
-  '201560a9-aa52-4772-93a0-80f842e2a4d0',
-  '2cec5382-26af-4b57-aecc-658593567fe7',
-  '990001de-61c5-452b-b237-039e479e74a0',
-  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
-);
-```
+System prompt especializado em técnica legislativa brasileira, incluindo:
+- Estrutura formal (ementa, preâmbulo, artigos, parágrafos, incisos, justificativa)
+- Linguagem jurídica adequada
+- Formatação em Markdown
+- Adaptação à esfera legislativa selecionada
 
-Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
-
-### Resultado
-
-Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
+Streaming SSE idêntico ao `gerar-discurso`, usando `google/gemini-3-flash-preview`.
 
