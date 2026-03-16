@@ -24,7 +24,7 @@ export function Layout({ children }: LayoutProps) {
             <span className="text-sm font-bold text-foreground">Unale</span>
           </NavLink>
         </header>
-        <main className="flex-1 px-4 py-4 pb-[calc(4rem+env(safe-area-inset-bottom))]">
+        <main className="flex-1 px-4 py-4 pb-4 overflow-hidden">
           {children}
         </main>
         <BottomNav />
