@@ -1,42 +1,55 @@
 
 
-## Plano: Restaurar Status de Pagamento
+## Gerador de Discurso com IA na Página Suporte
 
-### Situacao Atual
+### Visão Geral
 
-Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
+Transformar a página Suporte em um hub de ferramentas, começando com um "Gerador de Discurso" que usa Lovable AI (via edge function) para gerar discursos parlamentares personalizados. O parlamentar configura tema, tom, tamanho, estilo, público-alvo e contexto, e recebe um discurso completo com streaming em tempo real.
 
-### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
+### 1. Edge Function `gerar-discurso`
 
-Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
+- **Arquivo**: `supabase/functions/gerar-discurso/index.ts`
+- Recebe: `{ tema, tom, tamanho, estilo, publico, contexto }` via POST
+- Usa `LOVABLE_API_KEY` + Lovable AI Gateway com streaming SSE
+- System prompt especializado para discursos parlamentares brasileiros
+- Modelo: `google/gemini-3-flash-preview`
+- Retorna stream SSE para renderização token-by-token
 
-| Municipio | Responsavel | ID |
-|-----------|-------------|-----|
-| Aroeira | Itamar | 5594343a... |
-| Juazeirinho | Bevilacqua | 2bbaa610... |
-| Bonito de Santa Fe | Sabino | 201560a9... |
-| Sume | Ze Mario | 2cec5382... |
-| Joao Pessoa | Jailson | 990001de... |
-| Sousa | Vitor | 51e0080c... |
+### 2. Página Suporte Refatorada
 
-### Comando SQL
+Transformar em hub com cards de ferramentas. Card "Gerador de Discurso" abre a interface de geração.
 
-```sql
-UPDATE despesas_politicas 
-SET pagamento_feito_em = '2026-02-09'
-WHERE id IN (
-  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
-  '2bbaa610-e38e-44e0-9817-356253ef77ed',
-  '201560a9-aa52-4772-93a0-80f842e2a4d0',
-  '2cec5382-26af-4b57-aecc-658593567fe7',
-  '990001de-61c5-452b-b237-039e479e74a0',
-  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
-);
-```
+### 3. Componente `GeradorDiscurso`
 
-Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
+- **Arquivo**: `src/components/suporte/GeradorDiscurso.tsx`
+- Formulário com os campos:
+  - **Tema** (textarea): assunto principal do discurso
+  - **Tom** (select): Formal, Inspirador, Crítico, Conciliador, Emotivo, Técnico
+  - **Tamanho** (select): Curto (2min), Médio (5min), Longo (10min), Extenso (15min+)
+  - **Estilo** (select): Tribuna, Plenário, Comissão, Evento, Redes Sociais
+  - **Público-alvo** (select): Parlamentares, Cidadãos, Imprensa, Comunidade Específica
+  - **Contexto adicional** (textarea opcional): dados, referências, posicionamento
+- Área de resultado com streaming do discurso (markdown renderizado)
+- Botão copiar discurso gerado
+- Estado de loading com indicador visual
 
-### Resultado
+### 4. Atualizar `supabase/config.toml`
 
-Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
+Adicionar configuração da nova edge function com `verify_jwt = false`.
+
+### 5. Arquivos
+
+| Arquivo | Ação |
+|---------|------|
+| `supabase/functions/gerar-discurso/index.ts` | Criar - edge function com streaming |
+| `src/components/suporte/GeradorDiscurso.tsx` | Criar - componente completo |
+| `src/pages/Suporte.tsx` | Refatorar - hub com card do gerador |
+| `supabase/config.toml` | Adicionar config da função |
+
+### Detalhes Técnicos
+
+- Streaming SSE via fetch direto (não supabase.functions.invoke, pois não suporta streaming)
+- URL construída com `import.meta.env.VITE_SUPABASE_URL`
+- ReactMarkdown para renderizar o discurso gerado
+- `LOVABLE_API_KEY` já disponível como secret (verificado)
 
