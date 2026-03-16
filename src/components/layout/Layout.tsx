@@ -24,7 +24,7 @@ export function Layout({ children }: LayoutProps) {
             <span className="text-sm font-bold text-foreground">Unale</span>
           </NavLink>
         </header>
-        <main className="flex-1 px-4 py-4 pb-4 overflow-hidden">
+        <main className="flex-1 flex flex-col px-4 py-4 pb-20 overflow-hidden">
           {children}
         </main>
         <BottomNav />
