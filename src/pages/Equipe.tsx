@@ -8,13 +8,13 @@ const equipeCards = [
     title: "Assessores",
     description: "Gerencie sua equipe de assessores",
     icon: Users,
-    url: "/assessores",
+    url: "/equipe/assessores",
   },
   {
     title: "Apoiadores",
     description: "Gerencie seus apoiadores e colaboradores",
     icon: Heart,
-    url: "/apoiadores",
+    url: "/equipe/apoiadores",
   },
 ];
 
