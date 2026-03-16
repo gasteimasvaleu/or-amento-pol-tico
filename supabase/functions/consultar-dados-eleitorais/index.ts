@@ -69,7 +69,7 @@ async function fetchWithRetry(url: string, timeoutMs = 120000): Promise<Response
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const resp = await fetch(url, { headers, signal: controller.signal });
+      const resp = await fetch(url, { signal: controller.signal });
       clearTimeout(timer);
       if (resp.ok) return resp;
       if (attempt === 0 && resp.status >= 500) {
