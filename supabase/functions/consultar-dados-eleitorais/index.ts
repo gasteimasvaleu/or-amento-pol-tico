@@ -133,7 +133,8 @@ Deno.serve(async (req) => {
       .eq("cargo", cargo);
 
     if (nome_candidato?.trim()) {
-      query = query.ilike("nome_candidato", `%${nome_candidato.trim()}%`);
+      const search = nome_candidato.trim();
+      query = query.or(`nome_candidato.ilike.%${search}%,nome_urna.ilike.%${search}%`);
     }
 
     if (municipio?.trim()) {
@@ -150,17 +151,34 @@ Deno.serve(async (req) => {
       return jsonResponse({ data: cached, source: "cache" });
     }
 
-    // If name filter didn't match but cache exists for this combo
-    if (nome_candidato?.trim()) {
-      const { data: anyData } = await supabase
-        .from("dados_eleitorais_cache")
-        .select("id")
-        .eq("ano_eleicao", ano)
-        .eq("sigla_uf", ufUpper)
-        .eq("cargo", cargo)
-        .limit(1);
+    // Check if cache exists for this combo (without name/municipio filters)
+    const { data: anyData } = await supabase
+      .from("dados_eleitorais_cache")
+      .select("id, nome_municipio")
+      .eq("ano_eleicao", ano)
+      .eq("sigla_uf", ufUpper)
+      .eq("cargo", cargo)
+      .limit(5);
 
-      if (anyData && anyData.length > 0) {
+    if (anyData && anyData.length > 0) {
+      // If user wants municipality but cache only has "Todos", invalidate and re-download
+      if (municipio?.trim()) {
+        const allTodos = anyData.every((r) => !r.nome_municipio || r.nome_municipio === "Todos");
+        if (allTodos) {
+          console.log(`Cache has only "Todos" for municipality. Invalidating cache for ${ufUpper}/${cargo}/${ano} to re-download with municipality detail.`);
+          await supabase
+            .from("dados_eleitorais_cache")
+            .delete()
+            .eq("ano_eleicao", ano)
+            .eq("sigla_uf", ufUpper)
+            .eq("cargo", cargo);
+          // Fall through to download from TSE
+        } else {
+          // Cache has real municipalities but user's filter didn't match
+          return jsonResponse({ data: [], source: "cache" });
+        }
+      } else {
+        // Name filter didn't match but cache exists
         return jsonResponse({ data: [], source: "cache" });
       }
     }
