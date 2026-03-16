@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,8 +21,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Search, Vote, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { consultarDadosEleitorais, type ResultadoEleitoral } from "@/lib/tseClient";
 
 const ANOS = ["2024", "2022"];
 
@@ -31,27 +31,10 @@ const UFS = [
   "PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO",
 ];
 
-const CARGOS = [
-  "Presidente",
-  "Governador",
-  "Senador",
-  "Deputado Federal",
-  "Deputado Estadual",
-  "Prefeito",
-  "Vereador",
-];
-
-interface ResultadoEleitoral {
-  id?: string;
-  nome_candidato: string;
-  nome_urna: string;
-  sigla_partido: string;
-  numero_candidato: string;
-  situacao_eleito: string;
-  qtd_votos: number;
-  nome_municipio: string;
-  turno: number;
-}
+const CARGOS_POR_ANO: Record<string, string[]> = {
+  "2022": ["Presidente", "Governador", "Senador", "Deputado Federal", "Deputado Estadual"],
+  "2024": ["Prefeito", "Vereador"],
+};
 
 export default function DadosEleitorais() {
   const [ano, setAno] = useState("");
@@ -60,8 +43,19 @@ export default function DadosEleitorais() {
   const [nomeCandidato, setNomeCandidato] = useState("");
   const [resultados, setResultados] = useState<ResultadoEleitoral[]>([]);
   const [loading, setLoading] = useState(false);
+  const [progressMsg, setProgressMsg] = useState("");
   const [source, setSource] = useState("");
   const { toast } = useToast();
+
+  const cargosDisponiveis = useMemo(() => {
+    return ano ? (CARGOS_POR_ANO[ano] || []) : [];
+  }, [ano]);
+
+  const handleAnoChange = (novoAno: string) => {
+    setAno(novoAno);
+    const novosCargos = CARGOS_POR_ANO[novoAno] || [];
+    if (!novosCargos.includes(cargo)) setCargo("");
+  };
 
   const canSearch = ano && uf && cargo;
 
@@ -70,34 +64,21 @@ export default function DadosEleitorais() {
     setLoading(true);
     setResultados([]);
     setSource("");
+    setProgressMsg("");
 
     try {
-      const { data, error } = await supabase.functions.invoke(
-        "consultar-dados-eleitorais",
-        {
-          body: {
-            ano: parseInt(ano),
-            uf,
-            cargo,
-            nome_candidato: nomeCandidato || undefined,
-          },
-        }
+      const result = await consultarDadosEleitorais(
+        parseInt(ano),
+        uf,
+        cargo,
+        nomeCandidato || undefined,
+        setProgressMsg,
       );
 
-      if (error) throw error;
+      setResultados(result.data);
+      setSource(result.source);
 
-      if (data?.error) {
-        toast({
-          title: "Aviso",
-          description: data.error,
-          variant: "destructive",
-        });
-      }
-
-      setResultados(data?.data || []);
-      setSource(data?.source || "");
-
-      if (data?.data?.length === 0 && !data?.error) {
+      if (result.data.length === 0) {
         toast({
           title: "Sem resultados",
           description: "Nenhum resultado encontrado para os filtros selecionados.",
@@ -107,16 +88,16 @@ export default function DadosEleitorais() {
       console.error(err);
       toast({
         title: "Erro",
-        description: "Falha ao consultar dados eleitorais. Tente novamente.",
+        description: err.message || "Falha ao consultar dados eleitorais.",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
+      setProgressMsg("");
     }
   };
 
-  const formatVotes = (n: number) =>
-    n.toLocaleString("pt-BR");
+  const formatVotes = (n: number) => n.toLocaleString("pt-BR");
 
   const getSituacaoBadge = (situacao: string) => {
     if (!situacao) return null;
@@ -151,7 +132,7 @@ export default function DadosEleitorais() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <Label>Ano da Eleição *</Label>
-                <Select value={ano} onValueChange={setAno}>
+                <Select value={ano} onValueChange={handleAnoChange}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o ano" />
                   </SelectTrigger>
@@ -179,12 +160,12 @@ export default function DadosEleitorais() {
 
               <div className="space-y-2">
                 <Label>Cargo *</Label>
-                <Select value={cargo} onValueChange={setCargo}>
+                <Select value={cargo} onValueChange={setCargo} disabled={!ano}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione o cargo" />
+                    <SelectValue placeholder={ano ? "Selecione o cargo" : "Selecione o ano primeiro"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {CARGOS.map((c) => (
+                    {cargosDisponiveis.map((c) => (
                       <SelectItem key={c} value={c}>{c}</SelectItem>
                     ))}
                   </SelectContent>
@@ -214,7 +195,13 @@ export default function DadosEleitorais() {
                 {loading ? "Consultando..." : "Consultar"}
               </Button>
 
-              {source && (
+              {loading && progressMsg && (
+                <span className="text-xs text-muted-foreground animate-pulse">
+                  {progressMsg}
+                </span>
+              )}
+
+              {!loading && source && (
                 <span className="text-xs text-muted-foreground">
                   Fonte: {source === "cache" ? "Cache local" : "Portal TSE"}
                 </span>
@@ -226,9 +213,7 @@ export default function DadosEleitorais() {
         {resultados.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle>
-                Resultados ({resultados.length})
-              </CardTitle>
+              <CardTitle>Resultados ({resultados.length})</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
@@ -275,7 +260,7 @@ export default function DadosEleitorais() {
             <Vote className="h-12 w-12 mx-auto mb-4 opacity-30" />
             <p>Selecione os filtros e clique em "Consultar" para ver os resultados.</p>
             <p className="text-xs mt-2">
-              A primeira consulta pode demorar alguns segundos (dados do portal TSE).
+              A primeira consulta pode demorar até 60 segundos (download do portal TSE). Consultas seguintes são instantâneas (cache).
             </p>
           </div>
         )}
