@@ -113,6 +113,10 @@ const Suporte = () => {
       {activeTool === "gerador-projeto-lei" && (
         <GeradorProjetoLei onBack={() => setActiveTool("hub")} />
       )}
+
+      {activeTool === "gerador-midia" && (
+        <GeradorMidia onBack={() => setActiveTool("hub")} />
+      )}
     </Layout>
   );
 };
