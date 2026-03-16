@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, LifeBuoy } from "lucide-react";
+import { Sparkles, Newspaper, LifeBuoy } from "lucide-react";
 import GeradorDiscurso from "@/components/suporte/GeradorDiscurso";
+import AnaliseNoticia from "@/components/suporte/AnaliseNoticia";
 
-type Tool = "hub" | "gerador-discurso";
+type Tool = "hub" | "gerador-discurso" | "analise-noticia";
 
 const Suporte = () => {
   const [activeTool, setActiveTool] = useState<Tool>("hub");
@@ -36,6 +37,23 @@ const Suporte = () => {
               </CardContent>
             </Card>
 
+            <Card
+              className="cursor-pointer hover:shadow-md transition-shadow border-primary/20"
+              onClick={() => setActiveTool("analise-noticia")}
+            >
+              <CardContent className="flex items-center gap-4 p-4">
+                <div className="bg-primary/10 rounded-xl p-3">
+                  <Newspaper className="h-6 w-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-foreground">Análise de Notícia</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Analise notícias e gere comentários políticos com IA
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
             <div className="flex flex-col items-center py-10 text-center space-y-3">
               <div className="bg-muted rounded-full p-4">
                 <LifeBuoy className="h-8 w-8 text-muted-foreground" />
@@ -50,6 +68,10 @@ const Suporte = () => {
 
       {activeTool === "gerador-discurso" && (
         <GeradorDiscurso onBack={() => setActiveTool("hub")} />
+      )}
+
+      {activeTool === "analise-noticia" && (
+        <AnaliseNoticia onBack={() => setActiveTool("hub")} />
       )}
     </Layout>
   );
