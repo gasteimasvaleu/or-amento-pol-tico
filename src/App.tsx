@@ -21,6 +21,7 @@ import Equipe from "./pages/Equipe";
 import Assessores from "./pages/Assessores";
 import Apoiadores from "./pages/Apoiadores";
 import DadosEleitorais from "./pages/DadosEleitorais";
+import GestaoEleitores from "./pages/GestaoEleitores";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
