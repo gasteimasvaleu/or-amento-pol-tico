@@ -1,10 +1,11 @@
 import { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
-import { Landmark } from "lucide-react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { BottomNav } from "./BottomNav";
 import { useIsMobile } from "@/hooks/use-mobile";
+
+const LOGO_URL = "https://wrriittiqsmzbapbrcwm.supabase.co/storage/v1/object/public/criativos/logonavbar.png";
 
 interface LayoutProps {
   children: ReactNode;
