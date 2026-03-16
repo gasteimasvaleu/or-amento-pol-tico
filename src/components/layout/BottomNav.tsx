@@ -24,6 +24,14 @@ export function BottomNav() {
 
       {moreOpen && (
         <div className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-0 right-0 z-50 bg-card border-t border-border rounded-t-2xl p-4 space-y-1 animate-in slide-in-from-bottom-4">
+          <NavLink
+            to="/midia"
+            onClick={() => setMoreOpen(false)}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-foreground hover:bg-muted transition-colors w-full"
+          >
+            <ImageIcon className="h-5 w-5" />
+            <span>Mídia</span>
+          </NavLink>
           <button
             onClick={() => { setMoreOpen(false); signOut(); }}
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-destructive hover:bg-muted transition-colors w-full"

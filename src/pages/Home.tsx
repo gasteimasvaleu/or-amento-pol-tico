@@ -25,6 +25,13 @@ const quickCards = [
     route: "/agenda",
     bg: "bg-purple-500",
   },
+  {
+    title: "Mídia",
+    badges: ["Galeria", "Artes"],
+    icon: ImageIcon,
+    route: "/midia",
+    bg: "bg-amber-500",
+  },
 ];
 
 const CARD_HEIGHT = 160;
