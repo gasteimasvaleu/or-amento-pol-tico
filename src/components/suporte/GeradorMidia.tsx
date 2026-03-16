@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, ImagePlus, Loader2, Download, Save } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { ArrowLeft, ImagePlus, Loader2, Download, Save, Upload, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -32,8 +33,40 @@ const GeradorMidia = ({ onBack }: Props) => {
   const [loading, setLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [referenceImage, setReferenceImage] = useState<string | null>(null);
+  const [referenceFileName, setReferenceFileName] = useState<string | null>(null);
+  const [strength, setStrength] = useState(50);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.match(/^image\/(png|jpeg|webp)$/)) {
+      toast({ title: "Formato inválido", description: "Use PNG, JPEG ou WEBP", variant: "destructive" });
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ title: "Arquivo muito grande", description: "Máximo 10MB", variant: "destructive" });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setReferenceImage(reader.result as string);
+      setReferenceFileName(file.name);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeReference = () => {
+    setReferenceImage(null);
+    setReferenceFileName(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -45,9 +78,13 @@ const GeradorMidia = ({ onBack }: Props) => {
     setImageUrl(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke("gerar-midia", {
-        body: { prompt, formato, estilo },
-      });
+      const body: Record<string, any> = { prompt, formato, estilo };
+      if (referenceImage) {
+        body.referenceImageBase64 = referenceImage;
+        body.strength = 1 - strength / 100; // Invert: high influence = low init_strength
+      }
+
+      const { data, error } = await supabase.functions.invoke("gerar-midia", { body });
 
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -149,6 +186,68 @@ const GeradorMidia = ({ onBack }: Props) => {
               onChange={(e) => setPrompt(e.target.value)}
               rows={3}
             />
+          </div>
+
+          {/* Reference Image */}
+          <div className="space-y-2">
+            <Label>Imagem de referência (opcional)</Label>
+            {referenceImage ? (
+              <div className="relative rounded-lg border border-border overflow-hidden">
+                <img
+                  src={referenceImage}
+                  alt="Referência"
+                  className="w-full max-h-40 object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={removeReference}
+                  className="absolute top-2 right-2 rounded-full bg-background/80 p-1 hover:bg-background transition-colors"
+                >
+                  <X className="h-4 w-4 text-foreground" />
+                </button>
+                <div className="absolute bottom-0 left-0 right-0 bg-background/80 px-2 py-1">
+                  <p className="text-[10px] text-muted-foreground truncate">{referenceFileName}</p>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full rounded-lg border-2 border-dashed border-border p-4 text-center text-xs text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
+              >
+                <Upload className="h-5 w-5 mx-auto mb-1" />
+                Clique para selecionar uma imagem
+                <br />
+                <span className="text-[10px]">PNG, JPEG ou WEBP (máx. 10MB)</span>
+              </button>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+
+            {referenceImage && (
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Influência da referência</Label>
+                  <span className="text-xs text-muted-foreground">{strength}%</span>
+                </div>
+                <Slider
+                  value={[strength]}
+                  onValueChange={(v) => setStrength(v[0])}
+                  min={10}
+                  max={90}
+                  step={5}
+                />
+                <div className="flex justify-between text-[10px] text-muted-foreground">
+                  <span>Mais criativo</span>
+                  <span>Mais fiel</span>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
