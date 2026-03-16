@@ -112,7 +112,7 @@ export function DespesasTable({ despesas, selectedMonth, selectedYear }: Despesa
               const paymentStatus = getPaymentStatus(despesa, displayDate);
               
               return (
-                <TableRow key={despesa.id}>
+                <TableRow key={despesa.id} className="odd:bg-background even:bg-muted/40 dark:odd:bg-card dark:even:bg-muted/20">
                   <TableCell className="font-medium p-2 md:p-4 max-w-[100px] md:max-w-none truncate">{despesa.municipio}</TableCell>
                   <TableCell className="p-2 md:p-4 max-w-[100px] md:max-w-none truncate">{despesa.responsavel}</TableCell>
                   <TableCell className="p-2 md:p-4 max-w-[80px] md:max-w-none truncate">{despesa.cargo}</TableCell>
