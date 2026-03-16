@@ -122,6 +122,8 @@ export default function DadosEleitorais() {
           </p>
         </div>
 
+        <ImportCSV />
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
