@@ -64,14 +64,7 @@ function parseCSVLine(line: string): string[] {
   return fields;
 }
 
-async function fetchWithRetry(url: string, timeoutMs = 90000): Promise<Response> {
-  const headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-    "Accept": "*/*",
-    "Accept-Language": "pt-BR,pt;q=0.9",
-    "Referer": "https://dadosabertos.tse.jus.br/",
-  };
-
+async function fetchWithRetry(url: string, timeoutMs = 120000): Promise<Response> {
   for (let attempt = 0; attempt < 2; attempt++) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
