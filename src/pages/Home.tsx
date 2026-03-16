@@ -66,12 +66,6 @@ const Home = () => {
           onEnded={() => setShowSplash(false)}
           className="w-full h-full object-cover"
         />
-        <button
-          onClick={() => setShowSplash(false)}
-          className="absolute bottom-8 right-6 text-white/60 text-sm border border-white/30 rounded-full px-4 py-1.5 backdrop-blur-sm"
-        >
-          Pular
-        </button>
       </div>
     );
   }
