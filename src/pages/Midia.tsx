@@ -121,11 +121,11 @@ const MidiaPage = () => {
         </div>
 
         {/* Category filters */}
-        <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+        <div className="flex gap-2 flex-wrap">
           <button
             onClick={() => setCategoriaFiltro("todas")}
             className={cn(
-              "shrink-0 text-xs font-medium px-3 py-1.5 rounded-full border transition-colors",
+              "text-xs font-medium px-3 py-1.5 rounded-full border transition-colors",
               categoriaFiltro === "todas"
                 ? "bg-primary text-primary-foreground border-primary"
                 : "bg-card text-muted-foreground border-border"
@@ -138,7 +138,7 @@ const MidiaPage = () => {
               key={cat.value}
               onClick={() => setCategoriaFiltro(cat.value)}
               className={cn(
-                "shrink-0 text-xs font-medium px-3 py-1.5 rounded-full border transition-colors",
+                "text-xs font-medium px-3 py-1.5 rounded-full border transition-colors",
                 categoriaFiltro === cat.value
                   ? "bg-primary text-primary-foreground border-primary"
                   : "bg-card text-muted-foreground border-border"
