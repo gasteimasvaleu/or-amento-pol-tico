@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,15 +31,10 @@ const UFS = [
   "PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO",
 ];
 
-const CARGOS = [
-  "Presidente",
-  "Governador",
-  "Senador",
-  "Deputado Federal",
-  "Deputado Estadual",
-  "Prefeito",
-  "Vereador",
-];
+const CARGOS_POR_ANO: Record<string, string[]> = {
+  "2022": ["Presidente", "Governador", "Senador", "Deputado Federal", "Deputado Estadual"],
+  "2024": ["Prefeito", "Vereador"],
+};
 
 interface ResultadoEleitoral {
   id?: string;
@@ -62,6 +57,18 @@ export default function DadosEleitorais() {
   const [loading, setLoading] = useState(false);
   const [source, setSource] = useState("");
   const { toast } = useToast();
+
+  const cargosDisponiveis = useMemo(() => {
+    return ano ? (CARGOS_POR_ANO[ano] || []) : [];
+  }, [ano]);
+
+  const handleAnoChange = (novoAno: string) => {
+    setAno(novoAno);
+    const novosCargos = CARGOS_POR_ANO[novoAno] || [];
+    if (!novosCargos.includes(cargo)) {
+      setCargo("");
+    }
+  };
 
   const canSearch = ano && uf && cargo;
 
@@ -105,9 +112,10 @@ export default function DadosEleitorais() {
       }
     } catch (err: any) {
       console.error(err);
+      const msg = err?.message || err?.context?.body?.error || "Falha ao consultar dados eleitorais. Tente novamente.";
       toast({
         title: "Erro",
-        description: "Falha ao consultar dados eleitorais. Tente novamente.",
+        description: msg,
         variant: "destructive",
       });
     } finally {
@@ -151,7 +159,7 @@ export default function DadosEleitorais() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <Label>Ano da Eleição *</Label>
-                <Select value={ano} onValueChange={setAno}>
+                <Select value={ano} onValueChange={handleAnoChange}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o ano" />
                   </SelectTrigger>
@@ -179,12 +187,12 @@ export default function DadosEleitorais() {
 
               <div className="space-y-2">
                 <Label>Cargo *</Label>
-                <Select value={cargo} onValueChange={setCargo}>
+                <Select value={cargo} onValueChange={setCargo} disabled={!ano}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione o cargo" />
+                    <SelectValue placeholder={ano ? "Selecione o cargo" : "Selecione o ano primeiro"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {CARGOS.map((c) => (
+                    {cargosDisponiveis.map((c) => (
                       <SelectItem key={c} value={c}>{c}</SelectItem>
                     ))}
                   </SelectContent>
