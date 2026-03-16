@@ -110,6 +110,7 @@ export async function importarCSVEleitoral(
 
   let iAno = -1, iSgUf = -1, iDsCargo = -1, iNmCandidato = -1, iNmUrna = -1;
   let iSgPartido = -1, iNrCandidato = -1, iDsSitTot = -1, iQtVotos = -1, iQtVotosAlt = -1, iNrTurno = -1;
+  let iNmMunicipio = -1;
 
   const voteMap = new Map<string, any>();
   let detectedUf = "";
