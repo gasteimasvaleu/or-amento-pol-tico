@@ -20,6 +20,7 @@ import Noticias from "./pages/Noticias";
 import Equipe from "./pages/Equipe";
 import Assessores from "./pages/Assessores";
 import Apoiadores from "./pages/Apoiadores";
+import DadosEleitorais from "./pages/DadosEleitorais";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/equipe" element={<ProtectedRoute><Equipe /></ProtectedRoute>} />
             <Route path="/equipe/assessores" element={<ProtectedRoute><Assessores /></ProtectedRoute>} />
             <Route path="/equipe/apoiadores" element={<ProtectedRoute><Apoiadores /></ProtectedRoute>} />
+            <Route path="/dados-eleitorais" element={<ProtectedRoute><DadosEleitorais /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

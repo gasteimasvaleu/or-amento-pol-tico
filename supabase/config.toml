@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.gerar-projeto-lei]
 verify_jwt = false
+
+[functions.consultar-dados-eleitorais]
+verify_jwt = false

@@ -11,6 +11,7 @@ import {
   ImageIcon,
   LifeBuoy,
   Newspaper,
+  Vote,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -154,6 +155,20 @@ export function AppSidebar() {
                   >
                     <Newspaper className="mr-2 h-4 w-4" />
                     {!collapsed && <span>Notícias</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink
+                    to="/dados-eleitorais"
+                    end
+                    className="hover:bg-sidebar-accent/50"
+                    activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                  >
+                    <Vote className="mr-2 h-4 w-4" />
+                    {!collapsed && <span>Dados Eleitorais</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>

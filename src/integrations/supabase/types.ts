@@ -149,6 +149,54 @@ export type Database = {
         }
         Relationships: []
       }
+      dados_eleitorais_cache: {
+        Row: {
+          ano_eleicao: number
+          cargo: string
+          created_at: string | null
+          id: string
+          nome_candidato: string
+          nome_municipio: string | null
+          nome_urna: string | null
+          numero_candidato: string | null
+          qtd_votos: number
+          sigla_partido: string | null
+          sigla_uf: string
+          situacao_eleito: string | null
+          turno: number | null
+        }
+        Insert: {
+          ano_eleicao: number
+          cargo: string
+          created_at?: string | null
+          id?: string
+          nome_candidato: string
+          nome_municipio?: string | null
+          nome_urna?: string | null
+          numero_candidato?: string | null
+          qtd_votos?: number
+          sigla_partido?: string | null
+          sigla_uf: string
+          situacao_eleito?: string | null
+          turno?: number | null
+        }
+        Update: {
+          ano_eleicao?: number
+          cargo?: string
+          created_at?: string | null
+          id?: string
+          nome_candidato?: string
+          nome_municipio?: string | null
+          nome_urna?: string | null
+          numero_candidato?: string | null
+          qtd_votos?: number
+          sigla_partido?: string | null
+          sigla_uf?: string
+          situacao_eleito?: string | null
+          turno?: number | null
+        }
+        Relationships: []
+      }
       despesas_politicas: {
         Row: {
           cargo: string

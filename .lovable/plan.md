@@ -1,56 +1,42 @@
 
 
-## Página /dados-eleitorais — Consulta de Resultados do TSE
+## Plano: Restaurar Status de Pagamento
 
-### Contexto
+### Situacao Atual
 
-O TSE não possui API de consulta em tempo real. Os dados estão disponíveis como arquivos CSV/ZIP no portal CKAN (dadosabertos.tse.jus.br). A API CEPESP/FGV foi descontinuada.
+Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
 
-A abordagem será: uma edge function que consulta a API CKAN do TSE (tentando `datastore_search` para consultas diretas, com fallback para download e parsing de CSV), com cache dos resultados em Supabase para consultas futuras.
+### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
 
-### Banco de Dados
+Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
 
-**Tabela `dados_eleitorais_cache`** — cache de resultados consultados:
-- `id`, `ano_eleicao`, `sigla_uf`, `cargo`, `nome_candidato`, `nome_urna`, `sigla_partido`, `numero_candidato`, `situacao_eleito`, `qtd_votos`, `nome_municipio`, `turno`, `created_at`
-- Sem `user_id` — dados públicos compartilhados entre todos os usuários
-- RLS: SELECT para authenticated, INSERT/DELETE para service_role
+| Municipio | Responsavel | ID |
+|-----------|-------------|-----|
+| Aroeira | Itamar | 5594343a... |
+| Juazeirinho | Bevilacqua | 2bbaa610... |
+| Bonito de Santa Fe | Sabino | 201560a9... |
+| Sume | Ze Mario | 2cec5382... |
+| Joao Pessoa | Jailson | 990001de... |
+| Sousa | Vitor | 51e0080c... |
 
-### Edge Function `consultar-dados-eleitorais`
+### Comando SQL
 
-1. Recebe filtros: `ano`, `uf`, `cargo` (obrigatórios), `nome_candidato` (opcional)
-2. Primeiro verifica se já existe cache no Supabase para esses filtros
-3. Se não houver cache, busca os recursos do dataset `resultados-{ano}` via CKAN API
-4. Faz download do CSV de "Votação nominal por município e zona", filtra por UF
-5. Parseia o CSV e salva no cache
-6. Retorna os resultados filtrados
+```sql
+UPDATE despesas_politicas 
+SET pagamento_feito_em = '2026-02-09'
+WHERE id IN (
+  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
+  '2bbaa610-e38e-44e0-9817-356253ef77ed',
+  '201560a9-aa52-4772-93a0-80f842e2a4d0',
+  '2cec5382-26af-4b57-aecc-658593567fe7',
+  '990001de-61c5-452b-b237-039e479e74a0',
+  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
+);
+```
 
-### Frontend — Página `/dados-eleitorais`
+Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
 
-**Filtros:**
-- Ano da eleição (select: 2024, 2022, 2020, 2018, 2016, 2014)
-- Estado/UF (select com 27 UFs)
-- Cargo (select: Prefeito, Vereador, Governador, Senador, Dep. Federal, Dep. Estadual, Presidente)
-- Nome do candidato (input opcional)
+### Resultado
 
-**Resultados:** Tabela com colunas: Candidato, Partido, Cargo, Município, Votos, Situação (Eleito/Não Eleito)
-
-**Botão "Consultar"** que chama a edge function
-
-### Arquivos
-
-| Arquivo | Ação |
-|---------|------|
-| Migration SQL | Criar tabela `dados_eleitorais_cache` |
-| `supabase/functions/consultar-dados-eleitorais/index.ts` | Edge function de consulta ao TSE |
-| `supabase/config.toml` | Adicionar função |
-| `src/pages/DadosEleitorais.tsx` | Página principal |
-| `src/App.tsx` | Adicionar rota |
-| `src/components/layout/AppSidebar.tsx` | Adicionar link |
-| `src/components/layout/BottomNav.tsx` | Adicionar no menu "Mais" |
-
-### Limitações conhecidas
-
-- A primeira consulta para um ano/UF pode demorar (download + parsing do CSV)
-- Consultas subsequentes serão instantâneas (cache)
-- Arquivos CSV do TSE são grandes; a edge function pode ter timeout para UFs com muitos municípios — nesse caso, processará em lotes
+Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
 
