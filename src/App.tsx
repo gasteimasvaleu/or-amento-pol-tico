@@ -20,6 +20,7 @@ import Noticias from "./pages/Noticias";
 import Equipe from "./pages/Equipe";
 import Assessores from "./pages/Assessores";
 import Apoiadores from "./pages/Apoiadores";
+import DadosEleitorais from "./pages/DadosEleitorais";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
