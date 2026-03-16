@@ -237,6 +237,7 @@ export default function DadosEleitorais() {
                       <TableHead>Candidato</TableHead>
                       <TableHead>Partido</TableHead>
                       <TableHead>Nº</TableHead>
+                      <TableHead>Município</TableHead>
                       <TableHead className="text-right">Votos</TableHead>
                       <TableHead>Situação</TableHead>
                       <TableHead>Turno</TableHead>
@@ -255,6 +256,7 @@ export default function DadosEleitorais() {
                         </TableCell>
                         <TableCell>{r.sigla_partido}</TableCell>
                         <TableCell>{r.numero_candidato}</TableCell>
+                        <TableCell>{r.nome_municipio}</TableCell>
                         <TableCell className="text-right font-mono">
                           {formatVotes(r.qtd_votos)}
                         </TableCell>
