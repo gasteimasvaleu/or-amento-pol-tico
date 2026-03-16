@@ -1,32 +1,42 @@
 
 
-## Plano: Criar página /gestao-de-eleitores
+## Plano: Restaurar Status de Pagamento
 
-### Banco de Dados (4 tabelas + 1 bucket)
+### Situacao Atual
 
-**`eleitores`**: id, user_id, nome, telefone, endereco, bairro, created_at, updated_at
-**`demandas`**: id, user_id, eleitor_id (FK), titulo, descricao, responsavel, status ('novo'/'em_andamento'/'resolvido'), created_at, updated_at
-**`demanda_historico`**: id, demanda_id (FK), descricao, created_at
-**`demanda_anexos`**: id, demanda_id (FK), arquivo_url, arquivo_nome, arquivo_tipo, created_at
+Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
 
-Bucket Storage: `demandas` (público). RLS: `auth.uid() = user_id` em eleitores e demandas; demanda_historico e demanda_anexos via join com demandas.
+### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
 
-### Arquivos Novos
+Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
 
-1. **`src/types/eleitor.ts`** — tipos para Eleitor, Demanda, DemandaHistorico, DemandaAnexo
-2. **`src/hooks/useEleitores.ts`** — CRUD eleitores com react-query (padrão useApoiadores)
-3. **`src/hooks/useDemandas.ts`** — CRUD demandas, histórico e upload de anexos
-4. **`src/pages/GestaoEleitores.tsx`** — lista de eleitores com busca, badge de demandas abertas
-5. **`src/components/eleitores/EleitorModal.tsx`** — modal cadastro (nome, telefone, endereço, bairro)
-6. **`src/components/eleitores/EleitorDetalhe.tsx`** — sheet com dados do eleitor + lista de demandas
-7. **`src/components/eleitores/DemandaModal.tsx`** — modal para abrir chamado (título, descrição, responsável)
-8. **`src/components/eleitores/DemandaDetalhe.tsx`** — detalhe com status editável, timeline de histórico, upload de anexos
+| Municipio | Responsavel | ID |
+|-----------|-------------|-----|
+| Aroeira | Itamar | 5594343a... |
+| Juazeirinho | Bevilacqua | 2bbaa610... |
+| Bonito de Santa Fe | Sabino | 201560a9... |
+| Sume | Ze Mario | 2cec5382... |
+| Joao Pessoa | Jailson | 990001de... |
+| Sousa | Vitor | 51e0080c... |
 
-### Arquivos Alterados
+### Comando SQL
 
-- **`src/App.tsx`** — rota `/gestao-de-eleitores`
-- **`src/components/layout/AppSidebar.tsx`** — item no menu lateral
-- **`src/components/layout/BottomNav.tsx`** — item no menu "Mais"
+```sql
+UPDATE despesas_politicas 
+SET pagamento_feito_em = '2026-02-09'
+WHERE id IN (
+  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
+  '2bbaa610-e38e-44e0-9817-356253ef77ed',
+  '201560a9-aa52-4772-93a0-80f842e2a4d0',
+  '2cec5382-26af-4b57-aecc-658593567fe7',
+  '990001de-61c5-452b-b237-039e479e74a0',
+  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
+);
+```
 
-Sem card na página principal.
+Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
+
+### Resultado
+
+Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
 

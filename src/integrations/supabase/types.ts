@@ -197,6 +197,114 @@ export type Database = {
         }
         Relationships: []
       }
+      demanda_anexos: {
+        Row: {
+          arquivo_nome: string
+          arquivo_tipo: string | null
+          arquivo_url: string
+          created_at: string | null
+          demanda_id: string
+          id: string
+        }
+        Insert: {
+          arquivo_nome: string
+          arquivo_tipo?: string | null
+          arquivo_url: string
+          created_at?: string | null
+          demanda_id: string
+          id?: string
+        }
+        Update: {
+          arquivo_nome?: string
+          arquivo_tipo?: string | null
+          arquivo_url?: string
+          created_at?: string | null
+          demanda_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demanda_anexos_demanda_id_fkey"
+            columns: ["demanda_id"]
+            isOneToOne: false
+            referencedRelation: "demandas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      demanda_historico: {
+        Row: {
+          created_at: string | null
+          demanda_id: string
+          descricao: string
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          demanda_id: string
+          descricao: string
+          id?: string
+        }
+        Update: {
+          created_at?: string | null
+          demanda_id?: string
+          descricao?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demanda_historico_demanda_id_fkey"
+            columns: ["demanda_id"]
+            isOneToOne: false
+            referencedRelation: "demandas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      demandas: {
+        Row: {
+          created_at: string | null
+          descricao: string | null
+          eleitor_id: string
+          id: string
+          responsavel: string | null
+          status: Database["public"]["Enums"]["demanda_status"]
+          titulo: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          descricao?: string | null
+          eleitor_id: string
+          id?: string
+          responsavel?: string | null
+          status?: Database["public"]["Enums"]["demanda_status"]
+          titulo: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          descricao?: string | null
+          eleitor_id?: string
+          id?: string
+          responsavel?: string | null
+          status?: Database["public"]["Enums"]["demanda_status"]
+          titulo?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demandas_eleitor_id_fkey"
+            columns: ["eleitor_id"]
+            isOneToOne: false
+            referencedRelation: "eleitores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       despesas_politicas: {
         Row: {
           cargo: string
@@ -245,6 +353,39 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
           valor?: number
+        }
+        Relationships: []
+      }
+      eleitores: {
+        Row: {
+          bairro: string | null
+          created_at: string | null
+          endereco: string | null
+          id: string
+          nome: string
+          telefone: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          bairro?: string | null
+          created_at?: string | null
+          endereco?: string | null
+          id?: string
+          nome: string
+          telefone?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          bairro?: string | null
+          created_at?: string | null
+          endereco?: string | null
+          id?: string
+          nome?: string
+          telefone?: string | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -445,6 +586,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      demanda_status: "novo" | "em_andamento" | "resolvido"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -573,6 +715,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      demanda_status: ["novo", "em_andamento", "resolvido"],
     },
   },
 } as const

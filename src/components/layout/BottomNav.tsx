@@ -1,4 +1,4 @@
-import { Home, LayoutDashboard, Receipt, CalendarDays, Menu, X, LogOut, ImageIcon, LifeBuoy, Newspaper, Vote } from "lucide-react";
+import { Home, LayoutDashboard, Receipt, CalendarDays, Menu, X, LogOut, ImageIcon, LifeBuoy, Newspaper, Vote, Users } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -55,6 +55,14 @@ export function BottomNav() {
           >
             <Vote className="h-5 w-5" />
             <span>Dados Eleitorais</span>
+          </NavLink>
+          <NavLink
+            to="/gestao-de-eleitores"
+            onClick={() => setMoreOpen(false)}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-foreground hover:bg-muted transition-colors w-full"
+          >
+            <Users className="h-5 w-5" />
+            <span>Gestão de Eleitores</span>
           </NavLink>
           <button
             onClick={() => { setMoreOpen(false); signOut(); }}
