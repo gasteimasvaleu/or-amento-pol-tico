@@ -46,6 +46,7 @@ interface GeradorProjetoLeiProps {
 }
 
 const GeradorProjetoLei = ({ onBack }: GeradorProjetoLeiProps) => {
+  const { user } = useAuth();
   const [titulo, setTitulo] = useState("");
   const [esfera, setEsfera] = useState("");
   const [tipo, setTipo] = useState("");
