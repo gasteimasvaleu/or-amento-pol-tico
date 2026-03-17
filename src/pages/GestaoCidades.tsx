@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Search, Building2, User, DollarSign, Users, Pencil, Trash2, MapPin } from "lucide-react";
+import { VideoOverlay } from "@/components/ui/VideoOverlay";
 import { useCidades, useBairros } from "@/hooks/useCidades";
 import { CidadeModal } from "@/components/cidades/CidadeModal";
 import { BairroModal } from "@/components/cidades/BairroModal";
@@ -122,7 +123,7 @@ export default function GestaoCidades() {
         </div>
 
         {isLoading ? (
-          <p className="text-center text-muted-foreground py-10">Carregando...</p>
+          <VideoOverlay />
         ) : filtered.length === 0 ? (
           <p className="text-center text-muted-foreground py-10">
             {search ? "Nenhuma cidade encontrada." : "Nenhuma cidade cadastrada."}

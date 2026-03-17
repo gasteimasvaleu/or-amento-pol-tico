@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Users, Phone, MapPin, Trash2, Pencil } from "lucide-react";
+import { VideoOverlay } from "@/components/ui/VideoOverlay";
 import { useEleitores } from "@/hooks/useEleitores";
 import { useDemandas } from "@/hooks/useDemandas";
 import { EleitorModal } from "@/components/eleitores/EleitorModal";
@@ -82,9 +83,7 @@ export default function GestaoEleitores() {
         </div>
 
         {isLoading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-          </div>
+          <VideoOverlay />
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center py-12 text-muted-foreground">
             <Users className="h-12 w-12 mb-3" />

@@ -7,14 +7,31 @@ import AnaliseNoticia from "@/components/suporte/AnaliseNoticia";
 import GeradorProjetoLei from "@/components/suporte/GeradorProjetoLei";
 import GeradorMidia from "@/components/suporte/GeradorMidia";
 import GeradorPostagem from "@/components/suporte/GeradorPostagem";
+import { VideoOverlay } from "@/components/ui/VideoOverlay";
 
 type Tool = "hub" | "gerador-discurso" | "analise-noticia" | "gerador-projeto-lei" | "gerador-midia" | "gerador-postagem";
 
 const Suporte = () => {
   const [activeTool, setActiveTool] = useState<Tool>("hub");
+  const [showOverlay, setShowOverlay] = useState(false);
+  const [pendingTool, setPendingTool] = useState<Tool>("hub");
+
+  const handleToolSelect = (tool: Tool) => {
+    setPendingTool(tool);
+    setShowOverlay(true);
+  };
 
   return (
     <Layout>
+      {showOverlay && (
+        <VideoOverlay
+          duration={2000}
+          onComplete={() => {
+            setActiveTool(pendingTool);
+            setShowOverlay(false);
+          }}
+        />
+      )}
       {activeTool === "hub" && (
         <>
           <div className="space-y-1 mb-6">
@@ -25,7 +42,7 @@ const Suporte = () => {
           <div className="grid gap-4">
             <Card
               className="cursor-pointer hover:shadow-md transition-shadow border-primary/20"
-              onClick={() => setActiveTool("gerador-discurso")}
+              onClick={() => handleToolSelect("gerador-discurso")}
             >
               <CardContent className="flex items-center gap-4 p-4">
                 <div className="bg-primary/10 rounded-xl p-3">
@@ -42,7 +59,7 @@ const Suporte = () => {
 
             <Card
               className="cursor-pointer hover:shadow-md transition-shadow border-primary/20"
-              onClick={() => setActiveTool("analise-noticia")}
+              onClick={() => handleToolSelect("analise-noticia")}
             >
               <CardContent className="flex items-center gap-4 p-4">
                 <div className="bg-primary/10 rounded-xl p-3">
@@ -59,7 +76,7 @@ const Suporte = () => {
 
             <Card
               className="cursor-pointer hover:shadow-md transition-shadow border-primary/20"
-              onClick={() => setActiveTool("gerador-projeto-lei")}
+              onClick={() => handleToolSelect("gerador-projeto-lei")}
             >
               <CardContent className="flex items-center gap-4 p-4">
                 <div className="bg-primary/10 rounded-xl p-3">
@@ -76,7 +93,7 @@ const Suporte = () => {
 
             <Card
               className="cursor-pointer hover:shadow-md transition-shadow border-primary/20"
-              onClick={() => setActiveTool("gerador-midia")}
+              onClick={() => handleToolSelect("gerador-midia")}
             >
               <CardContent className="flex items-center gap-4 p-4">
                 <div className="bg-primary/10 rounded-xl p-3">
@@ -93,7 +110,7 @@ const Suporte = () => {
 
             <Card
               className="cursor-pointer hover:shadow-md transition-shadow border-primary/20"
-              onClick={() => setActiveTool("gerador-postagem")}
+              onClick={() => handleToolSelect("gerador-postagem")}
             >
               <CardContent className="flex items-center gap-4 p-4">
                 <div className="bg-primary/10 rounded-xl p-3">
