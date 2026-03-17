@@ -187,6 +187,11 @@ const GeradorPostagem = ({ onBack }: GeradorPostagemProps) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleWhatsApp = () => {
+    const url = `https://wa.me/?text=${encodeURIComponent(postagem)}`;
+    window.open(url, "_blank");
+  };
+
   return (
     <div className="space-y-4">
       <Button variant="ghost" size="sm" onClick={onBack} className="gap-1 -ml-2">
