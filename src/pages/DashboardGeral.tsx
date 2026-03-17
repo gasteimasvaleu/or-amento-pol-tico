@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -12,6 +12,7 @@ import {
   User, Mail, CalendarDays, Phone, Briefcase, MapPin,
   Building2, Map, Hash, Save, Camera, Loader2
 } from "lucide-react";
+import { pickImage, dataUrlToBlob } from "@/lib/capacitorCamera";
 
 import DashboardCharts from "@/components/dashboard/DashboardCharts";
 
