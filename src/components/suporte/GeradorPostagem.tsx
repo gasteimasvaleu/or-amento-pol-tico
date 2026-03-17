@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Copy, Loader2, Hash, Check, Upload, X } from "lucide-react";
+import { ArrowLeft, Copy, Loader2, Hash, Check, Upload, X, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 
