@@ -118,10 +118,14 @@ export default function GestaoEleitores() {
                             <span>{eleitor.telefone}</span>
                           </div>
                         )}
-                        {eleitor.bairro && (
+                        {(eleitor.cidade || eleitor.bairro) && (
                           <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5 ml-[18px]">
                             <MapPin className="h-3 w-3" />
-                            <span>{eleitor.bairro}</span>
+                            <span>
+                              {eleitor.cidade && eleitor.bairro
+                                ? `${eleitor.cidade} / ${eleitor.bairro}`
+                                : eleitor.cidade || eleitor.bairro}
+                            </span>
                           </div>
                         )}
                       </div>

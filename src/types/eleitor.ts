@@ -6,6 +6,7 @@ export interface Eleitor {
   nome: string;
   telefone: string;
   endereco: string;
+  cidade: string;
   bairro: string;
   classificacao: EleitorClassificacao;
   created_at: string | null;

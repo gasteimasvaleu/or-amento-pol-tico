@@ -68,6 +68,10 @@ export function EleitorModal({ open, onOpenChange, onSubmit, isLoading, eleitor 
             <Input id="endereco" value={form.endereco} onChange={(e) => setForm({ ...form, endereco: e.target.value })} />
           </div>
           <div className="space-y-2">
+            <Label htmlFor="cidade">Cidade</Label>
+            <Input id="cidade" value={form.cidade} onChange={(e) => setForm({ ...form, cidade: e.target.value })} />
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="bairro">Bairro</Label>
             <Input id="bairro" value={form.bairro} onChange={(e) => setForm({ ...form, bairro: e.target.value })} />
           </div>
