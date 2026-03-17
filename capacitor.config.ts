@@ -4,10 +4,6 @@ const config: CapacitorConfig = {
   appId: 'app.mandatointeligente.app',
   appName: 'Mandato Intelligence',
   webDir: 'dist',
-  server: {
-    url: 'https://app.mandatointeligente.app?forceHideBadge=true',
-    cleartext: true,
-  },
   ios: {
     contentInset: 'always',
     backgroundColor: '#FFFFFF',
