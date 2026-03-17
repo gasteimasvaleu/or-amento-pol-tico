@@ -1,42 +1,18 @@
 
 
-## Plano: Restaurar Status de Pagamento
+## Diagnóstico
 
-### Situacao Atual
+O problema é o `mt-auto` na linha 65 do `Home.tsx`. Essa classe empurra os cards para o fundo do container flex, criando um espaço vazio entre o texto "Acesso rápido" e os cards. No navegador web o viewport é menor e o gap é discreto, mas no app nativo iOS (com viewport mais alto e safe areas), o espaço fica bem visível — como mostra o screenshot.
 
-Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
+## Solução
 
-### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
+Trocar `mt-auto` por `mt-4` no container dos cards (linha 65). Isso mantém um espaçamento fixo e consistente entre o texto e os cards, independente da altura do viewport.
 
-Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
+### Alteração
 
-| Municipio | Responsavel | ID |
-|-----------|-------------|-----|
-| Aroeira | Itamar | 5594343a... |
-| Juazeirinho | Bevilacqua | 2bbaa610... |
-| Bonito de Santa Fe | Sabino | 201560a9... |
-| Sume | Ze Mario | 2cec5382... |
-| Joao Pessoa | Jailson | 990001de... |
-| Sousa | Vitor | 51e0080c... |
+**`src/pages/Home.tsx` linha 65:**
+- De: `className="mt-auto relative mb-[-5rem]"`
+- Para: `className="mt-4 relative mb-[-5rem]"`
 
-### Comando SQL
-
-```sql
-UPDATE despesas_politicas 
-SET pagamento_feito_em = '2026-02-09'
-WHERE id IN (
-  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
-  '2bbaa610-e38e-44e0-9817-356253ef77ed',
-  '201560a9-aa52-4772-93a0-80f842e2a4d0',
-  '2cec5382-26af-4b57-aecc-658593567fe7',
-  '990001de-61c5-452b-b237-039e479e74a0',
-  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
-);
-```
-
-Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
-
-### Resultado
-
-Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
+Apenas essa mudança. Os cards ficam logo abaixo do texto "Acesso rápido" sem gap flutuante.
 
