@@ -29,6 +29,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
     setLoading(true);
     try {
+      // Initialize native SDK (no-op on web)
+      await initRevenueCat(user.id);
       const subscriber = await getSubscriberInfo(user.id);
       setIsPremium(hasActiveEntitlement(subscriber));
     } catch {
