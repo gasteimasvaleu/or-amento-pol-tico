@@ -80,6 +80,14 @@ export function BottomNav() {
             <Building2 className="h-5 w-5" />
             <span>Cidades</span>
           </NavLink>
+          <NavLink
+            to="/politica-de-privacidade"
+            onClick={() => setMoreOpen(false)}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-foreground hover:bg-muted transition-colors w-full"
+          >
+            <Shield className="h-5 w-5" />
+            <span>Política de Privacidade</span>
+          </NavLink>
           <button
             onClick={() => { setMoreOpen(false); signOut(); }}
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-destructive hover:bg-muted transition-colors w-full"
