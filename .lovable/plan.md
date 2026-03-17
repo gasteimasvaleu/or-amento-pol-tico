@@ -1,42 +1,21 @@
 
 
-## Plano: Restaurar Status de Pagamento
+## Plano: Ajustar margem do Sheet lateral (direita → esquerda)
 
-### Situacao Atual
+O Sheet `right` surge do lado direito, então a margem deveria estar no lado esquerdo (para criar o efeito "flutuante" afastado da borda esquerda), não no direito.
 
-Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
+### Alteração em `src/components/ui/sheet.tsx`
 
-### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
+Na variante `right` do `sheetVariants`, trocar `right-4` por `right-0` e adicionar margem à esquerda implicitamente via `w-[calc(100vw-2rem)]` (o sheet já não ocupa 100% da largura, então ele fica naturalmente afastado da borda esquerda). Porém o `right-4` está empurrando o sheet para dentro — o correto é manter `right-0` no mobile para que ele fique colado à direita e o espaço livre fique à esquerda.
 
-Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
+Mesma lógica espelhada para a variante `left`: trocar `left-4` por `left-0` para que fique colado à esquerda e o espaço fique à direita.
 
-| Municipio | Responsavel | ID |
-|-----------|-------------|-----|
-| Aroeira | Itamar | 5594343a... |
-| Juazeirinho | Bevilacqua | 2bbaa610... |
-| Bonito de Santa Fe | Sabino | 201560a9... |
-| Sume | Ze Mario | 2cec5382... |
-| Joao Pessoa | Jailson | 990001de... |
-| Sousa | Vitor | 51e0080c... |
+**Resumo das mudanças na variante `right`:**
+- `right-4` → `right-0` (cola na borda direita)
+- Manter `top-4 bottom-4` (margens vertical)
+- Manter `w-[calc(100vw-2rem)]`, `rounded-2xl`, `border border-border/50`
 
-### Comando SQL
-
-```sql
-UPDATE despesas_politicas 
-SET pagamento_feito_em = '2026-02-09'
-WHERE id IN (
-  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
-  '2bbaa610-e38e-44e0-9817-356253ef77ed',
-  '201560a9-aa52-4772-93a0-80f842e2a4d0',
-  '2cec5382-26af-4b57-aecc-658593567fe7',
-  '990001de-61c5-452b-b237-039e479e74a0',
-  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
-);
-```
-
-Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
-
-### Resultado
-
-Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
+**Variante `left`:**
+- `left-4` → `left-0` (cola na borda esquerda)
+- Resto igual
 
