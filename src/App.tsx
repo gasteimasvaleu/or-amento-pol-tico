@@ -23,6 +23,7 @@ import Apoiadores from "./pages/Apoiadores";
 import DadosEleitorais from "./pages/DadosEleitorais";
 import GestaoEleitores from "./pages/GestaoEleitores";
 import GestaoCidades from "./pages/GestaoCidades";
+import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/dados-eleitorais" element={<ProtectedRoute><DadosEleitorais /></ProtectedRoute>} />
             <Route path="/gestao-de-eleitores" element={<ProtectedRoute><GestaoEleitores /></ProtectedRoute>} />
             <Route path="/gestao-de-cidades" element={<ProtectedRoute><GestaoCidades /></ProtectedRoute>} />
+            <Route path="/politica-de-privacidade" element={<ProtectedRoute><PoliticaPrivacidade /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

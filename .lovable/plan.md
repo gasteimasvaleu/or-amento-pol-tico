@@ -1,16 +1,42 @@
 
 
-## Plano: Página de Política de Privacidade + Rota no menu
+## Plano: Restaurar Status de Pagamento
 
-### Arquivos
+### Situacao Atual
 
-1. **Criar** `src/pages/PoliticaPrivacidade.tsx` — Página com conteúdo de política de privacidade, usando `Layout`, com seções padrão (coleta de dados, uso, compartilhamento, cookies, direitos do usuário, contato). Texto em português, estilizado com `prose` ou cards simples.
+Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
 
-2. **Editar** `src/App.tsx` — Adicionar rota `/politica-de-privacidade` dentro de `ProtectedRoute` (ou sem proteção, se preferir acesso público). Import do novo componente.
+### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
 
-3. **Editar** `src/components/layout/BottomNav.tsx` — Adicionar link "Política de Privacidade" com ícone `Shield` no menu "Mais", antes do botão "Sair".
+Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
 
-4. **Editar** `src/components/layout/AppSidebar.tsx` — Adicionar item "Privacidade" com ícone `Shield` no menu da sidebar, antes do footer/logout.
+| Municipio | Responsavel | ID |
+|-----------|-------------|-----|
+| Aroeira | Itamar | 5594343a... |
+| Juazeirinho | Bevilacqua | 2bbaa610... |
+| Bonito de Santa Fe | Sabino | 201560a9... |
+| Sume | Ze Mario | 2cec5382... |
+| Joao Pessoa | Jailson | 990001de... |
+| Sousa | Vitor | 51e0080c... |
 
-4 arquivos, 1 novo + 3 editados.
+### Comando SQL
+
+```sql
+UPDATE despesas_politicas 
+SET pagamento_feito_em = '2026-02-09'
+WHERE id IN (
+  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
+  '2bbaa610-e38e-44e0-9817-356253ef77ed',
+  '201560a9-aa52-4772-93a0-80f842e2a4d0',
+  '2cec5382-26af-4b57-aecc-658593567fe7',
+  '990001de-61c5-452b-b237-039e479e74a0',
+  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
+);
+```
+
+Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
+
+### Resultado
+
+Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
 

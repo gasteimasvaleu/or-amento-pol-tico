@@ -1,4 +1,4 @@
-import { Home, LayoutDashboard, Receipt, CalendarDays, Menu, X, LogOut, ImageIcon, LifeBuoy, Newspaper, Vote, Users, Building2, Heart } from "lucide-react";
+import { Home, LayoutDashboard, Receipt, CalendarDays, Menu, X, LogOut, ImageIcon, LifeBuoy, Newspaper, Vote, Users, Building2, Heart, Shield } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -79,6 +79,14 @@ export function BottomNav() {
           >
             <Building2 className="h-5 w-5" />
             <span>Cidades</span>
+          </NavLink>
+          <NavLink
+            to="/politica-de-privacidade"
+            onClick={() => setMoreOpen(false)}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-foreground hover:bg-muted transition-colors w-full"
+          >
+            <Shield className="h-5 w-5" />
+            <span>Política de Privacidade</span>
           </NavLink>
           <button
             onClick={() => { setMoreOpen(false); signOut(); }}

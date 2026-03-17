@@ -14,6 +14,7 @@ import {
   Users,
   Building2,
   Heart,
+  Shield,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -209,6 +210,20 @@ export function AppSidebar() {
                   >
                     <Building2 className="mr-2 h-4 w-4" />
                     {!collapsed && <span>Cidades</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink
+                    to="/politica-de-privacidade"
+                    end
+                    className="hover:bg-sidebar-accent/50"
+                    activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                  >
+                    <Shield className="mr-2 h-4 w-4" />
+                    {!collapsed && <span>Privacidade</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
