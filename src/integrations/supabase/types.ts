@@ -359,6 +359,7 @@ export type Database = {
       eleitores: {
         Row: {
           bairro: string | null
+          classificacao: string
           created_at: string | null
           endereco: string | null
           id: string
@@ -369,6 +370,7 @@ export type Database = {
         }
         Insert: {
           bairro?: string | null
+          classificacao?: string
           created_at?: string | null
           endereco?: string | null
           id?: string
@@ -379,6 +381,7 @@ export type Database = {
         }
         Update: {
           bairro?: string | null
+          classificacao?: string
           created_at?: string | null
           endereco?: string | null
           id?: string

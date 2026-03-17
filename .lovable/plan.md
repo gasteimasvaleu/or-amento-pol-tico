@@ -1,27 +1,42 @@
 
 
-## Plano: WhatsApp, editar eleitor e classificador por cor
+## Plano: Restaurar Status de Pagamento
 
-### 1. Migration: adicionar coluna `classificacao` na tabela `eleitores`
-- Adicionar coluna `classificacao text default 'neutro'` com valores possíveis: `positivo`, `neutro`, `negativo`
+### Situacao Atual
 
-### 2. Atualizar tipo `Eleitor` e `EleitorInsert`
-- **`src/types/eleitor.ts`**: adicionar `classificacao: string` ao `Eleitor`
+Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
 
-### 3. Atualizar `EleitorModal` para suportar criação e edição
-- **`src/components/eleitores/EleitorModal.tsx`**:
-  - Aceitar prop opcional `eleitor?: Eleitor` para modo edição (preencher form com dados existentes)
-  - Título dinâmico: "Novo Eleitor" / "Editar Eleitor"
-  - Adicionar seletor de classificação com 3 botões coloridos (vermelho/amarelo/verde) representando negativo/neutro/positivo
-  - Inicializar form com `classificacao: "neutro"` por padrão
+### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
 
-### 4. Atualizar card do eleitor na página `GestaoEleitores`
-- **`src/pages/GestaoEleitores.tsx`**:
-  - Adicionar botão WhatsApp (ícone verde pequeno) que abre `https://wa.me/{telefone}` em nova aba (com `stopPropagation`), visível apenas se o eleitor tiver telefone
-  - Adicionar botão editar (ícone Pencil) ao lado do delete, que abre o modal em modo edição
-  - Exibir um pequeno indicador de cor (bolinha) no card baseado na `classificacao` do eleitor
-  - Passar `updateEleitor` do hook para o modal de edição
+Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
 
-### 5. Hook `useEleitores` — sem mudanças necessárias
-- `updateMutation` já existe e aceita campos parciais
+| Municipio | Responsavel | ID |
+|-----------|-------------|-----|
+| Aroeira | Itamar | 5594343a... |
+| Juazeirinho | Bevilacqua | 2bbaa610... |
+| Bonito de Santa Fe | Sabino | 201560a9... |
+| Sume | Ze Mario | 2cec5382... |
+| Joao Pessoa | Jailson | 990001de... |
+| Sousa | Vitor | 51e0080c... |
+
+### Comando SQL
+
+```sql
+UPDATE despesas_politicas 
+SET pagamento_feito_em = '2026-02-09'
+WHERE id IN (
+  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
+  '2bbaa610-e38e-44e0-9817-356253ef77ed',
+  '201560a9-aa52-4772-93a0-80f842e2a4d0',
+  '2cec5382-26af-4b57-aecc-658593567fe7',
+  '990001de-61c5-452b-b237-039e479e74a0',
+  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
+);
+```
+
+Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
+
+### Resultado
+
+Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
 
