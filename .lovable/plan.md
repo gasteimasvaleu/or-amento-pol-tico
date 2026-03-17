@@ -1,42 +1,53 @@
 
 
-## Plano: Restaurar Status de Pagamento
+## Plano: App embarcado (sem server.url)
 
-### Situacao Atual
+### Problema atual
+O `capacitor.config.ts` tem `server.url` apontando para `https://app.mandatointeligente.app`. Isso faz o WebView carregar esse site remoto. Se o DNS, SSL ou domínio tiver qualquer problema, o app mostra uma página errada ou erro de carregamento.
 
-Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
+### Solução
+Remover o bloco `server` inteiro do `capacitor.config.ts`. Isso faz o Capacitor carregar os arquivos HTML/JS/CSS do bundle local (pasta `dist/`) que já está compilado dentro do binário iOS. O app funciona **offline** e carrega instantaneamente.
 
-### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
+### Alteração
 
-Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
+**`capacitor.config.ts`** — remover o bloco `server`:
 
-| Municipio | Responsavel | ID |
-|-----------|-------------|-----|
-| Aroeira | Itamar | 5594343a... |
-| Juazeirinho | Bevilacqua | 2bbaa610... |
-| Bonito de Santa Fe | Sabino | 201560a9... |
-| Sume | Ze Mario | 2cec5382... |
-| Joao Pessoa | Jailson | 990001de... |
-| Sousa | Vitor | 51e0080c... |
+```ts
+import type { CapacitorConfig } from '@capacitor/cli';
 
-### Comando SQL
+const config: CapacitorConfig = {
+  appId: 'app.mandatointeligente.app',
+  appName: 'Mandato Intelligence',
+  webDir: 'dist',
+  ios: {
+    contentInset: 'always',
+    backgroundColor: '#FFFFFF',
+    scheme: 'mandatointeligente',
+  },
+  plugins: {
+    Camera: {
+      NSCameraUsageDescription: 'Este app precisa acessar a câmera para capturar fotos.',
+      NSPhotoLibraryUsageDescription: 'Este app precisa acessar suas fotos para enviar mídias.',
+      NSPhotoLibraryAddUsageDescription: 'Este app precisa salvar fotos na sua galeria.',
+    },
+  },
+};
 
-```sql
-UPDATE despesas_politicas 
-SET pagamento_feito_em = '2026-02-09'
-WHERE id IN (
-  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
-  '2bbaa610-e38e-44e0-9817-356253ef77ed',
-  '201560a9-aa52-4772-93a0-80f842e2a4d0',
-  '2cec5382-26af-4b57-aecc-658593567fe7',
-  '990001de-61c5-452b-b237-039e479e74a0',
-  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
-);
+export default config;
 ```
 
-Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
+### Após o commit (no Mac)
+```bash
+git pull
+npm run build
+npx cap sync ios
+npx cap open ios
+```
 
-### Resultado
+O `npm run build` gera a pasta `dist/` e o `cap sync` copia para dentro do projeto iOS. O app agora carrega localmente.
 
-Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
+### Importante
+- Cada vez que você fizer alterações no código, precisa rodar `npm run build && npx cap sync ios` para atualizar o app nativo
+- O hot-reload não funciona mais (era o propósito do `server.url`), mas o app fica muito mais rápido e confiável
+- O Supabase continua funcionando normalmente (as chamadas de API são feitas via rede)
 
