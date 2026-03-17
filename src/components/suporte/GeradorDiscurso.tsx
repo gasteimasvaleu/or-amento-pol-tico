@@ -283,10 +283,15 @@ const GeradorDiscurso = ({ onBack }: GeradorDiscursoProps) => {
           <CardHeader className="pb-3 flex flex-row items-center justify-between">
             <CardTitle className="text-base">Discurso Gerado</CardTitle>
             {discurso && !isLoading && (
-              <Button variant="outline" size="sm" onClick={handleCopy} className="gap-1">
-                {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                {copied ? "Copiado" : "Copiar"}
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={handleCopy} className="gap-1">
+                  {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                  {copied ? "Copiado" : "Copiar"}
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleWhatsApp} className="gap-1">
+                  <Share2 className="h-3 w-3" /> WhatsApp
+                </Button>
+              </div>
             )}
           </CardHeader>
           <CardContent>
