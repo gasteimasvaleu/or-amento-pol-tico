@@ -10,8 +10,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import {
   User, Mail, CalendarDays, Phone, Briefcase, MapPin,
-  Building2, Map, Hash, Save, Camera, Loader2
+  Building2, Map, Hash, Save, Camera
 } from "lucide-react";
+import { VideoOverlay } from "@/components/ui/VideoOverlay";
 import DashboardCharts from "@/components/dashboard/DashboardCharts";
 
 interface ProfileData {
