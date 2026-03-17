@@ -140,6 +140,9 @@ const GeradorProjetoLei = ({ onBack }: GeradorProjetoLeiProps) => {
       toast.error(e instanceof Error ? e.message : "Erro ao gerar projeto de lei");
     } finally {
       setIsLoading(false);
+      if (user) {
+        supabase.from("geracoes_log" as any).insert({ user_id: user.id, tipo: "projeto_lei" } as any).then(() => {});
+      }
     }
   };
 

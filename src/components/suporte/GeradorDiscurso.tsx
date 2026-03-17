@@ -148,6 +148,10 @@ const GeradorDiscurso = ({ onBack }: GeradorDiscursoProps) => {
       toast.error(e instanceof Error ? e.message : "Erro ao gerar discurso");
     } finally {
       setIsLoading(false);
+      // Log generation
+      if (user) {
+        supabase.from("geracoes_log" as any).insert({ user_id: user.id, tipo: "discurso" } as any).then(() => {});
+      }
     }
   };
 
