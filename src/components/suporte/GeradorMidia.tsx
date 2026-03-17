@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,6 +9,7 @@ import { VideoOverlay } from "@/components/ui/VideoOverlay";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { pickImage } from "@/lib/capacitorCamera";
 
 interface Props {
   onBack: () => void;
