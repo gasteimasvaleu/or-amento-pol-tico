@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Users, Phone, MapPin, Trash2, Pencil } from "lucide-react";
-import { VideoOverlay } from "@/components/ui/VideoOverlay";
+import { Loader2 } from "lucide-react";
 import { useEleitores } from "@/hooks/useEleitores";
 import { useDemandas } from "@/hooks/useDemandas";
 import { EleitorModal } from "@/components/eleitores/EleitorModal";
