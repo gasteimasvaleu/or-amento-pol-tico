@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { identifyUser, logOutRevenueCat, syncSubscriptionAfterLogin, isNativePlatform } from "@/lib/revenuecat";
 
 interface AuthContextType {
   session: Session | null;
@@ -22,9 +23,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      async (_event, session) => {
         setSession(session);
         setLoading(false);
+
+        if (_event === "SIGNED_OUT") {
+          await logOutRevenueCat();
+        }
+
+        if (session?.user && (_event === "SIGNED_IN" || _event === "TOKEN_REFRESHED")) {
+          if (isNativePlatform()) {
+            // Don't block rendering — run in background
+            identifyUser(session.user.id).then(() =>
+              syncSubscriptionAfterLogin(session.user.id, session.user.email)
+            );
+          }
+        }
       }
     );
 
@@ -37,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = async () => {
+    await logOutRevenueCat();
     await supabase.auth.signOut();
   };
 
