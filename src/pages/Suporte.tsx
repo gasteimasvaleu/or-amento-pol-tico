@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, Newspaper, LifeBuoy, FileText, ImagePlus } from "lucide-react";
+import { Sparkles, Newspaper, LifeBuoy, FileText, ImagePlus, Hash } from "lucide-react";
 import GeradorDiscurso from "@/components/suporte/GeradorDiscurso";
 import AnaliseNoticia from "@/components/suporte/AnaliseNoticia";
 import GeradorProjetoLei from "@/components/suporte/GeradorProjetoLei";
 import GeradorMidia from "@/components/suporte/GeradorMidia";
+import GeradorPostagem from "@/components/suporte/GeradorPostagem";
 
-type Tool = "hub" | "gerador-discurso" | "analise-noticia" | "gerador-projeto-lei" | "gerador-midia";
+type Tool = "hub" | "gerador-discurso" | "analise-noticia" | "gerador-projeto-lei" | "gerador-midia" | "gerador-postagem";
 
 const Suporte = () => {
   const [activeTool, setActiveTool] = useState<Tool>("hub");
