@@ -110,6 +110,60 @@ export type Database = {
         }
         Relationships: []
       }
+      cidades: {
+        Row: {
+          acoes_realizadas: string
+          created_at: string
+          eleitorado: number
+          emendas_parlamentares: string
+          estado: string
+          id: string
+          nome: string
+          observacoes: string
+          populacao: number
+          prefeito: string
+          recursos_destinados: number
+          updated_at: string
+          user_id: string
+          vereadores: string
+          vice_prefeito: string
+        }
+        Insert: {
+          acoes_realizadas?: string
+          created_at?: string
+          eleitorado?: number
+          emendas_parlamentares?: string
+          estado?: string
+          id?: string
+          nome: string
+          observacoes?: string
+          populacao?: number
+          prefeito?: string
+          recursos_destinados?: number
+          updated_at?: string
+          user_id: string
+          vereadores?: string
+          vice_prefeito?: string
+        }
+        Update: {
+          acoes_realizadas?: string
+          created_at?: string
+          eleitorado?: number
+          emendas_parlamentares?: string
+          estado?: string
+          id?: string
+          nome?: string
+          observacoes?: string
+          populacao?: number
+          prefeito?: string
+          recursos_destinados?: number
+          updated_at?: string
+          user_id?: string
+          vereadores?: string
+          vice_prefeito?: string
+        }
+        Relationships: []
+      }
       compromissos: {
         Row: {
           created_at: string | null
