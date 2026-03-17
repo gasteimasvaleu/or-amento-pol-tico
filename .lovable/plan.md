@@ -1,29 +1,42 @@
 
 
-## Correção: Safe Area excessiva no iOS (topo e rodapé)
+## Plano: Restaurar Status de Pagamento
 
-### Problema
-O `capacitor.config.ts` tem `contentInset: 'always'`, que faz o iOS aplicar safe area insets automaticamente no WebView. Porém, o CSS já aplica safe area manualmente (`pt-[env(safe-area-inset-top)]` no header, `pb-[env(safe-area-inset-bottom)]` no BottomNav). Isso gera **padding duplicado** — o sistema aplica uma vez e o CSS aplica novamente.
+### Situacao Atual
 
-Além disso, o `apple-mobile-web-app-status-bar-style` está como `black`, o que pode causar uma barra preta extra no topo.
+Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
 
-### Solução
+### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
 
-1. **`capacitor.config.ts`** — Remover `contentInset: 'always'` para que o iOS não aplique safe area automaticamente (o CSS já cuida disso):
-   ```ts
-   ios: {
-     backgroundColor: '#FFFFFF',
-     scheme: 'mandatointeligente',
-   },
-   ```
+Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
 
-2. **`index.html`** — Trocar o status bar style de `black` para `default` para evitar barra preta extra:
-   ```html
-   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-   ```
+| Municipio | Responsavel | ID |
+|-----------|-------------|-----|
+| Aroeira | Itamar | 5594343a... |
+| Juazeirinho | Bevilacqua | 2bbaa610... |
+| Bonito de Santa Fe | Sabino | 201560a9... |
+| Sume | Ze Mario | 2cec5382... |
+| Joao Pessoa | Jailson | 990001de... |
+| Sousa | Vitor | 51e0080c... |
 
-Após essas mudanças, será necessário rebuild + sync:
+### Comando SQL
+
+```sql
+UPDATE despesas_politicas 
+SET pagamento_feito_em = '2026-02-09'
+WHERE id IN (
+  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
+  '2bbaa610-e38e-44e0-9817-356253ef77ed',
+  '201560a9-aa52-4772-93a0-80f842e2a4d0',
+  '2cec5382-26af-4b57-aecc-658593567fe7',
+  '990001de-61c5-452b-b237-039e479e74a0',
+  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
+);
 ```
-npm run build && npx cap sync ios && npx cap open ios
-```
+
+Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
+
+### Resultado
+
+Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
 

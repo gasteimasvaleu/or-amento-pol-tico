@@ -5,7 +5,6 @@ const config: CapacitorConfig = {
   appName: 'Mandato Intelligence',
   webDir: 'dist',
   ios: {
-    contentInset: 'always',
     backgroundColor: '#FFFFFF',
     scheme: 'mandatointeligente',
   },
