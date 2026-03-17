@@ -306,12 +306,7 @@ const AnaliseNoticia = ({ onBack }: Props) => {
             <div className="prose prose-sm max-w-none dark:prose-invert text-foreground">
               <ReactMarkdown>{comentario}</ReactMarkdown>
             </div>
-            {isCommenting && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Loader2 className="h-3 w-3 animate-spin" />
-                Gerando comentário...
-              </div>
-            )}
+            {isCommenting && !comentario && <VideoOverlay />}
           </CardContent>
         </Card>
       )}

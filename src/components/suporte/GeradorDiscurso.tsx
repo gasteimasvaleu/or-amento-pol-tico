@@ -296,12 +296,7 @@ const GeradorDiscurso = ({ onBack }: GeradorDiscursoProps) => {
             )}
           </CardHeader>
           <CardContent>
-            {isLoading && !discurso && (
-              <div className="flex items-center gap-2 text-muted-foreground text-sm py-8 justify-center">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Preparando seu discurso...
-              </div>
-            )}
+            {isLoading && !discurso && <VideoOverlay />}
             <div className="prose prose-sm dark:prose-invert max-w-none">
               <ReactMarkdown>{discurso}</ReactMarkdown>
             </div>

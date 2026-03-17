@@ -123,7 +123,9 @@ export default function GestaoCidades() {
         </div>
 
         {isLoading ? (
-          <VideoOverlay />
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
         ) : filtered.length === 0 ? (
           <p className="text-center text-muted-foreground py-10">
             {search ? "Nenhuma cidade encontrada." : "Nenhuma cidade cadastrada."}

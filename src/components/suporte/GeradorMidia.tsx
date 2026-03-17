@@ -316,16 +316,7 @@ const GeradorMidia = ({ onBack }: Props) => {
         </CardContent>
       </Card>
 
-      {loading && (
-        <Card>
-          <CardContent className="p-6 flex flex-col items-center gap-3 text-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">
-              Gerando sua imagem com IA... Isso pode levar até 1 minuto.
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      {loading && <VideoOverlay />}
 
       {imageUrl && (
         <Card>
