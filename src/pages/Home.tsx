@@ -55,8 +55,12 @@ const Home = () => {
         />
         <div className="space-y-1">
           <h1 className="text-xl font-bold text-foreground">Olá, {firstName} 👋</h1>
-          <p className="text-sm text-muted-foreground">Acesso rápido</p>
+          <p className="text-sm text-muted-foreground">Painel de atividades</p>
         </div>
+
+        <DashboardCharts />
+
+        <p className="text-sm font-medium text-muted-foreground mt-2">Acesso rápido</p>
 
         <div className="mt-auto relative mb-[-5rem]" style={{ height: stackHeight }}>
           {quickCards.map((card, index) => (
