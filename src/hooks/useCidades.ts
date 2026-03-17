@@ -180,3 +180,94 @@ export function useCidadeMidias(cidadeId?: string) {
     deleteMidia: deleteMidia.mutateAsync,
   };
 }
+
+// Hook for bairros
+export function useBairros(cidadeId?: string) {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
+    queryKey: ["bairros", cidadeId],
+    queryFn: async () => {
+      let q = supabase.from("bairros" as any).select("*").order("nome");
+      if (cidadeId) q = q.eq("cidade_id", cidadeId);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data as any[]).map((b) => ({
+        ...b,
+        liderancas: parseJsonbArray(b.liderancas),
+        recursos_destinados: parseJsonbArray(b.recursos_destinados),
+        emendas_parlamentares: parseJsonbArray(b.emendas_parlamentares),
+      })) as Bairro[];
+    },
+    enabled: !!user,
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (bairro: BairroInsert) => {
+      if (!user) throw new Error("Não autenticado");
+      const { data, error } = await supabase
+        .from("bairros" as any)
+        .insert({
+          ...bairro,
+          user_id: user.id,
+          liderancas: bairro.liderancas as any,
+          recursos_destinados: bairro.recursos_destinados as any,
+          emendas_parlamentares: bairro.emendas_parlamentares as any,
+        } as any)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as unknown as Bairro;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bairros"] });
+      toast({ title: "Bairro cadastrado com sucesso!" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Erro ao cadastrar bairro", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, ...data }: Partial<Bairro> & { id: string }) => {
+      const payload: any = { ...data };
+      if (data.liderancas) payload.liderancas = data.liderancas;
+      if (data.recursos_destinados) payload.recursos_destinados = data.recursos_destinados;
+      if (data.emendas_parlamentares) payload.emendas_parlamentares = data.emendas_parlamentares;
+      const { error } = await supabase.from("bairros" as any).update(payload as any).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bairros"] });
+      toast({ title: "Bairro atualizado!" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Erro ao atualizar bairro", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("bairros" as any).delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bairros"] });
+      toast({ title: "Bairro removido!" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Erro ao remover bairro", description: error.message, variant: "destructive" });
+    },
+  });
+
+  return {
+    bairros: query.data ?? [],
+    isLoading: query.isLoading,
+    createBairro: createMutation.mutateAsync,
+    updateBairro: updateMutation.mutateAsync,
+    deleteBairro: deleteMutation.mutateAsync,
+    isCreating: createMutation.isPending,
+  };
+}
