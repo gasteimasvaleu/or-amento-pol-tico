@@ -7,11 +7,19 @@ import AnaliseNoticia from "@/components/suporte/AnaliseNoticia";
 import GeradorProjetoLei from "@/components/suporte/GeradorProjetoLei";
 import GeradorMidia from "@/components/suporte/GeradorMidia";
 import GeradorPostagem from "@/components/suporte/GeradorPostagem";
+import { VideoOverlay } from "@/components/ui/VideoOverlay";
 
 type Tool = "hub" | "gerador-discurso" | "analise-noticia" | "gerador-projeto-lei" | "gerador-midia" | "gerador-postagem";
 
 const Suporte = () => {
   const [activeTool, setActiveTool] = useState<Tool>("hub");
+  const [showOverlay, setShowOverlay] = useState(false);
+  const [pendingTool, setPendingTool] = useState<Tool>("hub");
+
+  const handleToolSelect = (tool: Tool) => {
+    setPendingTool(tool);
+    setShowOverlay(true);
+  };
 
   return (
     <Layout>
