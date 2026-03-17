@@ -1,3 +1,5 @@
+export type EleitorClassificacao = "positivo" | "neutro" | "negativo";
+
 export interface Eleitor {
   id: string;
   user_id: string;
@@ -5,6 +7,7 @@ export interface Eleitor {
   telefone: string;
   endereco: string;
   bairro: string;
+  classificacao: EleitorClassificacao;
   created_at: string | null;
   updated_at: string | null;
 }
