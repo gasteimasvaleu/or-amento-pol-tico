@@ -15,6 +15,7 @@ import {
   Building2,
   Heart,
   Shield,
+  Bell,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
