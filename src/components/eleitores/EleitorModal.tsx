@@ -20,7 +20,7 @@ const classificacoes: { value: EleitorClassificacao; label: string; color: strin
   { value: "positivo", label: "Positivo", color: "bg-green-500" },
 ];
 
-const emptyForm: EleitorInsert = { nome: "", telefone: "", endereco: "", bairro: "", classificacao: "neutro" };
+const emptyForm: EleitorInsert = { nome: "", telefone: "", endereco: "", cidade: "", bairro: "", classificacao: "neutro" };
 
 export function EleitorModal({ open, onOpenChange, onSubmit, isLoading, eleitor }: EleitorModalProps) {
   const [form, setForm] = useState<EleitorInsert>(emptyForm);
