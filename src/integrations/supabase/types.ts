@@ -110,19 +110,60 @@ export type Database = {
         }
         Relationships: []
       }
+      cidade_midias: {
+        Row: {
+          arquivo_nome: string
+          arquivo_tipo: string | null
+          arquivo_url: string
+          cidade_id: string
+          created_at: string
+          descricao: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          arquivo_nome: string
+          arquivo_tipo?: string | null
+          arquivo_url: string
+          cidade_id: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          arquivo_nome?: string
+          arquivo_tipo?: string | null
+          arquivo_url?: string
+          cidade_id?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cidade_midias_cidade_id_fkey"
+            columns: ["cidade_id"]
+            isOneToOne: false
+            referencedRelation: "cidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cidades: {
         Row: {
           acoes_realizadas: string
           created_at: string
           eleitorado: number
-          emendas_parlamentares: string
+          emendas_parlamentares: Json
           estado: string
           id: string
           nome: string
           observacoes: string
           populacao: number
           prefeito: string
-          recursos_destinados: number
+          recursos_destinados: Json
           updated_at: string
           user_id: string
           vereadores: string
@@ -132,14 +173,14 @@ export type Database = {
           acoes_realizadas?: string
           created_at?: string
           eleitorado?: number
-          emendas_parlamentares?: string
+          emendas_parlamentares?: Json
           estado?: string
           id?: string
           nome: string
           observacoes?: string
           populacao?: number
           prefeito?: string
-          recursos_destinados?: number
+          recursos_destinados?: Json
           updated_at?: string
           user_id: string
           vereadores?: string
@@ -149,14 +190,14 @@ export type Database = {
           acoes_realizadas?: string
           created_at?: string
           eleitorado?: number
-          emendas_parlamentares?: string
+          emendas_parlamentares?: Json
           estado?: string
           id?: string
           nome?: string
           observacoes?: string
           populacao?: number
           prefeito?: string
-          recursos_destinados?: number
+          recursos_destinados?: Json
           updated_at?: string
           user_id?: string
           vereadores?: string
