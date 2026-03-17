@@ -82,9 +82,7 @@ export default function GestaoEleitores() {
         </div>
 
         {isLoading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-          </div>
+          <VideoOverlay />
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center py-12 text-muted-foreground">
             <Users className="h-12 w-12 mb-3" />

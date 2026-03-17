@@ -23,6 +23,15 @@ const Suporte = () => {
 
   return (
     <Layout>
+      {showOverlay && (
+        <VideoOverlay
+          duration={2000}
+          onComplete={() => {
+            setActiveTool(pendingTool);
+            setShowOverlay(false);
+          }}
+        />
+      )}
       {activeTool === "hub" && (
         <>
           <div className="space-y-1 mb-6">
