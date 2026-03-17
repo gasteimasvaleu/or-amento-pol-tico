@@ -31,7 +31,7 @@ interface ProfileData {
 
 const DashboardGeral = () => {
   const { user } = useAuth();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
