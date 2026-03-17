@@ -96,33 +96,38 @@ const DashboardGeral = () => {
     }
   };
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleAvatarUpload = async () => {
+    try {
+      const dataUrl = await pickImage({ source: 'prompt', quality: 80 });
+      if (!dataUrl) return;
 
-    setUploading(true);
-    const fileExt = file.name.split(".").pop();
-    const filePath = `${user!.id}/avatar.${fileExt}`;
+      setUploading(true);
+      const blob = dataUrlToBlob(dataUrl);
+      const ext = blob.type.split('/')[1] || 'png';
+      const filePath = `${user!.id}/avatar.${ext}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from("avatars")
-      .upload(filePath, file, { upsert: true });
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, blob, { upsert: true, contentType: blob.type });
 
-    if (uploadError) {
-      toast({ title: "Erro no upload", description: uploadError.message, variant: "destructive" });
+      if (uploadError) {
+        toast({ title: "Erro no upload", description: uploadError.message, variant: "destructive" });
+        setUploading(false);
+        return;
+      }
+
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
+      const avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+
+      setProfile((p) => ({ ...p, avatar_url: avatarUrl }));
+      await supabase.from("profiles").update({ avatar_url: avatarUrl } as any).eq("id", user!.id);
+
       setUploading(false);
-      return;
+      toast({ title: "Foto atualizada!" });
+    } catch (err: any) {
+      setUploading(false);
+      toast({ title: "Erro ao capturar imagem", description: err.message, variant: "destructive" });
     }
-
-    const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
-    const avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`;
-
-    setProfile((p) => ({ ...p, avatar_url: avatarUrl }));
-
-    await supabase.from("profiles").update({ avatar_url: avatarUrl } as any).eq("id", user!.id);
-
-    setUploading(false);
-    toast({ title: "Foto atualizada!" });
   };
 
   const handleChange = (field: keyof ProfileData, value: string) => {
