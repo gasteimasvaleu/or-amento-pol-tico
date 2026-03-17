@@ -567,6 +567,48 @@ export type Database = {
         }
         Relationships: []
       }
+      lembretes: {
+        Row: {
+          categoria: string
+          concluido: boolean
+          created_at: string | null
+          data_lembrete: string
+          descricao: string | null
+          hora_lembrete: string | null
+          id: string
+          prioridade: string
+          titulo: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          categoria?: string
+          concluido?: boolean
+          created_at?: string | null
+          data_lembrete: string
+          descricao?: string | null
+          hora_lembrete?: string | null
+          id?: string
+          prioridade?: string
+          titulo: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          categoria?: string
+          concluido?: boolean
+          created_at?: string | null
+          data_lembrete?: string
+          descricao?: string | null
+          hora_lembrete?: string | null
+          id?: string
+          prioridade?: string
+          titulo?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       midias: {
         Row: {
           arquivo_nome: string
