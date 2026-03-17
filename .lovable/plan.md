@@ -1,51 +1,42 @@
 
 
-## Plano: Implementar RevenueCat com Paywall e Controle de Assinatura
+## Plano: Restaurar Status de Pagamento
 
-A API Key pública `appl_mdFZtyVKDhsAdhWxqrjGIdEniXP` será armazenada diretamente no código (é uma chave pública/publishable).
+### Situacao Atual
 
-Como o RevenueCat SDK nativo requer iOS/Android, e o app roda como web via Capacitor, a abordagem será usar a **REST API do RevenueCat** no frontend para verificar assinaturas, combinada com uma **página de paywall** que redireciona para a compra nativa quando em Capacitor ou mostra informações quando na web.
+Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
 
-### Arquivos a criar/modificar
+### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
 
-**1. `src/lib/revenueCat.ts`** — Cliente RevenueCat via REST API
-- Funções para verificar status de assinatura do usuário (`getSubscriberInfo`)
-- Usar o `user_id` do Supabase Auth como app_user_id no RevenueCat
-- API Key pública no header
+Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
 
-**2. `src/contexts/SubscriptionContext.tsx`** — Contexto de assinatura
-- Provider que verifica se o usuário tem o entitlement `premium` ativo
-- Expõe `isPremium`, `loading`, `checkSubscription()`
-- Consulta RevenueCat ao montar e quando o user muda
+| Municipio | Responsavel | ID |
+|-----------|-------------|-----|
+| Aroeira | Itamar | 5594343a... |
+| Juazeirinho | Bevilacqua | 2bbaa610... |
+| Bonito de Santa Fe | Sabino | 201560a9... |
+| Sume | Ze Mario | 2cec5382... |
+| Joao Pessoa | Jailson | 990001de... |
+| Sousa | Vitor | 51e0080c... |
 
-**3. `src/pages/Paywall.tsx`** — Página de paywall
-- Design atrativo com benefícios do plano premium
-- Botão de assinar que usa o Capacitor plugin ou mostra instruções
-- Integração com `@revenuecat/purchases-capacitor` para compra nativa
+### Comando SQL
 
-**4. `src/components/layout/ProtectedRoute.tsx`** — Modificar
-- Após verificar autenticação, verificar assinatura
-- Se não for premium, redirecionar para `/paywall`
-- Permitir acesso livre a rotas específicas (login, cadastro, paywall)
+```sql
+UPDATE despesas_politicas 
+SET pagamento_feito_em = '2026-02-09'
+WHERE id IN (
+  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
+  '2bbaa610-e38e-44e0-9817-356253ef77ed',
+  '201560a9-aa52-4772-93a0-80f842e2a4d0',
+  '2cec5382-26af-4b57-aecc-658593567fe7',
+  '990001de-61c5-452b-b237-039e479e74a0',
+  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
+);
+```
 
-**5. `src/App.tsx`** — Modificar
-- Adicionar `SubscriptionProvider` envolvendo as rotas
-- Adicionar rota `/paywall`
+Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
 
-**6. Instalar dependência**: `@revenuecat/purchases-capacitor` para compras nativas no iOS
+### Resultado
 
-### Fluxo
-1. Usuário faz login → AuthContext carrega sessão
-2. SubscriptionContext consulta RevenueCat REST API com `user_id`
-3. Se tem entitlement `premium` → acesso liberado
-4. Se não tem → redireciona para Paywall
-5. No Paywall, botão "Assinar" inicia compra via Capacitor plugin nativo
-6. Após compra, re-verifica status e libera acesso
-
-### Detalhes técnicos
-- REST API endpoint: `https://api.revenuecat.com/v1/subscribers/{app_user_id}`
-- Header: `Authorization: Bearer appl_mdFZtyVKDhsAdhWxqrjGIdEniXP`
-- O entitlement a verificar: o identifier que você criou ("Mandato Intelligence Pro" ou similar)
-- No ambiente web (preview), a compra nativa não funciona — mostrará uma mensagem informativa
-- No Capacitor iOS nativo, usará o SDK para apresentar o produto e processar a compra
+Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
 

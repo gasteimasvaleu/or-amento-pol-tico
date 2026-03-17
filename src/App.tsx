@@ -4,9 +4,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
+import Paywall from "./pages/Paywall";
 import Home from "./pages/Home";
 import DashboardGeral from "./pages/DashboardGeral";
 import Despesas from "./pages/Despesas";
@@ -36,29 +38,32 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/cadastro" element={<Cadastro />} />
-            <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-            <Route path="/dashboard" element={<ProtectedRoute><DashboardGeral /></ProtectedRoute>} />
-            <Route path="/despesas" element={<ProtectedRoute><Despesas /></ProtectedRoute>} />
-            <Route path="/despesas/nova" element={<ProtectedRoute><NovaDespesa /></ProtectedRoute>} />
-            <Route path="/despesas/editar/:id" element={<ProtectedRoute><EditarDespesa /></ProtectedRoute>} />
-            <Route path="/despesas/historico" element={<ProtectedRoute><Historico /></ProtectedRoute>} />
-            <Route path="/agenda" element={<ProtectedRoute><Agenda /></ProtectedRoute>} />
-            <Route path="/midia" element={<ProtectedRoute><Midia /></ProtectedRoute>} />
-            <Route path="/suporte" element={<ProtectedRoute><Suporte /></ProtectedRoute>} />
-            <Route path="/noticias" element={<ProtectedRoute><Noticias /></ProtectedRoute>} />
-            <Route path="/equipe" element={<ProtectedRoute><Equipe /></ProtectedRoute>} />
-            <Route path="/equipe/assessores" element={<ProtectedRoute><Assessores /></ProtectedRoute>} />
-            <Route path="/equipe/apoiadores" element={<ProtectedRoute><Apoiadores /></ProtectedRoute>} />
-            <Route path="/dados-eleitorais" element={<ProtectedRoute><DadosEleitorais /></ProtectedRoute>} />
-            <Route path="/gestao-de-eleitores" element={<ProtectedRoute><GestaoEleitores /></ProtectedRoute>} />
-            <Route path="/gestao-de-cidades" element={<ProtectedRoute><GestaoCidades /></ProtectedRoute>} />
-            <Route path="/lembretes" element={<ProtectedRoute><Lembretes /></ProtectedRoute>} />
-            <Route path="/politica-de-privacidade" element={<ProtectedRoute><PoliticaPrivacidade /></ProtectedRoute>} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <SubscriptionProvider>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/cadastro" element={<Cadastro />} />
+              <Route path="/paywall" element={<Paywall />} />
+              <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><DashboardGeral /></ProtectedRoute>} />
+              <Route path="/despesas" element={<ProtectedRoute><Despesas /></ProtectedRoute>} />
+              <Route path="/despesas/nova" element={<ProtectedRoute><NovaDespesa /></ProtectedRoute>} />
+              <Route path="/despesas/editar/:id" element={<ProtectedRoute><EditarDespesa /></ProtectedRoute>} />
+              <Route path="/despesas/historico" element={<ProtectedRoute><Historico /></ProtectedRoute>} />
+              <Route path="/agenda" element={<ProtectedRoute><Agenda /></ProtectedRoute>} />
+              <Route path="/midia" element={<ProtectedRoute><Midia /></ProtectedRoute>} />
+              <Route path="/suporte" element={<ProtectedRoute><Suporte /></ProtectedRoute>} />
+              <Route path="/noticias" element={<ProtectedRoute><Noticias /></ProtectedRoute>} />
+              <Route path="/equipe" element={<ProtectedRoute><Equipe /></ProtectedRoute>} />
+              <Route path="/equipe/assessores" element={<ProtectedRoute><Assessores /></ProtectedRoute>} />
+              <Route path="/equipe/apoiadores" element={<ProtectedRoute><Apoiadores /></ProtectedRoute>} />
+              <Route path="/dados-eleitorais" element={<ProtectedRoute><DadosEleitorais /></ProtectedRoute>} />
+              <Route path="/gestao-de-eleitores" element={<ProtectedRoute><GestaoEleitores /></ProtectedRoute>} />
+              <Route path="/gestao-de-cidades" element={<ProtectedRoute><GestaoCidades /></ProtectedRoute>} />
+              <Route path="/lembretes" element={<ProtectedRoute><Lembretes /></ProtectedRoute>} />
+              <Route path="/politica-de-privacidade" element={<ProtectedRoute><PoliticaPrivacidade /></ProtectedRoute>} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </SubscriptionProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
