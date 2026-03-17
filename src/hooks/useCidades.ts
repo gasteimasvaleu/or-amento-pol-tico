@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import type { Cidade, CidadeInsert, CidadeMidia } from "@/types/cidade";
+import type { Cidade, CidadeInsert, CidadeMidia, Bairro, BairroInsert } from "@/types/cidade";
 
 function parseJsonbArray(val: any): any[] {
   if (Array.isArray(val)) return val;

@@ -33,3 +33,21 @@ export interface CidadeMidia {
   descricao: string;
   created_at: string | null;
 }
+
+export interface Bairro {
+  id: string;
+  cidade_id: string;
+  user_id: string;
+  nome: string;
+  liderancas: string[];
+  populacao: number;
+  eleitorado: number;
+  recursos_destinados: RecursoItem[];
+  acoes_realizadas: string;
+  emendas_parlamentares: RecursoItem[];
+  observacoes: string;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export type BairroInsert = Omit<Bairro, "id" | "user_id" | "created_at" | "updated_at">;
