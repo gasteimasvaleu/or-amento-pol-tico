@@ -23,6 +23,7 @@ import Apoiadores from "./pages/Apoiadores";
 import DadosEleitorais from "./pages/DadosEleitorais";
 import GestaoEleitores from "./pages/GestaoEleitores";
 import GestaoCidades from "./pages/GestaoCidades";
+import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
