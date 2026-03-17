@@ -12,6 +12,7 @@ import {
   User, Mail, CalendarDays, Phone, Briefcase, MapPin,
   Building2, Map, Hash, Save, Camera, Loader2
 } from "lucide-react";
+import DashboardCharts from "@/components/dashboard/DashboardCharts";
 
 interface ProfileData {
   full_name: string;
@@ -155,6 +156,8 @@ const DashboardGeral = () => {
           <h1 className="text-xl font-bold text-foreground">Meu Perfil</h1>
           <p className="text-sm text-muted-foreground">Gerencie suas informações pessoais</p>
         </div>
+
+        <DashboardCharts />
 
         {/* Avatar & Identity */}
         <Card>
