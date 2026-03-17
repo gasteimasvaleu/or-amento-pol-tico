@@ -1,42 +1,50 @@
 
 
-## Plano: Restaurar Status de Pagamento
+## Plano: VideoOverlay apenas nos estados de geração IA
 
-### Situacao Atual
+O overlay com vídeo + barra de progresso deve aparecer **somente enquanto a IA está processando/gerando conteúdo**, não em transições de página ou loading de dados.
 
-Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
+### Locais identificados (5 geradores de IA)
 
-### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
+| Componente | Estado de loading | O que está gerando |
+|---|---|---|
+| `GeradorDiscurso.tsx` | `isLoading` | Gerando discurso (streaming) |
+| `GeradorProjetoLei.tsx` | `isLoading` | Gerando projeto de lei (streaming) |
+| `GeradorPostagem.tsx` | `isLoading` | Gerando postagem (streaming) |
+| `GeradorMidia.tsx` | `loading` | Gerando imagem (API Leonardo AI) |
+| `AnaliseNoticia.tsx` | `isAnalyzing` / `isCommenting` | Analisando notícia / gerando comentário |
 
-Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
+### O que fazer
 
-| Municipio | Responsavel | ID |
-|-----------|-------------|-----|
-| Aroeira | Itamar | 5594343a... |
-| Juazeirinho | Bevilacqua | 2bbaa610... |
-| Bonito de Santa Fe | Sabino | 201560a9... |
-| Sume | Ze Mario | 2cec5382... |
-| Joao Pessoa | Jailson | 990001de... |
-| Sousa | Vitor | 51e0080c... |
+**1. Reverter overlays das páginas de dados e transição do Suporte**
 
-### Comando SQL
+Remover `VideoOverlay` de:
+- `DashboardGeral.tsx` — voltar ao spinner original
+- `Despesas.tsx` — voltar ao spinner original
+- `GestaoEleitores.tsx` — voltar ao spinner original
+- `GestaoCidades.tsx` — voltar ao spinner original
+- `Suporte.tsx` — remover lógica de `showOverlay`/`pendingTool`, voltar à troca direta de `activeTool`
 
-```sql
-UPDATE despesas_politicas 
-SET pagamento_feito_em = '2026-02-09'
-WHERE id IN (
-  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
-  '2bbaa610-e38e-44e0-9817-356253ef77ed',
-  '201560a9-aa52-4772-93a0-80f842e2a4d0',
-  '2cec5382-26af-4b57-aecc-658593567fe7',
-  '990001de-61c5-452b-b237-039e479e74a0',
-  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
-);
-```
+**2. Adicionar VideoOverlay nos 5 geradores**
 
-Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
+Em cada componente, renderizar `<VideoOverlay />` condicionalmente quando o estado de loading for `true` **e ainda não tiver conteúdo gerado** (ou seja, no início da geração, antes do streaming começar a preencher). Assim o overlay aparece no "preparando..." e some quando o primeiro chunk de texto chega.
 
-### Resultado
+Lógica: `{isLoading && !conteudo && <VideoOverlay />}`
 
-Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
+Para o **GeradorMidia** (que não faz streaming), o overlay fica visível durante todo o `loading` até a imagem ser retornada.
+
+Para a **AnaliseNoticia**, o overlay aparece em `isAnalyzing && !analise` e `isCommenting && !comentario`.
+
+### Arquivos editados
+
+1. `src/pages/DashboardGeral.tsx` — remover VideoOverlay, restaurar spinner
+2. `src/pages/Despesas.tsx` — remover VideoOverlay, restaurar spinner
+3. `src/pages/GestaoEleitores.tsx` — remover VideoOverlay, restaurar spinner
+4. `src/pages/GestaoCidades.tsx` — remover VideoOverlay, restaurar spinner
+5. `src/pages/Suporte.tsx` — remover overlay de transição, voltar à troca direta
+6. `src/components/suporte/GeradorDiscurso.tsx` — adicionar `<VideoOverlay />`
+7. `src/components/suporte/GeradorProjetoLei.tsx` — adicionar `<VideoOverlay />`
+8. `src/components/suporte/GeradorPostagem.tsx` — adicionar `<VideoOverlay />`
+9. `src/components/suporte/GeradorMidia.tsx` — adicionar `<VideoOverlay />`
+10. `src/components/suporte/AnaliseNoticia.tsx` — adicionar `<VideoOverlay />`
 
