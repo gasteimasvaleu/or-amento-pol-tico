@@ -12,7 +12,7 @@ import {
   User, Mail, CalendarDays, Phone, Briefcase, MapPin,
   Building2, Map, Hash, Save, Camera, Loader2
 } from "lucide-react";
-import { VideoOverlay } from "@/components/ui/VideoOverlay";
+
 import DashboardCharts from "@/components/dashboard/DashboardCharts";
 
 interface ProfileData {
