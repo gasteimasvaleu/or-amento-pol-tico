@@ -196,29 +196,19 @@ const GeradorMidia = ({ onBack }: Props) => {
                 >
                   <X className="h-4 w-4 text-foreground" />
                 </button>
-                <div className="absolute bottom-0 left-0 right-0 bg-background/80 px-2 py-1">
-                  <p className="text-[10px] text-muted-foreground truncate">{referenceFileName}</p>
-                </div>
               </div>
             ) : (
               <button
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={handlePickReference}
                 className="w-full rounded-lg border-2 border-dashed border-border p-4 text-center text-xs text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
               >
                 <Upload className="h-5 w-5 mx-auto mb-1" />
-                Clique para selecionar uma imagem
+                Toque para selecionar uma imagem
                 <br />
-                <span className="text-[10px]">PNG, JPEG ou WEBP (máx. 10MB)</span>
+                <span className="text-[10px]">PNG, JPEG ou WEBP</span>
               </button>
             )}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
 
             {referenceImage && (
               <div className="space-y-1">
