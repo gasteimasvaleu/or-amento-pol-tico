@@ -18,14 +18,14 @@ export function Layout({ children }: LayoutProps) {
     return (
       <div className="flex flex-col h-full">
         <header
-          className="fixed top-0 left-0 right-0 z-50 h-12 flex items-center border-b border-border bg-card px-4 pt-[max(0.5rem,env(safe-area-inset-top))]"
+          className="fixed top-0 left-0 right-0 z-50 flex items-center border-b border-border bg-card px-4 pt-[env(safe-area-inset-top)] pb-2"
           style={{ WebkitTransform: 'translateZ(0)', willChange: 'transform' }}
         >
           <NavLink to="/" className="flex items-center">
             <img src={LOGO_URL} alt="Mandato Intelligence" className="h-8" />
           </NavLink>
         </header>
-        <main className="flex-1 flex flex-col px-4 py-4 pb-20 mt-12">
+        <main className="flex-1 flex flex-col px-4 py-4 pb-24 mt-[calc(env(safe-area-inset-top)+3rem)]">
           {children}
         </main>
         <BottomNav />
