@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ArrowLeft, Copy, Loader2, Sparkles, Check, Share2 } from "lucide-react";
+import { VideoOverlay } from "@/components/ui/VideoOverlay";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 
