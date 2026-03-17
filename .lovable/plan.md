@@ -1,42 +1,42 @@
 
 
-## Plano: Restaurar Status de Pagamento
+## Diagnóstico
 
-### Situacao Atual
+### Problema 1: Nome errado abaixo do ícone
+O Xcode cacheia o `appName` antigo. Mesmo com o config atualizado, é preciso sincronizar novamente.
 
-Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
+### Problema 2: Redirecionando para página do Lovable
+A URL no `server.url` aponta para `https://238c6c3f-cd3d-4924-bcd9-404c97bcf042.lovableproject.com` — essa é a URL de preview, que pode estar mostrando a landing page do Lovable. O app precisa apontar para o domínio publicado correto.
 
-### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
+Há duas opções:
+- **Se você tem domínio custom configurado** (`app.mandatointeligente.app`): usar esse domínio
+- **Se não tem domínio custom**: usar a URL publicada `https://politico-controle-facil.lovable.app`
 
-Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
+---
 
-| Municipio | Responsavel | ID |
-|-----------|-------------|-----|
-| Aroeira | Itamar | 5594343a... |
-| Juazeirinho | Bevilacqua | 2bbaa610... |
-| Bonito de Santa Fe | Sabino | 201560a9... |
-| Sume | Ze Mario | 2cec5382... |
-| Joao Pessoa | Jailson | 990001de... |
-| Sousa | Vitor | 51e0080c... |
+## Plano
 
-### Comando SQL
+### Alteração em `capacitor.config.ts`
 
-```sql
-UPDATE despesas_politicas 
-SET pagamento_feito_em = '2026-02-09'
-WHERE id IN (
-  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
-  '2bbaa610-e38e-44e0-9817-356253ef77ed',
-  '201560a9-aa52-4772-93a0-80f842e2a4d0',
-  '2cec5382-26af-4b57-aecc-658593567fe7',
-  '990001de-61c5-452b-b237-039e479e74a0',
-  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
-);
+Atualizar a `server.url` para o domínio correto. Baseado na memória do projeto, o domínio custom é `app.mandatointeligente.app`:
+
+```ts
+server: {
+  url: 'https://app.mandatointeligente.app?forceHideBadge=true',
+  cleartext: true,
+},
 ```
 
-Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
+### Após o commit (no Mac):
+```bash
+git pull
+npx cap sync ios
+npx cap open ios
+```
 
-### Resultado
+O `npx cap sync` vai:
+1. Atualizar o `CFBundleDisplayName` para "Mandato Intelligence" (corrige o nome)
+2. Atualizar a URL do servidor para o domínio correto (corrige o redirecionamento)
 
-Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
+**Importante**: O app precisa estar **publicado** no Lovable para que a URL funcione no dispositivo. Certifique-se de que o projeto está publicado clicando em "Publish" no editor.
 
