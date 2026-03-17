@@ -1,114 +1,42 @@
 
 
-## Plano: Refatorar para fluxo App Store + Sign in with Apple (igual ao outro app)
+## Plano: Restaurar Status de Pagamento
 
-### Resumo da mudanca
-Remover a paywall separada e o link "Criar nova conta". A tela de login passa a ter: botao "App Store" (comprar assinatura), botao "Continuar com Apple" (desabilitado ate assinar), formulario email/senha, botao "Restaurar Compras", e links obrigatorios Apple.
+### Situacao Atual
 
-### Arquivos a criar
+Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
 
-**1. `src/lib/nativeAppleSignIn.ts`** — Plugin Capacitor para Sign in with Apple nativo
-- `registerPlugin('NativeAppleSignIn')` com metodo `authorize()`
-- Retorna `identityToken`, `authorizationCode`, `givenName`, `familyName`, `email`
-- Instrucoes para criar os arquivos Swift no Xcode (NativeAppleSignInPlugin.swift, bridge .m, MyViewController.swift)
+### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
 
-**2. `src/lib/revenuecat.ts`** — Reescrever unificando revenueCat.ts + revenueCatNative.ts
-- `isNativePlatform()`, `getPlatform()`
-- `initRevenueCat()` — configure sem appUserID (anonimo ate login)
-- `identifyUser(userId)` — `Purchases.logIn()`
-- `logOutRevenueCat()` — `Purchases.logOut()`
-- `purchaseMonthly()` — busca offerings, compra pacote, retorna `{ success, expiresAt?, error? }`
-- `checkSubscriptionStatus()` — verifica entitlements.active
-- `restorePurchases()` — obrigatorio Apple Guidelines
-- `syncSubscriptionAfterLogin(userId, email)` — verifica status, faz upsert na tabela `subscribers`
-- Tudo com `import()` dinamico para nao quebrar na web
+Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
 
-**3. `supabase/functions/revenuecat-webhook/index.ts`** — Edge Function webhook
-- Recebe eventos do RevenueCat (INITIAL_PURCHASE, RENEWAL, CANCELLATION, EXPIRATION)
-- Mapeia para status na tabela `subscribers`
-- Resolve user_id do app_user_id (ignora $RCAnonymousID)
-- Upsert na tabela `subscribers`
+| Municipio | Responsavel | ID |
+|-----------|-------------|-----|
+| Aroeira | Itamar | 5594343a... |
+| Juazeirinho | Bevilacqua | 2bbaa610... |
+| Bonito de Santa Fe | Sabino | 201560a9... |
+| Sume | Ze Mario | 2cec5382... |
+| Joao Pessoa | Jailson | 990001de... |
+| Sousa | Vitor | 51e0080c... |
 
-### Arquivos a modificar
+### Comando SQL
 
-**4. `src/pages/Login.tsx`** — Refatorar completamente
-- Remover link "Criar nova conta"
-- Adicionar estado `hasPurchased` (inicia false)
-- No mount, se nativo: `initRevenueCat()` + `restorePurchases()` silencioso → se ativo, `hasPurchased = true`
-- Botao " App Store" → chama `purchaseMonthly()`, no sucesso seta `hasPurchased = true`
-- Botao " Continuar com Apple" → disabled se `!hasPurchased`; ao clicar: `nativeAppleSignIn()` → `signInWithIdToken({ provider: 'apple', token })`. Na web: fallback `signInWithOAuth({ provider: 'apple' })`
-- Divisor "ou" + formulario email/senha (sempre visivel)
-- Botao "Restaurar Compras"
-- Links "Termos de Uso" e "Politica de Privacidade"
-- Info de assinatura (nome do plano, duracao, renovacao automatica) — Apple Guideline
-
-**5. `src/contexts/AuthContext.tsx`** — Integrar RevenueCat
-- `onAuthStateChange`: no SIGNED_OUT chamar `logOutRevenueCat()`; no login chamar `identifyUser(userId)` + `syncSubscriptionAfterLogin(userId, email)`
-- `signOut()`: chamar `logOutRevenueCat()` antes de `supabase.auth.signOut()`
-
-**6. `src/components/layout/ProtectedRoute.tsx`** — Simplificar
-- Remover checagem de subscription/paywall
-- Apenas verificar autenticacao (session). Se nao logado → `/login`
-- Remover import do SubscriptionContext
-
-**7. `src/App.tsx`** — Limpar
-- Remover rota `/paywall` e import do Paywall
-- Remover `SubscriptionProvider` (nao e mais necessario, controle fica no login)
-- Manter rota `/cadastro` (escondida, sem link)
-- Adicionar `initRevenueCat()` no carregamento do app
-
-**8. `capacitor.config.ts`** — Adicionar registro do plugin
-- Adicionar `NativeAppleSignInPlugin` no `plugins` ou `packageClassList`
-
-### Arquivos a deletar
-- `src/pages/Paywall.tsx`
-- `src/lib/revenueCat.ts` (substituido por revenuecat.ts)
-- `src/lib/revenueCatNative.ts` (unificado)
-- `src/contexts/SubscriptionContext.tsx` (nao mais necessario)
-
-### Migracao de banco — Tabela `subscribers`
 ```sql
-CREATE TABLE public.subscribers (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
-  email text,
-  status text NOT NULL DEFAULT 'expired',
-  product_id text,
-  expires_at timestamptz,
-  original_transaction_id text,
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now()
+UPDATE despesas_politicas 
+SET pagamento_feito_em = '2026-02-09'
+WHERE id IN (
+  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
+  '2bbaa610-e38e-44e0-9817-356253ef77ed',
+  '201560a9-aa52-4772-93a0-80f842e2a4d0',
+  '2cec5382-26af-4b57-aecc-658593567fe7',
+  '990001de-61c5-452b-b237-039e479e74a0',
+  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
 );
-
-ALTER TABLE public.subscribers ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view own subscription"
-  ON public.subscribers FOR SELECT TO authenticated
-  USING (auth.uid() = user_id);
-
-CREATE POLICY "Service role full access"
-  ON public.subscribers FOR ALL TO service_role
-  USING (true) WITH CHECK (true);
 ```
 
-### Config TOML — Adicionar webhook
-```toml
-[functions.revenuecat-webhook]
-verify_jwt = false
-```
+Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
 
-### Fluxo final
-1. Abrir app → tela de login
-2. "Continuar com Apple" desabilitado
-3. Toca " App Store" → compra via RevenueCat nativo
-4. Sucesso → "Continuar com Apple" habilitado
-5. Toca → Sign in with Apple nativo → `signInWithIdToken` no Supabase
-6. AuthContext detecta login → `identifyUser` + `syncSubscriptionAfterLogin`
-7. Webhook RevenueCat atualiza tabela `subscribers`
-8. Usuario acessa o app normalmente
+### Resultado
 
-### Instrucoes para o usuario apos implementacao
-- No Xcode: criar os 3 arquivos Swift, ativar capability "Sign in with Apple"
-- No Supabase Dashboard: ativar provider Apple em Authentication → Providers
-- No RevenueCat Dashboard: configurar webhook URL apontando para a edge function
+Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
 
