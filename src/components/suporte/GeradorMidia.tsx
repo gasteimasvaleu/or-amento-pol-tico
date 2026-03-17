@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,6 +9,7 @@ import { VideoOverlay } from "@/components/ui/VideoOverlay";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { pickImage } from "@/lib/capacitorCamera";
 
 interface Props {
   onBack: () => void;
@@ -35,38 +36,23 @@ const GeradorMidia = ({ onBack }: Props) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [referenceImage, setReferenceImage] = useState<string | null>(null);
-  const [referenceFileName, setReferenceFileName] = useState<string | null>(null);
   const [strength, setStrength] = useState(50);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.match(/^image\/(png|jpeg|webp)$/)) {
-      toast({ title: "Formato inválido", description: "Use PNG, JPEG ou WEBP", variant: "destructive" });
-      return;
+  const handlePickReference = async () => {
+    try {
+      const dataUrl = await pickImage({ source: 'prompt', quality: 80 });
+      if (dataUrl) {
+        setReferenceImage(dataUrl);
+      }
+    } catch (err: any) {
+      toast({ title: "Erro ao selecionar imagem", description: err.message, variant: "destructive" });
     }
-
-    if (file.size > 10 * 1024 * 1024) {
-      toast({ title: "Arquivo muito grande", description: "Máximo 10MB", variant: "destructive" });
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      setReferenceImage(reader.result as string);
-      setReferenceFileName(file.name);
-    };
-    reader.readAsDataURL(file);
   };
 
   const removeReference = () => {
     setReferenceImage(null);
-    setReferenceFileName(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleGenerate = async () => {
@@ -210,29 +196,19 @@ const GeradorMidia = ({ onBack }: Props) => {
                 >
                   <X className="h-4 w-4 text-foreground" />
                 </button>
-                <div className="absolute bottom-0 left-0 right-0 bg-background/80 px-2 py-1">
-                  <p className="text-[10px] text-muted-foreground truncate">{referenceFileName}</p>
-                </div>
               </div>
             ) : (
               <button
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={handlePickReference}
                 className="w-full rounded-lg border-2 border-dashed border-border p-4 text-center text-xs text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
               >
                 <Upload className="h-5 w-5 mx-auto mb-1" />
-                Clique para selecionar uma imagem
+                Toque para selecionar uma imagem
                 <br />
-                <span className="text-[10px]">PNG, JPEG ou WEBP (máx. 10MB)</span>
+                <span className="text-[10px]">PNG, JPEG ou WEBP</span>
               </button>
             )}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
 
             {referenceImage && (
               <div className="space-y-1">

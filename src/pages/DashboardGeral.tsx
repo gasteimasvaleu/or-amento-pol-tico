@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -12,6 +12,7 @@ import {
   User, Mail, CalendarDays, Phone, Briefcase, MapPin,
   Building2, Map, Hash, Save, Camera, Loader2
 } from "lucide-react";
+import { pickImage, dataUrlToBlob } from "@/lib/capacitorCamera";
 
 import DashboardCharts from "@/components/dashboard/DashboardCharts";
 
@@ -30,7 +31,7 @@ interface ProfileData {
 
 const DashboardGeral = () => {
   const { user } = useAuth();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -95,33 +96,38 @@ const DashboardGeral = () => {
     }
   };
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleAvatarUpload = async () => {
+    try {
+      const dataUrl = await pickImage({ source: 'prompt', quality: 80 });
+      if (!dataUrl) return;
 
-    setUploading(true);
-    const fileExt = file.name.split(".").pop();
-    const filePath = `${user!.id}/avatar.${fileExt}`;
+      setUploading(true);
+      const blob = dataUrlToBlob(dataUrl);
+      const ext = blob.type.split('/')[1] || 'png';
+      const filePath = `${user!.id}/avatar.${ext}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from("avatars")
-      .upload(filePath, file, { upsert: true });
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, blob, { upsert: true, contentType: blob.type });
 
-    if (uploadError) {
-      toast({ title: "Erro no upload", description: uploadError.message, variant: "destructive" });
+      if (uploadError) {
+        toast({ title: "Erro no upload", description: uploadError.message, variant: "destructive" });
+        setUploading(false);
+        return;
+      }
+
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
+      const avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+
+      setProfile((p) => ({ ...p, avatar_url: avatarUrl }));
+      await supabase.from("profiles").update({ avatar_url: avatarUrl } as any).eq("id", user!.id);
+
       setUploading(false);
-      return;
+      toast({ title: "Foto atualizada!" });
+    } catch (err: any) {
+      setUploading(false);
+      toast({ title: "Erro ao capturar imagem", description: err.message, variant: "destructive" });
     }
-
-    const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
-    const avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`;
-
-    setProfile((p) => ({ ...p, avatar_url: avatarUrl }));
-
-    await supabase.from("profiles").update({ avatar_url: avatarUrl } as any).eq("id", user!.id);
-
-    setUploading(false);
-    toast({ title: "Foto atualizada!" });
   };
 
   const handleChange = (field: keyof ProfileData, value: string) => {
@@ -173,7 +179,7 @@ const DashboardGeral = () => {
                 </AvatarFallback>
               </Avatar>
               <button
-                onClick={() => fileInputRef.current?.click()}
+                onClick={handleAvatarUpload}
                 className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                 disabled={uploading}
               >
@@ -183,13 +189,6 @@ const DashboardGeral = () => {
                   <Camera className="h-6 w-6 text-white" />
                 )}
               </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleAvatarUpload}
-              />
             </div>
             <div className="text-center">
               <h3 className="text-lg font-semibold text-foreground">{profile.full_name || "Usuário"}</h3>
