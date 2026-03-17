@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ArrowLeft, Copy, Loader2, Hash, Check, Upload, X, Share2 } from "lucide-react";
+import { VideoOverlay } from "@/components/ui/VideoOverlay";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 
@@ -348,12 +349,7 @@ const GeradorPostagem = ({ onBack }: GeradorPostagemProps) => {
             )}
           </CardHeader>
           <CardContent>
-            {isLoading && !postagem && (
-              <div className="flex items-center gap-2 text-muted-foreground text-sm py-8 justify-center">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Preparando sua postagem...
-              </div>
-            )}
+            {isLoading && !postagem && <VideoOverlay />}
             <div className="prose prose-sm dark:prose-invert max-w-none">
               <ReactMarkdown>{postagem}</ReactMarkdown>
             </div>

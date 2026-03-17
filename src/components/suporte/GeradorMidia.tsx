@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { ArrowLeft, ImagePlus, Loader2, Download, Save, Upload, X } from "lucide-react";
+import { VideoOverlay } from "@/components/ui/VideoOverlay";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -315,16 +316,7 @@ const GeradorMidia = ({ onBack }: Props) => {
         </CardContent>
       </Card>
 
-      {loading && (
-        <Card>
-          <CardContent className="p-6 flex flex-col items-center gap-3 text-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">
-              Gerando sua imagem com IA... Isso pode levar até 1 minuto.
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      {loading && <VideoOverlay />}
 
       {imageUrl && (
         <Card>

@@ -6,7 +6,7 @@ import { SearchFilters } from "@/components/despesas/SearchFilters";
 import { DespesasTable } from "@/components/despesas/DespesasTable";
 import { useDespesas } from "@/hooks/useDespesas";
 import { DespesaFilters } from "@/types/despesa";
-import { VideoOverlay } from "@/components/ui/VideoOverlay";
+import { Loader2 } from "lucide-react";
 
 const Despesas = () => {
   const currentMonth = new Date().getMonth();
@@ -53,7 +53,9 @@ const Despesas = () => {
         />
 
         {isLoading ? (
-          <VideoOverlay />
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
         ) : (
           <DespesasTable
             despesas={despesas}
