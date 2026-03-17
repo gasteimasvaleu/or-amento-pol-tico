@@ -36,9 +36,9 @@ const sheetVariants = cva(
         top: "inset-x-0 top-0 border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
         bottom:
           "bottom-4 left-4 right-4 rounded-2xl border border-border/50 sm:inset-x-0 sm:bottom-0 sm:rounded-none sm:rounded-t-2xl sm:border-t sm:border-x-0 sm:border-b-0 data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
-        left: "top-4 bottom-4 left-0 w-[calc(100vw-2rem)] rounded-2xl border border-border/50 sm:inset-y-0 sm:left-0 sm:w-3/4 sm:max-w-sm sm:rounded-none sm:border-r sm:border-y-0 sm:border-l-0 data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left",
+        left: "top-4 bottom-4 left-0 w-[calc(100vw-2rem)] rounded-r-2xl border border-border/50 sm:inset-y-0 sm:left-0 sm:w-3/4 sm:max-w-sm sm:rounded-none sm:border-r sm:border-y-0 sm:border-l-0 data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left",
         right:
-          "top-4 bottom-4 right-0 w-[calc(100vw-2rem)] rounded-2xl border border-border/50 sm:inset-y-0 sm:right-0 sm:w-3/4 sm:max-w-sm sm:rounded-none sm:border-l sm:border-y-0 sm:border-r-0 data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
+          "top-4 bottom-4 right-0 w-[calc(100vw-2rem)] rounded-l-2xl border border-border/50 sm:inset-y-0 sm:right-0 sm:w-3/4 sm:max-w-sm sm:rounded-none sm:border-l sm:border-y-0 sm:border-r-0 data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
       },
     },
     defaultVariants: {

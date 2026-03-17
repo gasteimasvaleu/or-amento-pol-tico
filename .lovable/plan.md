@@ -1,22 +1,42 @@
 
 
-## Plano: Corrigir Sheet lateral — margem esquerda e border-radius só nos cantos esquerdos
+## Plano: Restaurar Status de Pagamento
 
-O problema é duplo na variante `right`:
+### Situacao Atual
 
-1. **Border-radius nos 4 cantos** — deveria ser só nos cantos esquerdos (`rounded-l-2xl` em vez de `rounded-2xl`), pois o painel cola na borda direita.
-2. **Sem margem horizontal visível** — o `w-[calc(100vw-2rem)]` deveria criar espaço à esquerda, mas preciso confirmar que está funcionando. Caso o sheet esteja ocupando a tela toda, o espaço não aparece.
+Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
 
-### Alteração em `src/components/ui/sheet.tsx`
+### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
 
-**Variante `right` (linha 40-41):**
-- `rounded-2xl` → `rounded-l-2xl` (border-radius só nos cantos top-left e bottom-left)
-- Manter `right-0`, `top-4 bottom-4`, `w-[calc(100vw-2rem)]`
-- Manter `border border-border/50`
+Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
 
-**Variante `left` (linha 39) — mesma lógica espelhada:**
-- `rounded-2xl` → `rounded-r-2xl` (border-radius só nos cantos top-right e bottom-right)
+| Municipio | Responsavel | ID |
+|-----------|-------------|-----|
+| Aroeira | Itamar | 5594343a... |
+| Juazeirinho | Bevilacqua | 2bbaa610... |
+| Bonito de Santa Fe | Sabino | 201560a9... |
+| Sume | Ze Mario | 2cec5382... |
+| Joao Pessoa | Jailson | 990001de... |
+| Sousa | Vitor | 51e0080c... |
 
-**Variante `bottom` (linha 37-38):**
-- Manter `rounded-2xl` (já está correto para bottom)
+### Comando SQL
+
+```sql
+UPDATE despesas_politicas 
+SET pagamento_feito_em = '2026-02-09'
+WHERE id IN (
+  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
+  '2bbaa610-e38e-44e0-9817-356253ef77ed',
+  '201560a9-aa52-4772-93a0-80f842e2a4d0',
+  '2cec5382-26af-4b57-aecc-658593567fe7',
+  '990001de-61c5-452b-b237-039e479e74a0',
+  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
+);
+```
+
+Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
+
+### Resultado
+
+Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
 
