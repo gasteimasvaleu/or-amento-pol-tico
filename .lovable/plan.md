@@ -1,42 +1,48 @@
 
 
-## Plano: Restaurar Status de Pagamento
+## Plano: Recursos/Emendas como lista dinâmica + Upload de mídias da cidade
 
-### Situacao Atual
+### 1. Migration: alterar colunas e criar tabela de mídias
 
-Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
+- Alterar `recursos_destinados` de `numeric` para `jsonb DEFAULT '[]'` — armazena array de `{objeto, valor}`
+- Alterar `emendas_parlamentares` de `text` para `jsonb DEFAULT '[]'` — mesma estrutura
+- Criar tabela `cidade_midias` com: `id`, `cidade_id` (FK para cidades), `user_id`, `arquivo_url`, `arquivo_nome`, `arquivo_tipo`, `descricao`, `created_at`
+- RLS na `cidade_midias` vinculada ao `user_id`
 
-### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
+### 2. Atualizar `src/types/cidade.ts`
 
-Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
+- Criar tipo `RecursoItem = { objeto: string; valor: number }`
+- `recursos_destinados` e `emendas_parlamentares` passam a ser `RecursoItem[]`
+- Criar interface `CidadeMidia` para a nova tabela
 
-| Municipio | Responsavel | ID |
-|-----------|-------------|-----|
-| Aroeira | Itamar | 5594343a... |
-| Juazeirinho | Bevilacqua | 2bbaa610... |
-| Bonito de Santa Fe | Sabino | 201560a9... |
-| Sume | Ze Mario | 2cec5382... |
-| Joao Pessoa | Jailson | 990001de... |
-| Sousa | Vitor | 51e0080c... |
+### 3. Atualizar `CidadeModal`
 
-### Comando SQL
+**Seção Recursos Destinados:**
+- Lista dinâmica de itens, cada um com Input "Objeto" + Input "R$" na mesma linha
+- Botão "+" para adicionar novo item, botão "X" para remover
+- Total calculado automaticamente exibido abaixo
 
-```sql
-UPDATE despesas_politicas 
-SET pagamento_feito_em = '2026-02-09'
-WHERE id IN (
-  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
-  '2bbaa610-e38e-44e0-9817-356253ef77ed',
-  '201560a9-aa52-4772-93a0-80f842e2a4d0',
-  '2cec5382-26af-4b57-aecc-658593567fe7',
-  '990001de-61c5-452b-b237-039e479e74a0',
-  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
-);
-```
+**Seção Emendas Parlamentares:**
+- Mesma estrutura de lista dinâmica (Objeto + R$)
 
-Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
+**Seção Mídias da Cidade (nova):**
+- Input de upload de arquivo + Input de descrição
+- Lista das mídias já enviadas com preview e botão de remover
+- Upload vai para o bucket `midias` do Supabase Storage
+- Mídias são salvas na tabela `cidade_midias` após o save da cidade
 
-### Resultado
+### 4. Atualizar hook `useCidades`
 
-Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
+- Parsear `recursos_destinados` e `emendas_parlamentares` como JSON ao ler
+- Serializar como JSON ao salvar
+
+### 5. Criar hook ou lógica para `cidade_midias`
+
+- Funções de upload (usar bucket `midias`), create e delete para mídias vinculadas à cidade
+- Integrar no `CidadeModal` — carregar mídias ao abrir em modo edição
+
+### 6. Atualizar card em `GestaoCidades`
+
+- Exibir soma total dos recursos (calculada do array JSON) no card
+- Exibir contagem de mídias se houver
 
