@@ -19,7 +19,7 @@ export function Layout({ children }: LayoutProps) {
       <div className="min-h-screen flex flex-col">
         <header className="h-12 flex items-center border-b border-border bg-card sticky top-0 z-50 px-4">
           <NavLink to="/" className="flex items-center">
-            <img src={LOGO_URL} alt="Unale" className="h-8" />
+            <img src={LOGO_URL} alt="Mandato Intelligence" className="h-8" />
           </NavLink>
         </header>
         <main className="flex-1 flex flex-col px-4 py-4 pb-20 overflow-visible">

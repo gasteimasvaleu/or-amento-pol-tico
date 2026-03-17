@@ -12,8 +12,8 @@ export function Header() {
               <FileText className="h-6 w-6 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-foreground">Política</h1>
-              <p className="text-xs text-muted-foreground">Controle de Despesas</p>
+              <h1 className="text-xl font-bold text-foreground">Mandato Intelligence</h1>
+              <p className="text-xs text-muted-foreground">Gestão Parlamentar</p>
             </div>
           </Link>
 
