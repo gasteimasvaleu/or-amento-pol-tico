@@ -52,6 +52,7 @@ interface GeradorDiscursoProps {
 }
 
 const GeradorDiscurso = ({ onBack }: GeradorDiscursoProps) => {
+  const { user } = useAuth();
   const [tema, setTema] = useState("");
   const [tom, setTom] = useState("");
   const [tamanho, setTamanho] = useState("");
