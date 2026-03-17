@@ -32,6 +32,7 @@ export function EleitorModal({ open, onOpenChange, onSubmit, isLoading, eleitor 
         nome: eleitor.nome,
         telefone: eleitor.telefone || "",
         endereco: eleitor.endereco || "",
+        cidade: eleitor.cidade || "",
         bairro: eleitor.bairro || "",
         classificacao: eleitor.classificacao || "neutro",
       });
