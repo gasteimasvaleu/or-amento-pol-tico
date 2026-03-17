@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ArrowLeft, Search, Loader2, Copy, Check, MessageSquareQuote } from "lucide-react";
+import { VideoOverlay } from "@/components/ui/VideoOverlay";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 
