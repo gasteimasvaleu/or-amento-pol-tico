@@ -1,47 +1,42 @@
 
 
-## Plano: Gráficos no Dashboard
+## Plano: Restaurar Status de Pagamento
 
-O DashboardGeral atual (`/dashboard`) é a página de perfil. Os gráficos serão adicionados à página Home (`/`) ou ao DashboardGeral. Faz mais sentido adicionar na Home, que é a landing page após login.
+### Situacao Atual
 
-### 1. Migration: criar tabela `geracoes_log`
+Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
 
-Tabela para rastrear discursos, projetos de lei e mídias geradas via IA:
-- `id` uuid PK, `user_id` uuid NOT NULL, `tipo` text NOT NULL (valores: 'discurso', 'projeto_lei', 'midia_criativa'), `created_at` timestamptz DEFAULT now()
-- RLS por `user_id`
+### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
 
-Isso permite contar gerações por mês para o gráfico de Produtividade.
+Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
 
-### 2. Registrar gerações nos componentes de Suporte
+| Municipio | Responsavel | ID |
+|-----------|-------------|-----|
+| Aroeira | Itamar | 5594343a... |
+| Juazeirinho | Bevilacqua | 2bbaa610... |
+| Bonito de Santa Fe | Sabino | 201560a9... |
+| Sume | Ze Mario | 2cec5382... |
+| Joao Pessoa | Jailson | 990001de... |
+| Sousa | Vitor | 51e0080c... |
 
-Nos componentes `GeradorDiscurso`, `GeradorProjetoLei` e `GeradorMidia`, após uma geração bem-sucedida, inserir um registro na tabela `geracoes_log`.
+### Comando SQL
 
-### 3. Criar componente `src/components/dashboard/DashboardCharts.tsx`
+```sql
+UPDATE despesas_politicas 
+SET pagamento_feito_em = '2026-02-09'
+WHERE id IN (
+  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
+  '2bbaa610-e38e-44e0-9817-356253ef77ed',
+  '201560a9-aa52-4772-93a0-80f842e2a4d0',
+  '2cec5382-26af-4b57-aecc-658593567fe7',
+  '990001de-61c5-452b-b237-039e479e74a0',
+  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
+);
+```
 
-Três gráficos usando Recharts (já disponível via `chart.tsx`):
+Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
 
-**Gráfico 1 — Evolução de Despesas (Line/Bar Chart):**
-- Query `despesas_politicas` agrupando valor total por mês (últimos 6-12 meses)
-- Eixo X: meses, Eixo Y: R$ total
+### Resultado
 
-**Gráfico 2 — Produtividade (Bar Chart agrupado):**
-- Query `geracoes_log` contando por tipo e mês
-- 3 barras por mês: Discursos, Projetos de Lei, Mídias
-
-**Gráfico 3 — Crescimento Eleitoral (Area/Line Chart):**
-- Query `eleitores` contando registros por mês (created_at)
-- Linha cumulativa ou por mês
-
-### 4. Adicionar gráficos na página Home (`src/pages/Home.tsx`)
-
-Inserir o componente `DashboardCharts` entre a saudação e os cards de acesso rápido. Cada gráfico dentro de um Card com título e ícone.
-
-### 5. Hook `src/hooks/useDashboardStats.ts`
-
-Hook dedicado com 3 queries:
-- Despesas agrupadas por mês
-- Gerações agrupadas por tipo/mês
-- Eleitores agrupados por mês
-
-Processamento client-side para montar os dados dos gráficos a partir dos registros retornados.
+Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
 

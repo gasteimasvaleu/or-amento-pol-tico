@@ -91,6 +91,10 @@ const GeradorMidia = ({ onBack }: Props) => {
 
       setImageUrl(data.imageUrl);
       toast({ title: "Imagem gerada com sucesso!" });
+      // Log generation
+      if (user) {
+        supabase.from("geracoes_log" as any).insert({ user_id: user.id, tipo: "midia_criativa" } as any).then(() => {});
+      }
     } catch (err: any) {
       toast({
         title: "Erro ao gerar imagem",

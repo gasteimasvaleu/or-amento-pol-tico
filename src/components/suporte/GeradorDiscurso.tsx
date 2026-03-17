@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -50,6 +52,7 @@ interface GeradorDiscursoProps {
 }
 
 const GeradorDiscurso = ({ onBack }: GeradorDiscursoProps) => {
+  const { user } = useAuth();
   const [tema, setTema] = useState("");
   const [tom, setTom] = useState("");
   const [tamanho, setTamanho] = useState("");
@@ -145,6 +148,10 @@ const GeradorDiscurso = ({ onBack }: GeradorDiscursoProps) => {
       toast.error(e instanceof Error ? e.message : "Erro ao gerar discurso");
     } finally {
       setIsLoading(false);
+      // Log generation
+      if (user) {
+        supabase.from("geracoes_log" as any).insert({ user_id: user.id, tipo: "discurso" } as any).then(() => {});
+      }
     }
   };
 

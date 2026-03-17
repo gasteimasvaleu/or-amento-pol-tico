@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -44,6 +46,7 @@ interface GeradorProjetoLeiProps {
 }
 
 const GeradorProjetoLei = ({ onBack }: GeradorProjetoLeiProps) => {
+  const { user } = useAuth();
   const [titulo, setTitulo] = useState("");
   const [esfera, setEsfera] = useState("");
   const [tipo, setTipo] = useState("");
@@ -137,6 +140,9 @@ const GeradorProjetoLei = ({ onBack }: GeradorProjetoLeiProps) => {
       toast.error(e instanceof Error ? e.message : "Erro ao gerar projeto de lei");
     } finally {
       setIsLoading(false);
+      if (user) {
+        supabase.from("geracoes_log" as any).insert({ user_id: user.id, tipo: "projeto_lei" } as any).then(() => {});
+      }
     }
   };
 
