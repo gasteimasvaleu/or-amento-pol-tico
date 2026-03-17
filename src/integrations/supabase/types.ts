@@ -546,6 +546,27 @@ export type Database = {
         }
         Relationships: []
       }
+      geracoes_log: {
+        Row: {
+          created_at: string
+          id: string
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          tipo: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          tipo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       midias: {
         Row: {
           arquivo_nome: string
