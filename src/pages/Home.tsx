@@ -1,9 +1,7 @@
-import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Receipt, CalendarDays, ArrowRight, ImageIcon, LifeBuoy } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 const quickCards = [
   {
@@ -42,33 +40,8 @@ const CARD_OVERLAP = 80;
 const Home = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
-  const [showSplash, setShowSplash] = useState(false);
   const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "Usuário";
 
-  useEffect(() => {
-    if (isMobile && !sessionStorage.getItem("splashShown")) {
-      setShowSplash(true);
-      sessionStorage.setItem("splashShown", "1");
-      const timer = setTimeout(() => setShowSplash(false), 8000);
-      return () => clearTimeout(timer);
-    }
-  }, [isMobile]);
-
-  if (showSplash) {
-    return (
-      <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center">
-        <video
-          src="https://wrriittiqsmzbapbrcwm.supabase.co/storage/v1/object/public/criativos/splash1.mp4"
-          autoPlay
-          muted
-          playsInline
-          onEnded={() => setShowSplash(false)}
-          className="w-full h-full object-cover"
-        />
-      </div>
-    );
-  }
   const stackHeight = CARD_HEIGHT + (quickCards.length - 1) * CARD_OVERLAP;
 
   return (

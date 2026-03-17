@@ -15,9 +15,35 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showSplash, setShowSplash] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { session, loading: authLoading } = useAuth();
+  const isMobile = useIsMobile();
+
+  useEffect(() => {
+    if (isMobile && !sessionStorage.getItem("splashShown")) {
+      setShowSplash(true);
+      sessionStorage.setItem("splashShown", "1");
+      const timer = setTimeout(() => setShowSplash(false), 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [isMobile]);
+
+  if (showSplash) {
+    return (
+      <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center">
+        <video
+          src="https://wrriittiqsmzbapbrcwm.supabase.co/storage/v1/object/public/criativos/splash1.mp4"
+          autoPlay
+          muted
+          playsInline
+          onEnded={() => setShowSplash(false)}
+          className="w-full h-full object-cover"
+        />
+      </div>
+    );
+  }
 
   if (authLoading) {
     return (
