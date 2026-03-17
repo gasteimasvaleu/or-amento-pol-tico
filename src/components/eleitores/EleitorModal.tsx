@@ -20,7 +20,7 @@ const classificacoes: { value: EleitorClassificacao; label: string; color: strin
   { value: "positivo", label: "Positivo", color: "bg-green-500" },
 ];
 
-const emptyForm: EleitorInsert = { nome: "", telefone: "", endereco: "", bairro: "", classificacao: "neutro" };
+const emptyForm: EleitorInsert = { nome: "", telefone: "", endereco: "", cidade: "", bairro: "", classificacao: "neutro" };
 
 export function EleitorModal({ open, onOpenChange, onSubmit, isLoading, eleitor }: EleitorModalProps) {
   const [form, setForm] = useState<EleitorInsert>(emptyForm);
@@ -32,6 +32,7 @@ export function EleitorModal({ open, onOpenChange, onSubmit, isLoading, eleitor 
         nome: eleitor.nome,
         telefone: eleitor.telefone || "",
         endereco: eleitor.endereco || "",
+        cidade: eleitor.cidade || "",
         bairro: eleitor.bairro || "",
         classificacao: eleitor.classificacao || "neutro",
       });
@@ -65,6 +66,10 @@ export function EleitorModal({ open, onOpenChange, onSubmit, isLoading, eleitor 
           <div className="space-y-2">
             <Label htmlFor="endereco">Endereço</Label>
             <Input id="endereco" value={form.endereco} onChange={(e) => setForm({ ...form, endereco: e.target.value })} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="cidade">Cidade</Label>
+            <Input id="cidade" value={form.cidade} onChange={(e) => setForm({ ...form, cidade: e.target.value })} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="bairro">Bairro</Label>

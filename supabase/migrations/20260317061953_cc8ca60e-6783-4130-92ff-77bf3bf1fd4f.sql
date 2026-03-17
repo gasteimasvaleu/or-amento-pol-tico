@@ -1,0 +1,1 @@
+ALTER TABLE public.eleitores ADD COLUMN cidade text NOT NULL DEFAULT '';
