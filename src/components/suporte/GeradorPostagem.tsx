@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Copy, Loader2, Hash, Check, Upload, X } from "lucide-react";
+import { ArrowLeft, Copy, Loader2, Hash, Check, Upload, X, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 
@@ -187,6 +187,11 @@ const GeradorPostagem = ({ onBack }: GeradorPostagemProps) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleWhatsApp = () => {
+    const url = `https://wa.me/?text=${encodeURIComponent(postagem)}`;
+    window.open(url, "_blank");
+  };
+
   return (
     <div className="space-y-4">
       <Button variant="ghost" size="sm" onClick={onBack} className="gap-1 -ml-2">
@@ -331,10 +336,15 @@ const GeradorPostagem = ({ onBack }: GeradorPostagemProps) => {
           <CardHeader className="pb-3 flex flex-row items-center justify-between">
             <CardTitle className="text-base">Postagem Gerada</CardTitle>
             {postagem && !isLoading && (
-              <Button variant="outline" size="sm" onClick={handleCopy} className="gap-1">
-                {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                {copied ? "Copiado" : "Copiar"}
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={handleCopy} className="gap-1">
+                  {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                  {copied ? "Copiado" : "Copiar"}
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleWhatsApp} className="gap-1">
+                  <Share2 className="h-3 w-3" /> WhatsApp
+                </Button>
+              </div>
             )}
           </CardHeader>
           <CardContent>
