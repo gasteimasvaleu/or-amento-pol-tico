@@ -1,42 +1,23 @@
 
 
-## Plano: Restaurar Status de Pagamento
+## Plano: Corrigir scroll iOS (rubber-banding) com navbars fixas
 
-### Situacao Atual
+### Alterações
 
-Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
+**1. `index.html`** — Adicionar `<meta name="theme-color" content="#000000" />` e mudar `apple-mobile-web-app-status-bar-style` de `black-translucent` para `black`.
 
-### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
+**2. `src/index.css`** — Adicionar regras globais de scroll:
+- `html, body`: `overflow: hidden; height: 100%; overscroll-behavior: none;`
+- `body`: safe-area paddings em todos os lados
+- `#root`: `overflow-y: auto; overflow-x: hidden; height: 100%; -webkit-overflow-scrolling: touch; overscroll-behavior: none;` + ocultar scrollbar
 
-Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
+**3. `src/components/layout/Layout.tsx`** — No mobile:
+- Header: mudar de `sticky` para `fixed top-0 left-0 right-0`, adicionar `pt-[max(0.5rem,env(safe-area-inset-top))]`, e propriedades GPU: `style={{ WebkitTransform: 'translateZ(0)', willChange: 'transform' }}`
+- Wrapper div: remover `min-h-screen`, usar `flex flex-col h-full`
+- Main: adicionar `flex-1 overflow-y-auto` com margem superior para compensar o header fixo
 
-| Municipio | Responsavel | ID |
-|-----------|-------------|-----|
-| Aroeira | Itamar | 5594343a... |
-| Juazeirinho | Bevilacqua | 2bbaa610... |
-| Bonito de Santa Fe | Sabino | 201560a9... |
-| Sume | Ze Mario | 2cec5382... |
-| Joao Pessoa | Jailson | 990001de... |
-| Sousa | Vitor | 51e0080c... |
-
-### Comando SQL
-
-```sql
-UPDATE despesas_politicas 
-SET pagamento_feito_em = '2026-02-09'
-WHERE id IN (
-  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
-  '2bbaa610-e38e-44e0-9817-356253ef77ed',
-  '201560a9-aa52-4772-93a0-80f842e2a4d0',
-  '2cec5382-26af-4b57-aecc-658593567fe7',
-  '990001de-61c5-452b-b237-039e479e74a0',
-  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
-);
-```
-
-Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
+**4. `src/components/layout/BottomNav.tsx`** — Na nav fixa inferior, adicionar `style={{ WebkitTransform: 'translateZ(0)', willChange: 'transform' }}` para forçar composição GPU e evitar tremor.
 
 ### Resultado
-
-Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
+O scroll fica contido apenas no `#root` (ou na `main`), impedindo o rubber-banding do Safari de deslocar as barras fixas superior e inferior.
 
