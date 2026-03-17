@@ -2,7 +2,7 @@ import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Receipt, CalendarDays, ArrowRight, ImageIcon, LifeBuoy } from "lucide-react";
-import DashboardCharts from "@/components/dashboard/DashboardCharts";
+
 
 const quickCards = [
   {
