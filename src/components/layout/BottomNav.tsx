@@ -1,4 +1,4 @@
-import { Home, LayoutDashboard, Receipt, CalendarDays, Menu, X, LogOut, ImageIcon, LifeBuoy, Newspaper, Vote, Users, Building2, Heart, Shield } from "lucide-react";
+import { Home, LayoutDashboard, Receipt, CalendarDays, Menu, X, LogOut, ImageIcon, LifeBuoy, Newspaper, Vote, Users, Building2, Heart, Shield, Bell } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
