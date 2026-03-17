@@ -114,7 +114,7 @@ export default function Lembretes() {
 
   return (
     <Layout>
-      <div className="p-4 pb-24 space-y-6 max-w-2xl mx-auto">
+      <div className="flex flex-col gap-4 pb-20">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h1 className="text-xl font-bold text-foreground">Lembretes</h1>
