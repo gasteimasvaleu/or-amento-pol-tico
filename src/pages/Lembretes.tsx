@@ -116,9 +116,9 @@ export default function Lembretes() {
     <Layout>
       <div className="p-4 pb-24 space-y-6 max-w-2xl mx-auto">
         <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Bell className="h-5 w-5 text-primary" />
+          <div>
             <h1 className="text-xl font-bold text-foreground">Lembretes</h1>
+            <p className="text-sm text-muted-foreground">Gerencie seus lembretes</p>
           </div>
           <Button size="sm" onClick={() => { setEditing(null); setModalOpen(true); }}>
             <Plus className="h-4 w-4 mr-1" /> Novo
