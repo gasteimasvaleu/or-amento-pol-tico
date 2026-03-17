@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getSubscriberInfo, hasActiveEntitlement } from "@/lib/revenueCat";
+import { initRevenueCat } from "@/lib/revenueCatNative";
 
 interface SubscriptionContextType {
   isPremium: boolean;
