@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Copy, Loader2, Sparkles, Check } from "lucide-react";
+import { ArrowLeft, Copy, Loader2, Sparkles, Check, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 
