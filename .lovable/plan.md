@@ -1,42 +1,52 @@
 
 
-## Plano: Restaurar Status de Pagamento
+## Diagnóstico
 
-### Situacao Atual
+O app **crasha** ao tentar usar a câmera porque:
 
-Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
+1. As permissões `NSCameraUsageDescription` e `NSPhotoLibraryUsageDescription` no `capacitor.config.ts` só são injetadas no `Info.plist` quando o plugin `@capacitor/camera` está registrado nativamente via `npx cap sync`. Porém, o código atual **não usa a API do Capacitor Camera** — usa `<input type="file" accept="image/*">` (HTML padrão).
 
-### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
+2. No iOS nativo (WebView), quando o usuário clica no input de arquivo e escolhe "Tirar Foto", o sistema pede permissão de câmera. Se a chave `NSCameraUsageDescription` não estiver no `Info.plist`, o app **crasha imediatamente** (é um comportamento do iOS — termina o processo).
 
-Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
+## Solução
 
-| Municipio | Responsavel | ID |
-|-----------|-------------|-----|
-| Aroeira | Itamar | 5594343a... |
-| Juazeirinho | Bevilacqua | 2bbaa610... |
-| Bonito de Santa Fe | Sabino | 201560a9... |
-| Sume | Ze Mario | 2cec5382... |
-| Joao Pessoa | Jailson | 990001de... |
-| Sousa | Vitor | 51e0080c... |
+Duas abordagens possíveis — a mais confiável para um app Capacitor é usar a **API nativa do Capacitor Camera**:
 
-### Comando SQL
+### Opção recomendada: Usar `@capacitor/camera` API
 
-```sql
-UPDATE despesas_politicas 
-SET pagamento_feito_em = '2026-02-09'
-WHERE id IN (
-  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
-  '2bbaa610-e38e-44e0-9817-356253ef77ed',
-  '201560a9-aa52-4772-93a0-80f842e2a4d0',
-  '2cec5382-26af-4b57-aecc-658593567fe7',
-  '990001de-61c5-452b-b237-039e479e74a0',
-  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
-);
+Nos pontos do código onde o usuário seleciona imagens (avatar no `DashboardGeral.tsx` e referência no `GeradorMidia.tsx`), substituir o `<input type="file">` pela API nativa:
+
+```ts
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+
+const photo = await Camera.getPhoto({
+  resultType: CameraResultType.DataUrl,
+  source: CameraSource.Prompt, // mostra opções: Câmera ou Galeria
+  quality: 80,
+});
 ```
 
-Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
+Isso garante que:
+- O Capacitor gerencia as permissões corretamente
+- O plugin injeta as chaves no `Info.plist` via `cap sync`
+- Funciona tanto na câmera quanto na galeria
+- Fallback automático no navegador web (file picker)
 
-### Resultado
+### Alterações nos arquivos
 
-Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
+1. **`src/pages/DashboardGeral.tsx`** — Substituir o `<input type="file">` e `handleAvatarUpload` por uma função que usa `Camera.getPhoto()`, convertendo o DataUrl em blob para upload ao Supabase Storage.
+
+2. **`src/components/suporte/GeradorMidia.tsx`** — Substituir o `<input type="file">` de imagem de referência pela mesma API, usando `CameraSource.Photos` (apenas galeria) ou `CameraSource.Prompt`.
+
+3. **Manter compatibilidade web** — Verificar se está rodando no Capacitor (`Capacitor.isNativePlatform()`) e usar file input como fallback no browser.
+
+### Após o commit (no Mac)
+```bash
+git pull
+npm run build
+npx cap sync ios
+npx cap open ios
+```
+
+O `cap sync` vai registrar o plugin Camera corretamente e injetar as permissões no `Info.plist`.
 
