@@ -110,6 +110,62 @@ export type Database = {
         }
         Relationships: []
       }
+      bairros: {
+        Row: {
+          acoes_realizadas: string
+          cidade_id: string
+          created_at: string
+          eleitorado: number
+          emendas_parlamentares: Json
+          id: string
+          liderancas: Json
+          nome: string
+          observacoes: string
+          populacao: number
+          recursos_destinados: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          acoes_realizadas?: string
+          cidade_id: string
+          created_at?: string
+          eleitorado?: number
+          emendas_parlamentares?: Json
+          id?: string
+          liderancas?: Json
+          nome: string
+          observacoes?: string
+          populacao?: number
+          recursos_destinados?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          acoes_realizadas?: string
+          cidade_id?: string
+          created_at?: string
+          eleitorado?: number
+          emendas_parlamentares?: Json
+          id?: string
+          liderancas?: Json
+          nome?: string
+          observacoes?: string
+          populacao?: number
+          recursos_destinados?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bairros_cidade_id_fkey"
+            columns: ["cidade_id"]
+            isOneToOne: false
+            referencedRelation: "cidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cidade_midias: {
         Row: {
           arquivo_nome: string

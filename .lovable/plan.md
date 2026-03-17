@@ -1,36 +1,42 @@
 
 
-## Plano: Adicionar "Novo Bairro" com modal e lideranças dinâmicas
+## Plano: Restaurar Status de Pagamento
 
-### 1. Migration: criar tabela `bairros`
+### Situacao Atual
 
-Campos: `id` uuid PK, `cidade_id` uuid FK para `cidades` (ON DELETE CASCADE), `user_id` uuid NOT NULL, `nome` text NOT NULL, `liderancas` jsonb DEFAULT '[]' (array de strings — nomes das lideranças), `populacao` integer DEFAULT 0, `eleitorado` integer DEFAULT 0, `recursos_destinados` jsonb DEFAULT '[]' (mesma estrutura `RecursoItem`), `acoes_realizadas` text DEFAULT '', `emendas_parlamentares` jsonb DEFAULT '[]', `observacoes` text DEFAULT '', `created_at`/`updated_at` timestamps.
+Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
 
-RLS: 4 policies (select, insert, update, delete) vinculadas a `auth.uid() = user_id`.
+### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
 
-### 2. Atualizar `src/types/cidade.ts`
+Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
 
-Adicionar interfaces `Bairro` e `BairroInsert`, com `liderancas: string[]` no lugar de prefeito/vice/vereadores.
+| Municipio | Responsavel | ID |
+|-----------|-------------|-----|
+| Aroeira | Itamar | 5594343a... |
+| Juazeirinho | Bevilacqua | 2bbaa610... |
+| Bonito de Santa Fe | Sabino | 201560a9... |
+| Sume | Ze Mario | 2cec5382... |
+| Joao Pessoa | Jailson | 990001de... |
+| Sousa | Vitor | 51e0080c... |
 
-### 3. Criar hook `useBairros` em `src/hooks/useCidades.ts`
+### Comando SQL
 
-Hook CRUD para bairros, seguindo o mesmo padrão de `useCidades`. Recebe `cidadeId` opcional para filtrar.
+```sql
+UPDATE despesas_politicas 
+SET pagamento_feito_em = '2026-02-09'
+WHERE id IN (
+  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
+  '2bbaa610-e38e-44e0-9817-356253ef77ed',
+  '201560a9-aa52-4772-93a0-80f842e2a4d0',
+  '2cec5382-26af-4b57-aecc-658593567fe7',
+  '990001de-61c5-452b-b237-039e479e74a0',
+  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
+);
+```
 
-### 4. Criar `src/components/cidades/BairroModal.tsx`
+Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
 
-Modal similar ao `CidadeModal` mas com as seguintes diferenças na seção "Governo Local":
-- Substituir Prefeito, Vice-Prefeito e Vereadores por **lista dinâmica de Lideranças** (botão "+ Adicionar", cada item é um Input de texto com botão "X" para remover)
-- Manter as demais seções: Dados Gerais (nome, população, eleitorado), Recursos Destinados, Emendas Parlamentares, Ações Realizadas, Observações, Mídias
+### Resultado
 
-### 5. Atualizar `src/pages/GestaoCidades.tsx`
-
-- Adicionar botão **"+ Novo Bairro"** abaixo do botão "Nova Cidade" (requer selecionar a cidade ao criar)
-- Listar bairros dentro dos cards de cidade (ou em seção expandível)
-- Modal de bairro com select de cidade vinculada
-- Botões editar/deletar bairro
-
-### 6. Atualizar cards em `GestaoCidades`
-
-- Exibir contagem de bairros cadastrados por cidade
-- Exibir lideranças no card do bairro
+Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
 
