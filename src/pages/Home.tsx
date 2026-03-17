@@ -62,7 +62,7 @@ const Home = () => {
 
         <p className="text-sm font-medium text-muted-foreground mt-2">Acesso rápido</p>
 
-        <div className="mt-auto relative mb-[-5rem]" style={{ height: stackHeight }}>
+        <div className="mt-4 relative mb-[-5rem]" style={{ height: stackHeight }}>
           {quickCards.map((card, index) => (
             <button
               key={card.route}
