@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.238c6c3fcd3d4924bcd9404c97bcf042',
+  appId: 'app.mandatointeligente.app',
   appName: 'politico-controle-facil',
   webDir: 'dist',
   server: {
