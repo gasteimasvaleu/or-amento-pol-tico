@@ -1,34 +1,42 @@
 
 
-## Diagnóstico: Display Name errado no iOS
+## Plano: Restaurar Status de Pagamento
 
-O `capacitor.config.ts` já está correto com `appName: 'Mandato Intelligence'`. O problema é que o Xcode cacheia o `CFBundleDisplayName` antigo do primeiro `cap init`/`cap sync`.
+### Situacao Atual
 
-### Solução (não requer mudança de código)
+Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
 
-O nome do app no iOS é controlado pelo arquivo `ios/App/App/Info.plist` dentro do projeto Xcode. O `npx cap sync` deveria atualizar, mas às vezes o cache persiste.
+### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
 
-**No seu Mac, execute:**
+Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
 
-```bash
-git pull
-npm run build
-npx cap sync ios
+| Municipio | Responsavel | ID |
+|-----------|-------------|-----|
+| Aroeira | Itamar | 5594343a... |
+| Juazeirinho | Bevilacqua | 2bbaa610... |
+| Bonito de Santa Fe | Sabino | 201560a9... |
+| Sume | Ze Mario | 2cec5382... |
+| Joao Pessoa | Jailson | 990001de... |
+| Sousa | Vitor | 51e0080c... |
+
+### Comando SQL
+
+```sql
+UPDATE despesas_politicas 
+SET pagamento_feito_em = '2026-02-09'
+WHERE id IN (
+  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
+  '2bbaa610-e38e-44e0-9817-356253ef77ed',
+  '201560a9-aa52-4772-93a0-80f842e2a4d0',
+  '2cec5382-26af-4b57-aecc-658593567fe7',
+  '990001de-61c5-452b-b237-039e479e74a0',
+  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
+);
 ```
 
-Depois, **no Xcode**, verifique manualmente:
-1. Abra o projeto iOS (`npx cap open ios`)
-2. Clique em **App** no navegador lateral → aba **General**
-3. Em **Display Name**, mude para `Mandato Intelligence`
-4. Ou edite diretamente o arquivo `ios/App/App/Info.plist` e altere a chave `CFBundleDisplayName` para `Mandato Intelligence`
+Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
 
-Se preferir via terminal:
-```bash
-cd ios/App/App
-/usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName 'Mandato Intelligence'" Info.plist
-```
+### Resultado
 
-Depois faça o build e instale novamente no dispositivo.
-
-**Nenhuma alteração de código é necessária** — o config já está correto. É apenas o cache do Xcode que precisa ser atualizado manualmente.
+Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
 
