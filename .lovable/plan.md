@@ -1,42 +1,26 @@
 
 
-## Plano: Restaurar Status de Pagamento
+## Plano: Corrigir Textarea no mobile iOS
 
-### Situacao Atual
+O problema central é que o iOS Safari aplica auto-zoom quando o font-size de um input/textarea é menor que 16px. O componente atual usa `text-sm` (14px), causando zoom e deslocamento do layout ao focar.
 
-Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
+### Alterações
 
-### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
+**1. `src/components/ui/textarea.tsx`** — Correção centralizada no componente base:
+- Trocar `text-sm` por `text-base` (16px) para evitar auto-zoom no iOS
+- Adicionar `resize-none` para impedir redimensionamento manual
+- Adicionar `box-border` (já é default do Tailwind, mas explícito para clareza)
 
-Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
-
-| Municipio | Responsavel | ID |
-|-----------|-------------|-----|
-| Aroeira | Itamar | 5594343a... |
-| Juazeirinho | Bevilacqua | 2bbaa610... |
-| Bonito de Santa Fe | Sabino | 201560a9... |
-| Sume | Ze Mario | 2cec5382... |
-| Joao Pessoa | Jailson | 990001de... |
-| Sousa | Vitor | 51e0080c... |
-
-### Comando SQL
-
-```sql
-UPDATE despesas_politicas 
-SET pagamento_feito_em = '2026-02-09'
-WHERE id IN (
-  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
-  '2bbaa610-e38e-44e0-9817-356253ef77ed',
-  '201560a9-aa52-4772-93a0-80f842e2a4d0',
-  '2cec5382-26af-4b57-aecc-658593567fe7',
-  '990001de-61c5-452b-b237-039e479e74a0',
-  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
-);
+```tsx
+"flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-base resize-none box-border ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
 ```
 
-Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
+**2. `src/components/despesas/DespesaForm.tsx`** — Remover o `resize-none` inline (já que agora vem do componente base), para evitar duplicação.
+
+**3. `src/index.css`** — Já está correto (`html,body: overflow:hidden`, `#root: overflow-y:auto, overflow-x:hidden, overscroll-behavior:none`). Nenhuma alteração necessária.
+
+**Não é necessário** envolver cada Textarea em `<div className="overflow-hidden">` porque o `#root` já tem `overflow-x: hidden` e o Textarea terá `resize-none` + `box-border` + `w-full`, impedindo qualquer expansão lateral. Isso mantém o código limpo sem wrappers desnecessários.
 
 ### Resultado
-
-Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
+Apenas 1 arquivo editado (`textarea.tsx`) resolve o problema para todos os 13 arquivos que usam o componente. O iOS não fará auto-zoom ao focar, e o textarea não pode ser redimensionado manualmente.
 
