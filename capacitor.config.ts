@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'Mandato Intelligence',
   webDir: 'dist',
   server: {
-    url: 'https://238c6c3f-cd3d-4924-bcd9-404c97bcf042.lovableproject.com?forceHideBadge=true',
+    url: 'https://app.mandatointeligente.app?forceHideBadge=true',
     cleartext: true,
   },
   ios: {
