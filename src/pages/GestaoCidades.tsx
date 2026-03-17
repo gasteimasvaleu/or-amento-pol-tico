@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Search, Building2, User, DollarSign, Users, Pencil, Trash2, MapPin } from "lucide-react";
-import { VideoOverlay } from "@/components/ui/VideoOverlay";
+import { Loader2 } from "lucide-react";
 import { useCidades, useBairros } from "@/hooks/useCidades";
 import { CidadeModal } from "@/components/cidades/CidadeModal";
 import { BairroModal } from "@/components/cidades/BairroModal";
