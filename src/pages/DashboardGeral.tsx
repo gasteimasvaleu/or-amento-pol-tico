@@ -179,7 +179,7 @@ const DashboardGeral = () => {
                 </AvatarFallback>
               </Avatar>
               <button
-                onClick={() => fileInputRef.current?.click()}
+                onClick={handleAvatarUpload}
                 className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                 disabled={uploading}
               >
@@ -189,13 +189,6 @@ const DashboardGeral = () => {
                   <Camera className="h-6 w-6 text-white" />
                 )}
               </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleAvatarUpload}
-              />
             </div>
             <div className="text-center">
               <h3 className="text-lg font-semibold text-foreground">{profile.full_name || "Usuário"}</h3>
