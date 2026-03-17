@@ -78,7 +78,7 @@ const Login = () => {
           <div className="mx-auto bg-primary p-3 rounded-xl w-fit mb-4">
             <Landmark className="h-8 w-8 text-primary-foreground" />
           </div>
-          <CardTitle className="text-2xl">Unale</CardTitle>
+          <CardTitle className="text-2xl">Mandato Intelligence</CardTitle>
           <CardDescription>Gestão Parlamentar</CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>

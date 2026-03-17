@@ -63,7 +63,7 @@ export function AppSidebar() {
         <NavLink to="/" className="flex items-center group">
           <img
             src="https://wrriittiqsmzbapbrcwm.supabase.co/storage/v1/object/public/criativos/logonavbar.png"
-            alt="Unale"
+            alt="Mandato Intelligence"
             className={collapsed ? "h-8" : "h-10"}
           />
         </NavLink>
