@@ -36,9 +36,7 @@ const GeradorMidia = ({ onBack }: Props) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [referenceImage, setReferenceImage] = useState<string | null>(null);
-  const [referenceFileName, setReferenceFileName] = useState<string | null>(null);
   const [strength, setStrength] = useState(50);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
