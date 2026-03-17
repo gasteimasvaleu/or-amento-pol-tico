@@ -13,6 +13,7 @@ import {
   Vote,
   Users,
   Building2,
+  Heart,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -152,6 +153,20 @@ export function AppSidebar() {
                   >
                     <Newspaper className="mr-2 h-4 w-4" />
                     {!collapsed && <span>Notícias</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink
+                    to="/equipe"
+                    end
+                    className="hover:bg-sidebar-accent/50"
+                    activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                  >
+                    <Heart className="mr-2 h-4 w-4" />
+                    {!collapsed && <span>Equipe</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>

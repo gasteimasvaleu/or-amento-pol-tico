@@ -1,4 +1,4 @@
-import { Home, LayoutDashboard, Receipt, CalendarDays, Menu, X, LogOut, ImageIcon, LifeBuoy, Newspaper, Vote, Users, Building2 } from "lucide-react";
+import { Home, LayoutDashboard, Receipt, CalendarDays, Menu, X, LogOut, ImageIcon, LifeBuoy, Newspaper, Vote, Users, Building2, Heart } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -47,6 +47,14 @@ export function BottomNav() {
           >
             <Newspaper className="h-5 w-5" />
             <span>Notícias</span>
+          </NavLink>
+          <NavLink
+            to="/equipe"
+            onClick={() => setMoreOpen(false)}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-foreground hover:bg-muted transition-colors w-full"
+          >
+            <Heart className="h-5 w-5" />
+            <span>Equipe</span>
           </NavLink>
           <NavLink
             to="/dados-eleitorais"
