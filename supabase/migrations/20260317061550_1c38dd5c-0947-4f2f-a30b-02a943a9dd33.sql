@@ -1,0 +1,1 @@
+ALTER TABLE public.eleitores ADD COLUMN classificacao text NOT NULL DEFAULT 'neutro';
