@@ -1,42 +1,33 @@
 
 
-## Plano: Restaurar Status de Pagamento
+## Plano: Configurar Capacitor para iOS com domínio customizado
 
-### Situacao Atual
+### Correções no plano anterior
 
-Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
+- **appId**: `app.mandatointeligente.app` (formato reverse-domain) → usar `app.mandatointeligente.app` como bundle ID
+- **server.url**: `https://app.mandatointeligente.app` (domínio próprio, hot-reload direto do domínio customizado)
+- **appName**: `Mandato Intelligence`
 
-### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
+### Arquivos a criar/editar
 
-Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
+| Arquivo | Ação |
+|---|---|
+| `capacitor.config.ts` | **Criar** — appId: `app.mandatointeligente.app`, server.url: `https://app.mandatointeligente.app`, webDir: `dist` |
+| `index.html` | **Editar** — adicionar `viewport-fit=cover`, `apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style` |
+| `src/index.css` | **Editar** — garantir `env(safe-area-inset-*)` no body/layout |
+| `package.json` | **Editar** — adicionar `@capacitor/core`, `@capacitor/ios`, `@capacitor/app`, `@capacitor/haptics`, `@capacitor/keyboard`, `@capacitor/status-bar` e `@capacitor/cli` (dev) |
 
-| Municipio | Responsavel | ID |
-|-----------|-------------|-----|
-| Aroeira | Itamar | 5594343a... |
-| Juazeirinho | Bevilacqua | 2bbaa610... |
-| Bonito de Santa Fe | Sabino | 201560a9... |
-| Sume | Ze Mario | 2cec5382... |
-| Joao Pessoa | Jailson | 990001de... |
-| Sousa | Vitor | 51e0080c... |
+### Nota sobre o domínio
 
-### Comando SQL
+Se o domínio `app.mandatointeligente.app` ainda não estiver conectado ao projeto, será preciso conectá-lo em **Settings → Domains** no Lovable antes de usar o hot-reload. Caso contrário, o app nativo não conseguirá carregar o conteúdo.
 
-```sql
-UPDATE despesas_politicas 
-SET pagamento_feito_em = '2026-02-09'
-WHERE id IN (
-  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
-  '2bbaa610-e38e-44e0-9817-356253ef77ed',
-  '201560a9-aa52-4772-93a0-80f842e2a4d0',
-  '2cec5382-26af-4b57-aecc-658593567fe7',
-  '990001de-61c5-452b-b237-039e479e74a0',
-  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
-);
-```
+### Passos pós-implementação (rodar localmente)
 
-Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
+1. Export to GitHub → git pull
+2. `npm install`
+3. `npx cap add ios`
+4. `npx cap sync`
+5. `npx cap open ios`
 
-### Resultado
-
-Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
+4 arquivos, 1 novo + 3 editados.
 
