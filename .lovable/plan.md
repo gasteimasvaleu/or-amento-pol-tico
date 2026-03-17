@@ -1,47 +1,42 @@
 
 
-## Diagnóstico
+## Plano: Restaurar Status de Pagamento
 
-O layout está "desmantelado" por **dupla aplicação de safe-area insets**:
+### Situacao Atual
 
-1. O `body` tem `padding-top: env(safe-area-inset-top)` e `padding-bottom: env(safe-area-inset-bottom)` — isso empurra todo o `#root` para baixo e encurta por baixo.
-2. O header fixo (`fixed top-0`) fica no topo do **viewport** (atrás da status bar), e internamente aplica `pt-[max(0.5rem,env(safe-area-inset-top))]` — mas como tem altura fixa `h-12`, o padding come o espaço da logo, que fica espremida ou desalinhada.
-3. O bottom nav tem `pb-[env(safe-area-inset-bottom)]` + o body padding = espaço duplo embaixo.
+Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
 
-O gap enorme entre a barra superior e o banner é o `padding-top` do body + o `mt-12` do main somados.
+### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
 
-## Correções
+Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
 
-### 1. `src/index.css` — Remover safe-area paddings do body
-Elementos `position: fixed` não são afetados pelo padding do body, então cada componente fixo deve gerenciar seu próprio safe-area. O body não deve ter esses paddings.
+| Municipio | Responsavel | ID |
+|-----------|-------------|-----|
+| Aroeira | Itamar | 5594343a... |
+| Juazeirinho | Bevilacqua | 2bbaa610... |
+| Bonito de Santa Fe | Sabino | 201560a9... |
+| Sume | Ze Mario | 2cec5382... |
+| Joao Pessoa | Jailson | 990001de... |
+| Sousa | Vitor | 51e0080c... |
 
-```css
-body {
-  /* REMOVER todos os padding de safe-area */
-}
+### Comando SQL
+
+```sql
+UPDATE despesas_politicas 
+SET pagamento_feito_em = '2026-02-09'
+WHERE id IN (
+  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
+  '2bbaa610-e38e-44e0-9817-356253ef77ed',
+  '201560a9-aa52-4772-93a0-80f842e2a4d0',
+  '2cec5382-26af-4b57-aecc-658593567fe7',
+  '990001de-61c5-452b-b237-039e479e74a0',
+  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
+);
 ```
 
-### 2. `src/components/layout/Layout.tsx` — Ajustar header mobile
-- Remover `h-12` fixo do header; usar altura automática com padding
-- Manter `pt-[env(safe-area-inset-top)]` para empurrar conteúdo abaixo da status bar
-- Adicionar padding interno (`py-2 px-4`) para a logo
-- No `main`, trocar `mt-12` por um valor que considere a safe-area: `mt-[calc(env(safe-area-inset-top)+3rem)]`
+Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
 
-```tsx
-<header
-  className="fixed top-0 left-0 right-0 z-50 flex items-center border-b border-border bg-card px-4 pt-[env(safe-area-inset-top)] pb-2"
-  style={{ WebkitTransform: 'translateZ(0)', willChange: 'transform' }}
->
-```
+### Resultado
 
-```tsx
-<main className="flex-1 flex flex-col px-4 py-4 pb-24 mt-[calc(env(safe-area-inset-top)+3rem)]">
-```
-
-### 3. Bottom nav — já está correto
-O `pb-[env(safe-area-inset-bottom)]` no nav é suficiente. Sem o body padding duplo, volta ao normal. O `pb-20` no main precisa subir para `pb-24` para dar espaço adequado ao bottom nav + safe area.
-
-### Resumo das mudanças
-- **`src/index.css`**: remover 4 linhas de `padding-*: env(safe-area-inset-*)` do `body`
-- **`src/components/layout/Layout.tsx`**: ajustar header (remover `h-12`, usar `pt-[env(safe-area-inset-top)] pb-2`) e main (`mt-[calc(...)]`, `pb-24`)
+Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
 
