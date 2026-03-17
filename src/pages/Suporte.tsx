@@ -91,6 +91,23 @@ const Suporte = () => {
               </CardContent>
             </Card>
 
+            <Card
+              className="cursor-pointer hover:shadow-md transition-shadow border-primary/20"
+              onClick={() => setActiveTool("gerador-postagem")}
+            >
+              <CardContent className="flex items-center gap-4 p-4">
+                <div className="bg-primary/10 rounded-xl p-3">
+                  <Hash className="h-6 w-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-foreground">Gerador de Postagem</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Crie postagens otimizadas para redes sociais com IA
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
             <div className="flex flex-col items-center py-10 text-center space-y-3">
               <div className="bg-muted rounded-full p-4">
                 <LifeBuoy className="h-8 w-8 text-muted-foreground" />
