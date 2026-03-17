@@ -135,6 +135,10 @@ const Suporte = () => {
       {activeTool === "gerador-midia" && (
         <GeradorMidia onBack={() => setActiveTool("hub")} />
       )}
+
+      {activeTool === "gerador-postagem" && (
+        <GeradorPostagem onBack={() => setActiveTool("hub")} />
+      )}
     </Layout>
   );
 };

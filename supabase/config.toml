@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.gerar-midia]
 verify_jwt = false
+
+[functions.gerar-postagem]
+verify_jwt = false
