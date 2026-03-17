@@ -279,7 +279,7 @@ export function DespesaForm({ onSubmit, defaultValues, isLoading }: DespesaFormP
               <FormControl>
                 <Textarea 
                   placeholder="Observações adicionais sobre a despesa..."
-                  className="resize-none"
+                  className=""
                   rows={4}
                   {...field}
                 />
