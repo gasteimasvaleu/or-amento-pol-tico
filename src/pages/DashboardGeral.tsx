@@ -157,6 +157,8 @@ const DashboardGeral = () => {
           <p className="text-sm text-muted-foreground">Gerencie suas informações pessoais</p>
         </div>
 
+        <DashboardCharts />
+
         {/* Avatar & Identity */}
         <Card>
           <CardContent className="flex flex-col items-center gap-4 pt-6">

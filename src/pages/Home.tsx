@@ -58,7 +58,7 @@ const Home = () => {
           <p className="text-sm text-muted-foreground">Painel de atividades</p>
         </div>
 
-        <DashboardCharts />
+        
 
         <p className="text-sm font-medium text-muted-foreground mt-2">Acesso rápido</p>
 
