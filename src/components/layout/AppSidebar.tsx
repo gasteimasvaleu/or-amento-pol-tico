@@ -13,6 +13,7 @@ import {
   Vote,
   Users,
   Building2,
+  Heart,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
