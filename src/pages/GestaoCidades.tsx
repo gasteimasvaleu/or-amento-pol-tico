@@ -3,10 +3,10 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Search, Building2, User, DollarSign, Users, Pencil, Trash2 } from "lucide-react";
+import { Plus, Search, Building2, User, DollarSign, Users, Pencil, Trash2, Image } from "lucide-react";
 import { useCidades } from "@/hooks/useCidades";
 import { CidadeModal } from "@/components/cidades/CidadeModal";
-import type { Cidade, CidadeInsert } from "@/types/cidade";
+import type { Cidade, CidadeInsert, RecursoItem } from "@/types/cidade";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,6 +17,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
+function sumRecursos(items: RecursoItem[]): number {
+  return (items || []).reduce((s, i) => s + (i.valor || 0), 0);
+}
 
 export default function GestaoCidades() {
   const { cidades, isLoading, createCidade, updateCidade, deleteCidade, isCreating } = useCidades();
@@ -89,48 +93,58 @@ export default function GestaoCidades() {
           </p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((cidade) => (
-              <Card key={cidade.id} className="group relative">
-                <CardContent className="p-5 space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Building2 className="h-5 w-5 text-primary shrink-0" />
-                      <div className="min-w-0">
-                        <p className="font-semibold truncate">{cidade.nome}</p>
-                        {cidade.estado && (
-                          <p className="text-xs text-muted-foreground">{cidade.estado}</p>
-                        )}
+            {filtered.map((cidade) => {
+              const totalRecursos = sumRecursos(cidade.recursos_destinados);
+              const totalEmendas = sumRecursos(cidade.emendas_parlamentares);
+              return (
+                <Card key={cidade.id} className="group relative">
+                  <CardContent className="p-5 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Building2 className="h-5 w-5 text-primary shrink-0" />
+                        <div className="min-w-0">
+                          <p className="font-semibold truncate">{cidade.nome}</p>
+                          {cidade.estado && (
+                            <p className="text-xs text-muted-foreground">{cidade.estado}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-1 shrink-0">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(cidade)}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteId(cidade.id)}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex gap-1 shrink-0">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(cidade)}>
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteId(cidade.id)}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    {cidade.prefeito && (
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      {cidade.prefeito && (
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <User className="h-3.5 w-3.5 shrink-0" />
+                          <span className="truncate">{cidade.prefeito}</span>
+                        </div>
+                      )}
                       <div className="flex items-center gap-1.5 text-muted-foreground">
-                        <User className="h-3.5 w-3.5 shrink-0" />
-                        <span className="truncate">{cidade.prefeito}</span>
+                        <Users className="h-3.5 w-3.5 shrink-0" />
+                        <span>Pop: {formatNumber(cidade.populacao)}</span>
                       </div>
-                    )}
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <Users className="h-3.5 w-3.5 shrink-0" />
-                      <span>Pop: {formatNumber(cidade.populacao)}</span>
+                      <div className="flex items-center gap-1.5 text-muted-foreground col-span-2">
+                        <DollarSign className="h-3.5 w-3.5 shrink-0" />
+                        <span>Recursos: {formatCurrency(totalRecursos)}</span>
+                      </div>
+                      {totalEmendas > 0 && (
+                        <div className="flex items-center gap-1.5 text-muted-foreground col-span-2">
+                          <DollarSign className="h-3.5 w-3.5 shrink-0" />
+                          <span>Emendas: {formatCurrency(totalEmendas)}</span>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex items-center gap-1.5 text-muted-foreground col-span-2">
-                      <DollarSign className="h-3.5 w-3.5 shrink-0" />
-                      <span>Recursos: {formatCurrency(cidade.recursos_destinados)}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>
