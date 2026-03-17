@@ -40,32 +40,19 @@ const GeradorMidia = ({ onBack }: Props) => {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.match(/^image\/(png|jpeg|webp)$/)) {
-      toast({ title: "Formato inválido", description: "Use PNG, JPEG ou WEBP", variant: "destructive" });
-      return;
+  const handlePickReference = async () => {
+    try {
+      const dataUrl = await pickImage({ source: 'prompt', quality: 80 });
+      if (dataUrl) {
+        setReferenceImage(dataUrl);
+      }
+    } catch (err: any) {
+      toast({ title: "Erro ao selecionar imagem", description: err.message, variant: "destructive" });
     }
-
-    if (file.size > 10 * 1024 * 1024) {
-      toast({ title: "Arquivo muito grande", description: "Máximo 10MB", variant: "destructive" });
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      setReferenceImage(reader.result as string);
-      setReferenceFileName(file.name);
-    };
-    reader.readAsDataURL(file);
   };
 
   const removeReference = () => {
     setReferenceImage(null);
-    setReferenceFileName(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleGenerate = async () => {
