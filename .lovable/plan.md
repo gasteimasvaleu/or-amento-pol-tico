@@ -1,43 +1,42 @@
 
 
-## Problema
+## Plano: Restaurar Status de Pagamento
 
-O `isMobile` hook retorna `undefined`/`false` no primeiro render (antes de medir o viewport), então o `useEffect` executa com `isMobile = false` e nunca ativa a splash. Quando o hook finalmente resolve `true`, o effect já rodou e não roda de novo (ou roda tarde demais). Além disso, o timer de 8s compete com o `onEnded` — se o vídeo demora a carregar, o timer esconde a splash antes do vídeo terminar.
+### Situacao Atual
 
-## Correção em `src/pages/Login.tsx`
+Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
 
-1. **Esperar o hook `isMobile` estabilizar** — Só decidir sobre a splash depois que `isMobile` tiver um valor confiável. O hook `useIsMobile` usa um state que começa `undefined` e só fica definido após o primeiro `useEffect`. Precisamos tratar esse estado inicial.
+### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
 
-2. **Remover o timer fixo de 8s** — Confiar apenas no `onEnded` do vídeo. Se o vídeo falhar ao carregar, usar `onError` como fallback para esconder a splash.
+Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
 
-3. **Adicionar `onCanPlay`/`onLoadedData`** não é necessário — o `autoPlay` já cuida disso.
+| Municipio | Responsavel | ID |
+|-----------|-------------|-----|
+| Aroeira | Itamar | 5594343a... |
+| Juazeirinho | Bevilacqua | 2bbaa610... |
+| Bonito de Santa Fe | Sabino | 201560a9... |
+| Sume | Ze Mario | 2cec5382... |
+| Joao Pessoa | Jailson | 990001de... |
+| Sousa | Vitor | 51e0080c... |
 
-### Mudanças concretas:
+### Comando SQL
 
-**useEffect** — Adicionar guard para `isMobile === undefined`:
-```tsx
-useEffect(() => {
-  if (isMobile === undefined) return; // hook ainda não mediu
-  if (isMobile && !sessionStorage.getItem("splashShown")) {
-    setShowSplash(true);
-    sessionStorage.setItem("splashShown", "1");
-  }
-}, [isMobile]);
-```
-Sem timer. A splash só fecha via `onEnded` ou `onError`.
-
-**Video element** — Adicionar `onError` como fallback:
-```tsx
-<video
-  ...
-  onEnded={() => setShowSplash(false)}
-  onError={() => setShowSplash(false)}
-  ...
-/>
+```sql
+UPDATE despesas_politicas 
+SET pagamento_feito_em = '2026-02-09'
+WHERE id IN (
+  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
+  '2bbaa610-e38e-44e0-9817-356253ef77ed',
+  '201560a9-aa52-4772-93a0-80f842e2a4d0',
+  '2cec5382-26af-4b57-aecc-658593567fe7',
+  '990001de-61c5-452b-b237-039e479e74a0',
+  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
+);
 ```
 
-Isso garante que:
-- A splash só aparece quando `isMobile` é confirmado `true`
-- A splash dura exatamente o tempo do vídeo (não é cortada por timer)
-- Se o vídeo falhar, a splash fecha graciosamente
+Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
+
+### Resultado
+
+Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
 

@@ -22,11 +22,10 @@ const Login = () => {
   const isMobile = useIsMobile();
 
   useEffect(() => {
+    if (isMobile === undefined) return;
     if (isMobile && !sessionStorage.getItem("splashShown")) {
       setShowSplash(true);
       sessionStorage.setItem("splashShown", "1");
-      const timer = setTimeout(() => setShowSplash(false), 8000);
-      return () => clearTimeout(timer);
     }
   }, [isMobile]);
 
@@ -39,6 +38,7 @@ const Login = () => {
           muted
           playsInline
           onEnded={() => setShowSplash(false)}
+          onError={() => setShowSplash(false)}
           className="w-full h-full object-cover"
         />
       </div>
