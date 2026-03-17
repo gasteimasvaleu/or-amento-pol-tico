@@ -93,7 +93,7 @@ const Suporte = () => {
 
             <Card
               className="cursor-pointer hover:shadow-md transition-shadow border-primary/20"
-              onClick={() => setActiveTool("gerador-midia")}
+              onClick={() => handleToolSelect("gerador-midia")}
             >
               <CardContent className="flex items-center gap-4 p-4">
                 <div className="bg-primary/10 rounded-xl p-3">
