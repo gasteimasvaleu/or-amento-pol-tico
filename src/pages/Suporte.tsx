@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, Newspaper, LifeBuoy, FileText, ImagePlus } from "lucide-react";
+import { Sparkles, Newspaper, LifeBuoy, FileText, ImagePlus, Hash } from "lucide-react";
 import GeradorDiscurso from "@/components/suporte/GeradorDiscurso";
 import AnaliseNoticia from "@/components/suporte/AnaliseNoticia";
 import GeradorProjetoLei from "@/components/suporte/GeradorProjetoLei";
 import GeradorMidia from "@/components/suporte/GeradorMidia";
+import GeradorPostagem from "@/components/suporte/GeradorPostagem";
 
-type Tool = "hub" | "gerador-discurso" | "analise-noticia" | "gerador-projeto-lei" | "gerador-midia";
+type Tool = "hub" | "gerador-discurso" | "analise-noticia" | "gerador-projeto-lei" | "gerador-midia" | "gerador-postagem";
 
 const Suporte = () => {
   const [activeTool, setActiveTool] = useState<Tool>("hub");
@@ -90,6 +91,23 @@ const Suporte = () => {
               </CardContent>
             </Card>
 
+            <Card
+              className="cursor-pointer hover:shadow-md transition-shadow border-primary/20"
+              onClick={() => setActiveTool("gerador-postagem")}
+            >
+              <CardContent className="flex items-center gap-4 p-4">
+                <div className="bg-primary/10 rounded-xl p-3">
+                  <Hash className="h-6 w-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-foreground">Gerador de Postagem</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Crie postagens otimizadas para redes sociais com IA
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
             <div className="flex flex-col items-center py-10 text-center space-y-3">
               <div className="bg-muted rounded-full p-4">
                 <LifeBuoy className="h-8 w-8 text-muted-foreground" />
@@ -116,6 +134,10 @@ const Suporte = () => {
 
       {activeTool === "gerador-midia" && (
         <GeradorMidia onBack={() => setActiveTool("hub")} />
+      )}
+
+      {activeTool === "gerador-postagem" && (
+        <GeradorPostagem onBack={() => setActiveTool("hub")} />
       )}
     </Layout>
   );
