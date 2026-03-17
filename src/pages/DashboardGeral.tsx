@@ -357,6 +357,8 @@ const DashboardGeral = () => {
             Salvar Alterações
           </Button>
         </div>
+
+        <DashboardCharts />
       </div>
     </Layout>
   );
