@@ -120,9 +120,18 @@ const GeradorMidia = ({ onBack }: Props) => {
     setSaving(true);
 
     try {
-      const res = await fetch(imageUrl);
-      const blob = await res.blob();
-      const fileName = `${Date.now()}.png`;
+      let blob: Blob;
+      if (imageUrl.startsWith("data:")) {
+        const [header, base64] = imageUrl.split(",");
+        const mime = header.match(/:(.*?);/)?.[1] || "image/png";
+        const binary = atob(base64);
+        const array = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) array[i] = binary.charCodeAt(i);
+        blob = new Blob([array], { type: mime });
+      } else {
+        const res = await fetch(imageUrl);
+        blob = await res.blob();
+      }
       const filePath = `${user.id}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
