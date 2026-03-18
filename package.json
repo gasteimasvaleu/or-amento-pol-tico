@@ -9,8 +9,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "ionic:build": "vite build",
-    "capacitor:sync:after": "node scripts/ios-fix-signing.cjs"
+    "ionic:build": "vite build"
   },
   "dependencies": {
     "@capacitor/app": "^8.0.1",
