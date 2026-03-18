@@ -1,42 +1,26 @@
 
 
-## Plano: Restaurar Status de Pagamento
+## Plano: Criar Knowledge Base Completa — App Nativo iOS com Capacitor
 
-### Situacao Atual
+Vou criar o arquivo `.lovable/knowledge/ios-native-app.md` documentando **todo o processo** de implementação do app nativo, desde a configuração inicial até o deploy no App Store Connect.
 
-Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
+### Conteúdo do arquivo
 
-### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
+O documento cobrirá estas seções:
 
-Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
+1. **Arquitetura Geral** — Capacitor + CocoaPods + Appflow + RevenueCat + Apple Sign In
+2. **Configuração do Capacitor** — `capacitor.config.ts` com Bundle ID, build number, Live Updates, permissões de câmera
+3. **Apple Sign In Nativo** — Plugin Swift customizado (`NativeAppleSignIn`) com bridge ObjC, `MyViewController`, `AppDelegate` customizado, entitlements
+4. **Pasta `ios-native-backup/`** — Arquivos que devem ser restaurados após `npx cap add ios`
+5. **RevenueCat / In-App Purchases** — Fluxo de compra antes do login, sincronização com Supabase via webhook, entitlement ID
+6. **Login Flow no iOS** — Comprar assinatura → Apple Sign In → `signInWithIdToken` → upsert profile → sync RevenueCat
+7. **Câmera Nativa** — `capacitorCamera.ts` com fallback web
+8. **Appflow CI/CD** — Variáveis de ambiente obrigatórias e proibidas, troubleshooting de Exit 65
+9. **App Icon** — Requisito de 1024x1024 para Xcode 15+
+10. **Podfile** — Hardening recomendado para code signing dos Pods
+11. **Comandos de Deploy** — Fluxo git para disparar builds no Appflow
 
-| Municipio | Responsavel | ID |
-|-----------|-------------|-----|
-| Aroeira | Itamar | 5594343a... |
-| Juazeirinho | Bevilacqua | 2bbaa610... |
-| Bonito de Santa Fe | Sabino | 201560a9... |
-| Sume | Ze Mario | 2cec5382... |
-| Joao Pessoa | Jailson | 990001de... |
-| Sousa | Vitor | 51e0080c... |
+### Implementação
 
-### Comando SQL
-
-```sql
-UPDATE despesas_politicas 
-SET pagamento_feito_em = '2026-02-09'
-WHERE id IN (
-  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
-  '2bbaa610-e38e-44e0-9817-356253ef77ed',
-  '201560a9-aa52-4772-93a0-80f842e2a4d0',
-  '2cec5382-26af-4b57-aecc-658593567fe7',
-  '990001de-61c5-452b-b237-039e479e74a0',
-  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
-);
-```
-
-Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
-
-### Resultado
-
-Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
+Criar **um único arquivo**: `.lovable/knowledge/ios-native-app.md`
 
