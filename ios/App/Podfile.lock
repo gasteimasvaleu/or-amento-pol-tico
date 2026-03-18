@@ -1,0 +1,73 @@
+PODS:
+  - Capacitor (8.2.0):
+    - CapacitorCordova
+  - CapacitorApp (8.0.1):
+    - Capacitor
+  - CapacitorCamera (8.0.2):
+    - Capacitor
+  - CapacitorCordova (8.2.0)
+  - CapacitorHaptics (8.0.1):
+    - Capacitor
+  - CapacitorLiveUpdates (0.5.0):
+    - Capacitor
+    - IonicLiveUpdates (~> 0.5.7)
+  - CapacitorStatusBar (8.0.1):
+    - Capacitor
+  - IonicLiveUpdates (0.5.7)
+  - PurchasesHybridCommon (17.47.0):
+    - RevenueCat (= 5.63.0)
+  - RevenueCat (5.63.0)
+  - RevenuecatPurchasesCapacitor (12.2.4):
+    - Capacitor
+    - PurchasesHybridCommon (= 17.47.0)
+
+DEPENDENCIES:
+  - "Capacitor (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorApp (from `../../node_modules/@capacitor/app`)"
+  - "CapacitorCamera (from `../../node_modules/@capacitor/camera`)"
+  - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorHaptics (from `../../node_modules/@capacitor/haptics`)"
+  - "CapacitorLiveUpdates (from `../../node_modules/@capacitor/live-updates`)"
+  - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
+  - "RevenuecatPurchasesCapacitor (from `../../node_modules/@revenuecat/purchases-capacitor`)"
+
+SPEC REPOS:
+  trunk:
+    - IonicLiveUpdates
+    - PurchasesHybridCommon
+    - RevenueCat
+
+EXTERNAL SOURCES:
+  Capacitor:
+    :path: "../../node_modules/@capacitor/ios"
+  CapacitorApp:
+    :path: "../../node_modules/@capacitor/app"
+  CapacitorCamera:
+    :path: "../../node_modules/@capacitor/camera"
+  CapacitorCordova:
+    :path: "../../node_modules/@capacitor/ios"
+  CapacitorHaptics:
+    :path: "../../node_modules/@capacitor/haptics"
+  CapacitorLiveUpdates:
+    :path: "../../node_modules/@capacitor/live-updates"
+  CapacitorStatusBar:
+    :path: "../../node_modules/@capacitor/status-bar"
+  RevenuecatPurchasesCapacitor:
+    :path: "../../node_modules/@revenuecat/purchases-capacitor"
+
+SPEC CHECKSUMS:
+  Capacitor: 49a454e1cdbd520bc106a220adca7913536a4933
+  CapacitorApp: 942306cd1acf7774a00e89a3986af3a67c8cad7a
+  CapacitorCamera: 66bb9c4ea1703a5acf2a328bac0e613d278c399c
+  CapacitorCordova: a9ac88d84a1f5280f33b349fe50fce1902683ac0
+  CapacitorHaptics: 4df2c625445cef39b67ea635a21802bc92df3b82
+  CapacitorLiveUpdates: 80e75e9730f664a9a73ffd8463c86ce85877063a
+  CapacitorStatusBar: 32206abd53b14f339763da26f71286deaa891e16
+  IonicLiveUpdates: 2a722280f5052fcc5363b0e86317e9e7d1504215
+  PurchasesHybridCommon: 7794f8a04e50265d595b695d49b8fc212e138d1f
+  RevenueCat: c7310bad19cb96a1551c68045303e1faaa1942a5
+  RevenuecatPurchasesCapacitor: 6b652e6e001224841fbfb9a97322c46f14d32504
+
+PODFILE CHECKSUM: 7a547666405bf5b680edbbeffcbbdedf11e6c006
+
+COCOAPODS: 1.16.2
