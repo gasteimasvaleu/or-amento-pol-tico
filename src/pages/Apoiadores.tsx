@@ -28,6 +28,7 @@ import {
   Trash2,
   Instagram,
   Crown,
+  ArrowLeft,
 } from "lucide-react";
 
 export default function Apoiadores() {
