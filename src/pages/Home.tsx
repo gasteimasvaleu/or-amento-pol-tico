@@ -1,8 +1,9 @@
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Receipt, CalendarDays, ArrowRight, ImageIcon, LifeBuoy } from "lucide-react";
-
+import { supabase } from "@/integrations/supabase/client";
 
 const quickCards = [
   {
@@ -41,7 +42,21 @@ const CARD_OVERLAP = 80;
 const Home = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "Usuário";
+  const [profileName, setProfileName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", user.id)
+      .single()
+      .then(({ data }) => {
+        if (data?.full_name) setProfileName(data.full_name);
+      });
+  }, [user]);
+
+  const firstName = (profileName || user?.user_metadata?.full_name || "Usuário").split(" ")[0];
 
   const stackHeight = CARD_HEIGHT + (quickCards.length - 1) * CARD_OVERLAP;
 
