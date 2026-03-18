@@ -14,6 +14,11 @@ const config: CapacitorConfig = {
       NSPhotoLibraryUsageDescription: 'Este app precisa acessar suas fotos para enviar mídias.',
       NSPhotoLibraryAddUsageDescription: 'Este app precisa salvar fotos na sua galeria.',
     },
+    LiveUpdates: {
+      appId: '0ec0d586',
+      channel: 'Production',
+      autoUpdateMethod: 'background',
+    },
   },
 };
 
