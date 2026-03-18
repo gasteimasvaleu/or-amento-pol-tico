@@ -1,42 +1,33 @@
 
 
-## Plano: Restaurar Status de Pagamento
+## Plano: Configurar número WhatsApp de produção e webhook no Twilio
 
-### Situacao Atual
+### 1. Adicionar secret `TWILIO_WHATSAPP_FROM`
 
-Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
+Adicionar o secret `TWILIO_WHATSAPP_FROM` com o valor `whatsapp:+15559346984` nas Edge Functions do Supabase. Atualmente o código faz fallback para o número do Sandbox — com esse secret configurado, usará o número de produção.
 
-### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
+### 2. Configurar Webhook no Twilio
 
-Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
+Na página de configuração do WhatsApp Sender no Twilio (os screenshots que você enviou), preencher:
 
-| Municipio | Responsavel | ID |
-|-----------|-------------|-----|
-| Aroeira | Itamar | 5594343a... |
-| Juazeirinho | Bevilacqua | 2bbaa610... |
-| Bonito de Santa Fe | Sabino | 201560a9... |
-| Sume | Ze Mario | 2cec5382... |
-| Joao Pessoa | Jailson | 990001de... |
-| Sousa | Vitor | 51e0080c... |
+- **Webhook URL for incoming messages**: `https://wrriittiqsmzbapbrcwm.supabase.co/functions/v1/whatsapp-webhook`
+- **Webhook method**: HTTP Post
 
-### Comando SQL
+Isso permitirá receber respostas dos usuários no futuro (confirmações, interações).
 
-```sql
-UPDATE despesas_politicas 
-SET pagamento_feito_em = '2026-02-09'
-WHERE id IN (
-  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
-  '2bbaa610-e38e-44e0-9817-356253ef77ed',
-  '201560a9-aa52-4772-93a0-80f842e2a4d0',
-  '2cec5382-26af-4b57-aecc-658593567fe7',
-  '990001de-61c5-452b-b237-039e479e74a0',
-  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
-);
-```
+### 3. Criar Edge Function `whatsapp-webhook`
 
-Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
+Uma Edge Function simples para receber callbacks do Twilio (mensagens recebidas e status de entrega). Por agora, apenas loga os dados recebidos para monitoramento. Futuramente pode ser expandida para processar respostas dos usuários.
 
-### Resultado
+### Alterações no código
 
-Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
+- Criar `supabase/functions/whatsapp-webhook/index.ts` — recebe POST do Twilio com `application/x-www-form-urlencoded`, loga e retorna 200
+- Atualizar `supabase/config.toml` — registrar a nova function com `verify_jwt = false` (Twilio não envia JWT)
+- Adicionar secret `TWILIO_WHATSAPP_FROM` = `whatsapp:+15559346984`
+
+### Configuração manual no Twilio
+
+Após o deploy, você preencherá no painel do Twilio:
+- **Webhook URL**: `https://wrriittiqsmzbapbrcwm.supabase.co/functions/v1/whatsapp-webhook`
+- **Status callback URL**: mesmo URL (opcional, para tracking de entrega)
 
