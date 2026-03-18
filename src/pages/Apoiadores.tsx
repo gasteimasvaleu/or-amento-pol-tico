@@ -53,8 +53,12 @@ export default function Apoiadores() {
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Apoiadores</h1>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/equipe")}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-xl font-bold text-foreground">Apoiadores</h1>
             <p className="text-xs text-muted-foreground">
               {apoiadores.length} apoiador{apoiadores.length !== 1 ? "es" : ""} cadastrado{apoiadores.length !== 1 ? "s" : ""}
             </p>
