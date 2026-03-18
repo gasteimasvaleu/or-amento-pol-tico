@@ -15,6 +15,7 @@ import {
 import { pickImage, dataUrlToBlob } from "@/lib/capacitorCamera";
 
 import DashboardCharts from "@/components/dashboard/DashboardCharts";
+import NotificacoesConfig from "@/components/notificacoes/NotificacoesConfig";
 
 interface ProfileData {
   full_name: string;
