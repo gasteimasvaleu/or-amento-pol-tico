@@ -76,7 +76,8 @@ const GeradorMidia = ({ onBack }: Props) => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      setImageUrl(data.imageUrl);
+      // Gateway returns base64 data URL
+      setImageUrl(data.imageBase64 || data.imageUrl);
       toast({ title: "Imagem gerada com sucesso!" });
       // Log generation
       if (user) {
@@ -96,14 +97,19 @@ const GeradorMidia = ({ onBack }: Props) => {
   const handleDownload = async () => {
     if (!imageUrl) return;
     try {
-      const res = await fetch(imageUrl);
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
+      let url: string;
+      if (imageUrl.startsWith("data:")) {
+        url = imageUrl;
+      } else {
+        const res = await fetch(imageUrl);
+        const blob = await res.blob();
+        url = URL.createObjectURL(blob);
+      }
       const a = document.createElement("a");
       a.href = url;
       a.download = `post-${formato}-${Date.now()}.png`;
       a.click();
-      URL.revokeObjectURL(url);
+      if (!imageUrl.startsWith("data:")) URL.revokeObjectURL(url);
     } catch {
       toast({ title: "Erro ao baixar imagem", variant: "destructive" });
     }
@@ -114,8 +120,18 @@ const GeradorMidia = ({ onBack }: Props) => {
     setSaving(true);
 
     try {
-      const res = await fetch(imageUrl);
-      const blob = await res.blob();
+      let blob: Blob;
+      if (imageUrl.startsWith("data:")) {
+        const [header, base64] = imageUrl.split(",");
+        const mime = header.match(/:(.*?);/)?.[1] || "image/png";
+        const binary = atob(base64);
+        const array = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) array[i] = binary.charCodeAt(i);
+        blob = new Blob([array], { type: mime });
+      } else {
+        const res = await fetch(imageUrl);
+        blob = await res.blob();
+      }
       const fileName = `${Date.now()}.png`;
       const filePath = `${user.id}/${fileName}`;
 

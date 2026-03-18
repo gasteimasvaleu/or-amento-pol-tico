@@ -1,30 +1,42 @@
 
 
-## Trocar Leonardo AI para Nano Banana Pro (Gemini 3 Pro Image)
+## Plano: Restaurar Status de Pagamento
 
-Reescrever a Edge Function `gerar-midia` para usar o gateway Lovable AI (`google/gemini-3-pro-image-preview`) em vez do Leonardo AI. Isso simplifica bastante o código — elimina polling, upload de init image, e dependência da API do Leonardo.
+### Situacao Atual
 
-### Alterações
+Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
 
-**Arquivo: `supabase/functions/gerar-midia/index.ts`**
+### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
 
-- Remover toda lógica Leonardo (pollGeneration, uploadInitImage, presigned URLs)
-- Usar `LOVABLE_API_KEY` (já existe nos secrets) para chamar `https://ai.gateway.lovable.dev/v1/chat/completions`
-- Modelo: `google/gemini-3-pro-image-preview` com `modalities: ["image", "text"]`
-- Montar prompt com instruções de dimensão e estilo
-- Para imagem de referência: enviar como `image_url` no content array (multimodal)
-- Retornar a imagem base64 gerada diretamente (o frontend já aceita URLs de imagem)
+Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
 
-**Arquivo: `src/components/suporte/GeradorMidia.tsx`**
+| Municipio | Responsavel | ID |
+|-----------|-------------|-----|
+| Aroeira | Itamar | 5594343a... |
+| Juazeirinho | Bevilacqua | 2bbaa610... |
+| Bonito de Santa Fe | Sabino | 201560a9... |
+| Sume | Ze Mario | 2cec5382... |
+| Joao Pessoa | Jailson | 990001de... |
+| Sousa | Vitor | 51e0080c... |
 
-- Ajustar para aceitar resposta com `imageBase64` (data URL) além de `imageUrl`, já que o gateway retorna base64
-- O download e save precisam funcionar com data URLs também
+### Comando SQL
 
-### Fluxo simplificado
-
-```text
-Frontend → Edge Function → Lovable AI Gateway (Gemini 3 Pro) → base64 image → Frontend
+```sql
+UPDATE despesas_politicas 
+SET pagamento_feito_em = '2026-02-09'
+WHERE id IN (
+  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
+  '2bbaa610-e38e-44e0-9817-356253ef77ed',
+  '201560a9-aa52-4772-93a0-80f842e2a4d0',
+  '2cec5382-26af-4b57-aecc-658593567fe7',
+  '990001de-61c5-452b-b237-039e479e74a0',
+  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
+);
 ```
 
-Sem polling, sem upload separado de referência — tudo em uma única chamada.
+Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
+
+### Resultado
+
+Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
 
