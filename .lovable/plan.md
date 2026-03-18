@@ -1,31 +1,42 @@
 
 
-## Plano: Corrigir Info.plist e Ícone do App
+## Plano: Restaurar Status de Pagamento
 
-### Problema 1: NSPhotoLibraryUsageDescription ausente no Info.plist
+### Situacao Atual
 
-O `Info.plist` não tem as chaves de privacidade para câmera/galeria. O `capacitor.config.ts` define essas strings, mas o Capacitor nem sempre as injeta no Info.plist — precisam estar explicitamente lá.
+Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
 
-**Correção**: Adicionar ao `Info.plist`:
-- `NSPhotoLibraryUsageDescription`
-- `NSCameraUsageDescription`
-- `NSPhotoLibraryAddUsageDescription`
+### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
 
-### Problema 2: Ícone não aparece no TestFlight
+Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
 
-O `Contents.json` referencia `AppIcon-1024x1024.png`, e esse arquivo **existe** na pasta. Porém, também existem arquivos extras (`AppIcon-1024@1x.png`, `AppIcon-512@2x.png`) que podem causar confusão.
+| Municipio | Responsavel | ID |
+|-----------|-------------|-----|
+| Aroeira | Itamar | 5594343a... |
+| Juazeirinho | Bevilacqua | 2bbaa610... |
+| Bonito de Santa Fe | Sabino | 201560a9... |
+| Sume | Ze Mario | 2cec5382... |
+| Joao Pessoa | Jailson | 990001de... |
+| Sousa | Vitor | 51e0080c... |
 
-Da última vez, o knowledge base menciona que o `Contents.json` deveria referenciar `AppIcon-1024@1x.png`. Há uma inconsistência: o `Contents.json` aponta para `AppIcon-1024x1024.png` mas o knowledge base diz `AppIcon-1024@1x.png`.
+### Comando SQL
 
-**Correção**: Atualizar o `Contents.json` para referenciar `AppIcon-1024@1x.png` (que é o arquivo correto de 1024x1024 pixels), ou verificar qual dos arquivos PNG é realmente 1024x1024. Vou padronizar para `AppIcon-1024@1x.png` conforme o knowledge base.
+```sql
+UPDATE despesas_politicas 
+SET pagamento_feito_em = '2026-02-09'
+WHERE id IN (
+  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
+  '2bbaa610-e38e-44e0-9817-356253ef77ed',
+  '201560a9-aa52-4772-93a0-80f842e2a4d0',
+  '2cec5382-26af-4b57-aecc-658593567fe7',
+  '990001de-61c5-452b-b237-039e479e74a0',
+  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
+);
+```
 
-### Problema 3: buildNumber
+Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
 
-Precisa ser incrementado para `4` já que o build `3` já foi enviado.
+### Resultado
 
-### Alterações
-
-1. **`ios/App/App/Info.plist`** — Adicionar as 3 chaves de privacidade (câmera, galeria leitura, galeria escrita)
-2. **`ios/App/App/Assets.xcassets/AppIcon.appiconset/Contents.json`** — Alterar filename para `AppIcon-1024@1x.png`
-3. **`capacitor.config.ts`** — Incrementar buildNumber para `'4'`
+Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
 
