@@ -1,31 +1,42 @@
 
 
-## Plano: Corrigir erro de signing do RevenueCat no build Appflow
+## Plano: Restaurar Status de Pagamento
 
-### Diagnóstico
+### Situacao Atual
 
-O erro `Signing for "RevenueCat_RevenueCat" requires a development team` ocorre porque os pacotes SPM (como RevenueCat) herdam as configurações de signing do **projeto** (project-level), e não do **target**. 
+Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
 
-No seu `project.pbxproj`, o `DEVELOPMENT_TEAM = CASJQDDA7L` está definido apenas nas configurações do **target** App (linhas 318 e 349), mas **não** nas configurações do **projeto** (linhas 199-255 e 257-306). Os pacotes SPM usam as configurações do projeto, por isso falham.
+### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
 
-### Solução
+Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
 
-Adicionar `DEVELOPMENT_TEAM = CASJQDDA7L` nas build configurations **do projeto** (Debug e Release) no arquivo `ios/App/App.xcodeproj/project.pbxproj`.
+| Municipio | Responsavel | ID |
+|-----------|-------------|-----|
+| Aroeira | Itamar | 5594343a... |
+| Juazeirinho | Bevilacqua | 2bbaa610... |
+| Bonito de Santa Fe | Sabino | 201560a9... |
+| Sume | Ze Mario | 2cec5382... |
+| Joao Pessoa | Jailson | 990001de... |
+| Sousa | Vitor | 51e0080c... |
 
-**Mudanças no arquivo:**
+### Comando SQL
 
-1. **Debug config do projeto** (seção que começa na linha 199) -- adicionar `DEVELOPMENT_TEAM = CASJQDDA7L;` nos buildSettings
-2. **Release config do projeto** (seção que começa na linha 257) -- adicionar `DEVELOPMENT_TEAM = CASJQDDA7L;` nos buildSettings
-
-### Após a mudança
-
-Fazer git pull no Mac e push novamente:
-```bash
-git pull
-git add ios/
-git commit -m "Add DEVELOPMENT_TEAM to project-level build settings"
-git push
+```sql
+UPDATE despesas_politicas 
+SET pagamento_feito_em = '2026-02-09'
+WHERE id IN (
+  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
+  '2bbaa610-e38e-44e0-9817-356253ef77ed',
+  '201560a9-aa52-4772-93a0-80f842e2a4d0',
+  '2cec5382-26af-4b57-aecc-658593567fe7',
+  '990001de-61c5-452b-b237-039e479e74a0',
+  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
+);
 ```
 
-Depois, disparar novo build no Appflow.
+Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
+
+### Resultado
+
+Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
 
