@@ -1,42 +1,18 @@
 
 
-## Plano: Restaurar Status de Pagamento
+## Plano: Testar envio de notificação WhatsApp
 
-### Situacao Atual
+Invocar manualmente a Edge Function `whatsapp-notificacoes` para verificar se o lembrete criado gera uma mensagem WhatsApp real para o número configurado.
 
-Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
+### Acao
 
-### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
+1. Chamar `POST /whatsapp-notificacoes` via `supabase--curl_edge_functions`
+2. Verificar o resultado (status sent vs no_notifications)
+3. Se retornar `no_notifications`, verificar a data do lembrete criado -- a function busca lembretes para **amanha** (2026-03-19), entao o lembrete precisa ter `data_lembrete` nessa data
 
-Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
+### Detalhes tecnicos
 
-| Municipio | Responsavel | ID |
-|-----------|-------------|-----|
-| Aroeira | Itamar | 5594343a... |
-| Juazeirinho | Bevilacqua | 2bbaa610... |
-| Bonito de Santa Fe | Sabino | 201560a9... |
-| Sume | Ze Mario | 2cec5382... |
-| Joao Pessoa | Jailson | 990001de... |
-| Sousa | Vitor | 51e0080c... |
-
-### Comando SQL
-
-```sql
-UPDATE despesas_politicas 
-SET pagamento_feito_em = '2026-02-09'
-WHERE id IN (
-  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
-  '2bbaa610-e38e-44e0-9817-356253ef77ed',
-  '201560a9-aa52-4772-93a0-80f842e2a4d0',
-  '2cec5382-26af-4b57-aecc-658593567fe7',
-  '990001de-61c5-452b-b237-039e479e74a0',
-  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
-);
-```
-
-Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
-
-### Resultado
-
-Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
+- A Edge Function filtra lembretes com `data_lembrete` entre `2026-03-19T00:00:00` e `2026-03-19T23:59:59` e `concluido = false`
+- Se o lembrete foi criado com data de hoje (2026-03-18), nao sera incluido na notificacao
+- Caso necessario, orientar o usuario a editar a data do lembrete para amanha
 
