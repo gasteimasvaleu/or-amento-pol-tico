@@ -1,42 +1,45 @@
 
+Objetivo: destravar o build iOS no Appflow que falha em `RevenueCat_RevenueCat requires a development team` mesmo após já ter `DEVELOPMENT_TEAM` no `project.pbxproj`.
 
-## Plano: Restaurar Status de Pagamento
+Diagnóstico (com base no código + logs):
+- O `ios/App/App.xcodeproj/project.pbxproj` já tem `DEVELOPMENT_TEAM = CASJQDDA7L` em nível de projeto e target.
+- O erro continua acontecendo dentro de `SourcePackages/checkouts/purchases-ios-spm/...` (target do pacote SPM, não do app).
+- Isso indica problema de herança de signing no CI (Appflow/Fastlane + SPM), não falta simples no target App.
 
-### Situacao Atual
+Do I know what the issue is? Sim.
+- O signing está correto no app, mas o build de pacotes SPM (RevenueCat) não está recebendo a configuração de team/signing de forma consistente no Appflow.
 
-Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
+Plano de implementação (faseado para reduzir risco):
 
-### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
+1) Harden de signing no repositório (persistente)
+- Arquivos:
+  - `ios/App/App.xcodeproj/project.pbxproj`
+  - `package.json`
+  - `scripts/ios-fix-signing.cjs` (novo)
+- Ações:
+  - Garantir explicitamente em Debug/Release (project + target): `DEVELOPMENT_TEAM`, `CODE_SIGN_STYLE`.
+  - Criar script de pós-sync do Capacitor para reaplicar essas chaves no `project.pbxproj` (porque Appflow executa `cap sync` em todo build e pode reescrever ajustes).
+  - Registrar hook em `package.json`: `capacitor:sync:after` apontando para esse script.
 
-Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
+2) Forçar assinatura no passo gym do Appflow (sem depender só do Xcode project)
+- No Appflow Environment (dashboard), definir:
+  - `ENABLE_SPM_SUPPORT=true` (manter)
+  - `GYM_XCARGS=CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=CASJQDDA7L`
+- Motivo: esse override entra no `xcodebuild` da fase de build e costuma resolver erro de team em targets SPM no CI.
 
-| Municipio | Responsavel | ID |
-|-----------|-------------|-----|
-| Aroeira | Itamar | 5594343a... |
-| Juazeirinho | Bevilacqua | 2bbaa610... |
-| Bonito de Santa Fe | Sabino | 201560a9... |
-| Sume | Ze Mario | 2cec5382... |
-| Joao Pessoa | Jailson | 990001de... |
-| Sousa | Vitor | 51e0080c... |
+3) Validação
+- Rodar novo build iOS no Appflow.
+- Critério de sucesso: não aparecer mais `Signing for "RevenueCat_RevenueCat" requires a development team`.
+- Se falhar, coletar trecho do comando `xcodebuild` e confirmar que `GYM_XCARGS` foi aplicado no job.
 
-### Comando SQL
+4) Plano B (somente se a fase 1+2 não resolver)
+- Migrar iOS de SPM para CocoaPods (mais estável em Appflow para esse cenário):
+  - `npx cap rm ios`
+  - `npx cap add ios --packagemanager cocoapods`
+- Reaplicar customizações nativas existentes (Apple Sign-In nativo e `MyViewController`).
+- Remover necessidade de `ENABLE_SPM_SUPPORT`.
+- Isso é fallback porque é mudança maior no projeto iOS.
 
-```sql
-UPDATE despesas_politicas 
-SET pagamento_feito_em = '2026-02-09'
-WHERE id IN (
-  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
-  '2bbaa610-e38e-44e0-9817-356253ef77ed',
-  '201560a9-aa52-4772-93a0-80f842e2a4d0',
-  '2cec5382-26af-4b57-aecc-658593567fe7',
-  '990001de-61c5-452b-b237-039e479e74a0',
-  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
-);
-```
-
-Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
-
-### Resultado
-
-Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
-
+Resultado esperado:
+- Build iOS no Appflow concluindo archive sem erro de signing do RevenueCat.
+- Manutenção das funcionalidades atuais (RevenueCat + Apple Sign In nativo) sem regressão.
