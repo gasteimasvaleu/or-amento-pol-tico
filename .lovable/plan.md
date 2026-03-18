@@ -1,42 +1,37 @@
 
 
-## Plano: Restaurar Status de Pagamento
+## Problems Identified
 
-### Situacao Atual
+1. **Profile not auto-created for Apple Sign In users** — The `handle_new_user` trigger exists but the Apple Sign In user (`e7ca6eee`) has no row in `profiles`. The trigger likely failed silently or wasn't properly installed. Additionally, Apple only sends the user's name on the **first** authorization, and the current trigger relies on `raw_user_meta_data->>'full_name'` which Apple doesn't populate (it uses a different structure).
 
-Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
+2. **Home page reads name from wrong source** — `Home.tsx` line 44 reads `user?.user_metadata?.full_name` (from Supabase auth metadata), not from the `profiles` table. So even after updating the name in Dashboard, the Home page still shows "Usuario" because auth metadata was never updated.
 
-### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
+3. **Apple private relay email** — The `g457tk7fm5@privaterelay.appleid.com` email is expected behavior when the user chooses "Hide My Email" during Apple Sign In. This is not a bug — it's Apple's privacy feature.
 
-Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
+## Plan
 
-| Municipio | Responsavel | ID |
-|-----------|-------------|-----|
-| Aroeira | Itamar | 5594343a... |
-| Juazeirinho | Bevilacqua | 2bbaa610... |
-| Bonito de Santa Fe | Sabino | 201560a9... |
-| Sume | Ze Mario | 2cec5382... |
-| Joao Pessoa | Jailson | 990001de... |
-| Sousa | Vitor | 51e0080c... |
+### 1. Fix the trigger to be more resilient
+- Update `handle_new_user()` to use `ON CONFLICT (id) DO NOTHING` so it never fails silently on duplicate/conflict scenarios.
+- Ensure the fallback name comes from email prefix or "Usuario" when Apple doesn't provide a name.
 
-### Comando SQL
+### 2. Add profile creation fallback in the app code
+- In `Login.tsx` `handleAppleSignIn`, after successful sign-in, ensure a profile row exists by doing an upsert (insert if not exists).
+- Also save the `givenName`/`familyName` from Apple's first-auth response into both the `profiles` table AND `auth.updateUser({ data: { full_name } })` so the metadata stays in sync.
 
-```sql
-UPDATE despesas_politicas 
-SET pagamento_feito_em = '2026-02-09'
-WHERE id IN (
-  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
-  '2bbaa610-e38e-44e0-9817-356253ef77ed',
-  '201560a9-aa52-4772-93a0-80f842e2a4d0',
-  '2cec5382-26af-4b57-aecc-658593567fe7',
-  '990001de-61c5-452b-b237-039e479e74a0',
-  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
-);
-```
+### 3. Fix Home page to read from profiles table
+- Change `Home.tsx` to fetch the user's `full_name` from the `profiles` table instead of `user_metadata`.
+- This ensures that when the user updates their name in Dashboard, it reflects everywhere.
+- Create a small hook or inline query with `react-query` to fetch the profile name.
 
-Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
+### 4. Sync auth metadata on Dashboard save
+- In `DashboardGeral.tsx` `handleSave`, also call `supabase.auth.updateUser({ data: { full_name: profile.full_name } })` so that `user_metadata` stays in sync as a secondary source.
 
-### Resultado
+### Files to modify
+- **Migration (new)**: Update `handle_new_user()` with `ON CONFLICT DO NOTHING`
+- **`src/pages/Login.tsx`**: Add profile upsert after Apple Sign In + save name to auth metadata
+- **`src/pages/Home.tsx`**: Fetch `full_name` from `profiles` table instead of `user_metadata`
+- **`src/pages/DashboardGeral.tsx`**: Also update auth user metadata when saving profile
 
-Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
+### Regarding the Apple relay email
+This is normal Apple behavior. Users who choose "Hide My Email" will always show a relay address. No code change needed — it's working as designed.
 
