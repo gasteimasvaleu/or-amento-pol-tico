@@ -2,9 +2,10 @@ import { Layout } from "@/components/layout/Layout";
 import { useAssessores } from "@/hooks/useAssessores";
 import { AssessorModal } from "@/components/assessores/AssessorModal";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plus, User, Phone, Mail, Briefcase, Trash2, Loader2 } from "lucide-react";
+import { Plus, User, Phone, Mail, Briefcase, Trash2, Loader2, ArrowLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
@@ -21,11 +22,17 @@ import {
 export default function Assessores() {
   const { assessores, isLoading, createAssessor, deleteAssessor, isCreating } = useAssessores();
   const [modalOpen, setModalOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <Layout>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Assessores</h1>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/equipe")}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-2xl font-bold text-foreground">Assessores</h1>
+        </div>
         <Button onClick={() => setModalOpen(true)} size="sm">
           <Plus className="h-4 w-4 mr-1" />
           Novo

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { useApoiadores } from "@/hooks/useApoiadores";
 import { ApoiadorModal } from "@/components/apoiadores/ApoiadorModal";
@@ -27,12 +28,14 @@ import {
   Trash2,
   Instagram,
   Crown,
+  ArrowLeft,
 } from "lucide-react";
 
 export default function Apoiadores() {
   const { apoiadores, isLoading, createApoiador, deleteApoiador, isCreating } = useApoiadores();
   const [modalOpen, setModalOpen] = useState(false);
   const [busca, setBusca] = useState("");
+  const navigate = useNavigate();
 
   const filtered = apoiadores.filter((a) => {
     if (!busca) return true;
@@ -50,11 +53,16 @@ export default function Apoiadores() {
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Apoiadores</h1>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/equipe")}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-xl font-bold text-foreground">Apoiadores</h1>
             <p className="text-xs text-muted-foreground">
               {apoiadores.length} apoiador{apoiadores.length !== 1 ? "es" : ""} cadastrado{apoiadores.length !== 1 ? "s" : ""}
-            </p>
+              </p>
+            </div>
           </div>
           <Button size="sm" onClick={() => setModalOpen(true)}>
             <Plus className="h-4 w-4 mr-1" /> Adicionar
