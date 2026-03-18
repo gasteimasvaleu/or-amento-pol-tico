@@ -361,6 +361,8 @@ const DashboardGeral = () => {
           </Button>
         </div>
 
+        <NotificacoesConfig />
+
         <DashboardCharts />
       </div>
     </Layout>
