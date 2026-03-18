@@ -1,42 +1,16 @@
 
 
-## Plano: Restaurar Status de Pagamento
+## Plano: Corrigir buildNumber no project.pbxproj
 
-### Situacao Atual
+### Problema
+O `capacitor.config.ts` define `buildNumber: '4'`, mas o arquivo `ios/App/App.xcodeproj/project.pbxproj` tem `CURRENT_PROJECT_VERSION = 1` em todas as build configurations. O Appflow/Xcode usa o valor do `.pbxproj`, ignorando o do Capacitor config.
 
-Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
+### Correção
+Atualizar todas as ocorrências de `CURRENT_PROJECT_VERSION = 1` para `CURRENT_PROJECT_VERSION = 4` no `project.pbxproj` (são ~10 ocorrências nas diferentes build configurations: Debug e Release, para os targets App e App-App).
 
-### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
+### Arquivo alterado
+- `ios/App/App.xcodeproj/project.pbxproj` — trocar `CURRENT_PROJECT_VERSION = 1` → `CURRENT_PROJECT_VERSION = 4` em todas as ocorrências
 
-Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
-
-| Municipio | Responsavel | ID |
-|-----------|-------------|-----|
-| Aroeira | Itamar | 5594343a... |
-| Juazeirinho | Bevilacqua | 2bbaa610... |
-| Bonito de Santa Fe | Sabino | 201560a9... |
-| Sume | Ze Mario | 2cec5382... |
-| Joao Pessoa | Jailson | 990001de... |
-| Sousa | Vitor | 51e0080c... |
-
-### Comando SQL
-
-```sql
-UPDATE despesas_politicas 
-SET pagamento_feito_em = '2026-02-09'
-WHERE id IN (
-  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
-  '2bbaa610-e38e-44e0-9817-356253ef77ed',
-  '201560a9-aa52-4772-93a0-80f842e2a4d0',
-  '2cec5382-26af-4b57-aecc-658593567fe7',
-  '990001de-61c5-452b-b237-039e479e74a0',
-  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
-);
-```
-
-Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
-
-### Resultado
-
-Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
+### Próximos deploys
+Para cada novo build, será necessário incrementar esse valor **tanto** no `capacitor.config.ts` quanto no `project.pbxproj`, ou garantir que o `npx cap sync` esteja propagando corretamente.
 
