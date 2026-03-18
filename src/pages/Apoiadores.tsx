@@ -35,6 +35,7 @@ export default function Apoiadores() {
   const { apoiadores, isLoading, createApoiador, deleteApoiador, isCreating } = useApoiadores();
   const [modalOpen, setModalOpen] = useState(false);
   const [busca, setBusca] = useState("");
+  const navigate = useNavigate();
 
   const filtered = apoiadores.filter((a) => {
     if (!busca) return true;
