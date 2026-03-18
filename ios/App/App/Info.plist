@@ -45,5 +45,11 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Este app precisa acessar a câmera para capturar fotos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Este app precisa acessar suas fotos para enviar mídias.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Este app precisa salvar fotos na sua galeria.</string>
 </dict>
 </plist>
