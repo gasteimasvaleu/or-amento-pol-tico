@@ -31,7 +31,12 @@ export default function Assessores() {
           <Button variant="ghost" size="icon" onClick={() => navigate("/equipe")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-2xl font-bold text-foreground">Assessores</h1>
+          <div>
+            <h1 className="text-xl font-bold text-foreground">Assessores</h1>
+            <p className="text-xs text-muted-foreground">
+              {assessores.length} assessor{assessores.length !== 1 ? "es" : ""} cadastrado{assessores.length !== 1 ? "s" : ""}
+            </p>
+          </div>
         </div>
         <Button onClick={() => setModalOpen(true)} size="sm">
           <Plus className="h-4 w-4 mr-1" />
