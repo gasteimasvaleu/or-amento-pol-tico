@@ -695,6 +695,39 @@ export type Database = {
           },
         ]
       }
+      notificacao_config: {
+        Row: {
+          created_at: string
+          id: string
+          notif_agenda: boolean
+          notif_despesas: boolean
+          notif_lembretes: boolean
+          updated_at: string
+          user_id: string
+          whatsapp_phone: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notif_agenda?: boolean
+          notif_despesas?: boolean
+          notif_lembretes?: boolean
+          updated_at?: string
+          user_id: string
+          whatsapp_phone?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notif_agenda?: boolean
+          notif_despesas?: boolean
+          notif_lembretes?: boolean
+          updated_at?: string
+          user_id?: string
+          whatsapp_phone?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

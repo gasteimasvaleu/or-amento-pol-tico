@@ -1,71 +1,42 @@
 
 
-## Plano: Automação de Notificações via WhatsApp
+## Plano: Restaurar Status de Pagamento
 
-### Visão Geral
+### Situacao Atual
 
-Criar um sistema de notificações automáticas via WhatsApp que avisa o usuário sobre:
+Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
 
-1. **Despesas** — 1 dia antes do vencimento + 5 dias depois se ainda pendente
-2. **Lembretes** — 1 dia antes da data do lembrete
-3. **Agenda** — 1 dia antes do compromisso
+### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
 
-### Tecnologia
+Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
 
-- **Twilio WhatsApp API** via conector gateway (já disponível como conector Lovable)
-- **Edge Function agendada** via `pg_cron` (roda 1x por dia, ex: 8h da manhã)
-- **Telefone do usuário** — já existe coluna `phone` na tabela `profiles`
+| Municipio | Responsavel | ID |
+|-----------|-------------|-----|
+| Aroeira | Itamar | 5594343a... |
+| Juazeirinho | Bevilacqua | 2bbaa610... |
+| Bonito de Santa Fe | Sabino | 201560a9... |
+| Sume | Ze Mario | 2cec5382... |
+| Joao Pessoa | Jailson | 990001de... |
+| Sousa | Vitor | 51e0080c... |
 
-### Arquitetura
+### Comando SQL
 
-```text
-pg_cron (diário 8h)
-  └─► Edge Function "whatsapp-notificacoes"
-        ├─ Consulta despesas (vencimento amanhã OU pendentes há 5+ dias)
-        ├─ Consulta lembretes (data_lembrete = amanhã, não concluídos)
-        ├─ Consulta compromissos (data_inicio = amanhã)
-        ├─ Agrupa por user_id
-        ├─ Busca phone de cada user em profiles
-        └─ Envia WhatsApp via Twilio Gateway
+```sql
+UPDATE despesas_politicas 
+SET pagamento_feito_em = '2026-02-09'
+WHERE id IN (
+  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
+  '2bbaa610-e38e-44e0-9817-356253ef77ed',
+  '201560a9-aa52-4772-93a0-80f842e2a4d0',
+  '2cec5382-26af-4b57-aecc-658593567fe7',
+  '990001de-61c5-452b-b237-039e479e74a0',
+  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
+);
 ```
 
-### Alterações
+Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
 
-1. **Conectar Twilio** — vincular conector ao projeto
-2. **Edge Function `whatsapp-notificacoes/index.ts`** — lógica principal:
-   - Query despesas recorrentes cujo dia de vencimento é amanhã (sem `pagamento_feito_em` no mês atual)
-   - Query despesas com vencimento há 5+ dias sem `pagamento_feito_em`
-   - Query lembretes pendentes com `data_lembrete` = amanhã
-   - Query compromissos com `data_inicio` = amanhã
-   - Agrupa tudo por usuário, monta mensagem formatada
-   - Envia via Twilio WhatsApp gateway
-3. **Configurar pg_cron** — agendar execução diária às 8h (UTC-3 = 11h UTC)
-4. **Tela de configuração** — campo para o usuário informar/editar seu telefone WhatsApp no perfil (já existe `phone` em profiles, só garantir que está acessível na UI)
-5. **Tabela `notificacao_config`** (opcional) — permitir o usuário ativar/desativar cada tipo de notificação
+### Resultado
 
-### Pré-requisitos
-
-- Você precisa ter uma conta Twilio com um número habilitado para WhatsApp (Twilio Sandbox para testes ou número aprovado para produção)
-- O telefone do usuário precisa estar no formato internacional (+55...)
-
-### Mensagem exemplo
-
-```
-📋 *Lembretes para amanhã:*
-• Reunião com assessores (Alta)
-
-📅 *Compromissos amanhã:*
-• Audiência pública - 14:00, Câmara Municipal
-
-💰 *Despesas com vencimento amanhã:*
-• João Silva - R$ 2.500,00 (Assessor)
-
-⚠️ *Despesas pendentes (atrasadas):*
-• Maria Santos - R$ 1.800,00 (venceu há 5 dias)
-```
-
-### Considerações
-
-- Twilio WhatsApp requer templates aprovados para mensagens proativas (fora da janela de 24h). Para produção, será necessário registrar templates no Twilio. Para testes, o Sandbox funciona com mensagens livres.
-- A coluna `phone` já existe em `profiles` — só precisamos garantir que o usuário a preencha.
+Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
 
