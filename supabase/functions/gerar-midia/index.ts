@@ -6,100 +6,15 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const LEONARDO_API = "https://cloud.leonardo.ai/api/rest/v1";
-
-async function pollGeneration(generationId: string, apiKey: string, maxAttempts = 30): Promise<string> {
-  for (let i = 0; i < maxAttempts; i++) {
-    await new Promise((r) => setTimeout(r, 3000));
-
-    const res = await fetch(`${LEONARDO_API}/generations/${generationId}`, {
-      headers: { Authorization: `Bearer ${apiKey}` },
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      console.error("Poll error:", res.status, text);
-      throw new Error("Erro ao verificar status da geração");
-    }
-
-    const data = await res.json();
-    const gen = data.generations_by_pk;
-
-    if (gen?.status === "COMPLETE" && gen.generated_images?.length > 0) {
-      return gen.generated_images[0].url;
-    }
-
-    if (gen?.status === "FAILED") {
-      throw new Error("A geração da imagem falhou no Leonardo AI");
-    }
-  }
-
-  throw new Error("Tempo limite excedido aguardando geração da imagem");
-}
-
-async function uploadInitImage(base64Data: string, apiKey: string): Promise<string> {
-  // Step 1: Get presigned URL
-  const initRes = await fetch(`${LEONARDO_API}/init-image`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ extension: "png" }),
-  });
-
-  if (!initRes.ok) {
-    const errText = await initRes.text();
-    console.error("Init image error:", initRes.status, errText);
-    throw new Error("Erro ao inicializar upload de imagem de referência");
-  }
-
-  const initData = await initRes.json();
-  const { url: presignedUrl, fields, id: initImageId } = initData.uploadInitImage;
-
-  console.log("Got presigned URL for init image:", initImageId);
-
-  // Step 2: Upload image via presigned URL
-  // Decode base64 to binary
-  const rawBase64 = base64Data.includes(",") ? base64Data.split(",")[1] : base64Data;
-  const binaryStr = atob(rawBase64);
-  const bytes = new Uint8Array(binaryStr.length);
-  for (let i = 0; i < binaryStr.length; i++) {
-    bytes[i] = binaryStr.charCodeAt(i);
-  }
-
-  const formData = new FormData();
-  // Add all fields from presigned URL response
-  const parsedFields = typeof fields === "string" ? JSON.parse(fields) : fields;
-  for (const [key, value] of Object.entries(parsedFields)) {
-    formData.append(key, value as string);
-  }
-  formData.append("file", new Blob([bytes], { type: "image/png" }), "reference.png");
-
-  const uploadRes = await fetch(presignedUrl, {
-    method: "POST",
-    body: formData,
-  });
-
-  if (!uploadRes.ok && uploadRes.status !== 204) {
-    const errText = await uploadRes.text();
-    console.error("Upload error:", uploadRes.status, errText);
-    throw new Error("Erro ao fazer upload da imagem de referência");
-  }
-
-  console.log("Reference image uploaded successfully:", initImageId);
-  return initImageId;
-}
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const LEONARDO_API_KEY = Deno.env.get("LEONARDO_API_KEY");
-    if (!LEONARDO_API_KEY) {
-      throw new Error("LEONARDO_API_KEY não configurada");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY não configurada");
     }
 
     const { prompt, formato, estilo, referenceImageBase64, strength } = await req.json();
@@ -111,14 +26,14 @@ serve(async (req) => {
       );
     }
 
-    // Map formato to dimensions
-    const dimensoes: Record<string, { width: number; height: number }> = {
-      story: { width: 1080, height: 1920 },
-      feed_quadrado: { width: 1080, height: 1080 },
-      feed_paisagem: { width: 1200, height: 628 },
+    // Map formato to dimensions for prompt context
+    const dimensoes: Record<string, string> = {
+      story: "1080x1920 pixels (9:16 vertical/story format)",
+      feed_quadrado: "1080x1080 pixels (1:1 square format)",
+      feed_paisagem: "1200x628 pixels (landscape format)",
     };
 
-    const dim = dimensoes[formato] || dimensoes.feed_quadrado;
+    const dimText = dimensoes[formato] || dimensoes.feed_quadrado;
 
     // Build enhanced prompt with style
     const estiloMap: Record<string, string> = {
@@ -129,85 +44,87 @@ serve(async (req) => {
     };
 
     const styleText = estiloMap[estilo] || estiloMap.moderno;
-    const enhancedPrompt = `${prompt}. Style: ${styleText}. High quality, suitable for social media post.`;
 
-    // Handle reference image upload if provided
-    let initImageId: string | undefined;
+    const influenceText = referenceImageBase64
+      ? ` Use the provided reference image as inspiration with ${Math.round((strength ?? 0.5) * 100)}% fidelity to the original.`
+      : "";
+
+    const systemPrompt = `You are an expert graphic designer specializing in social media content for political campaigns. Generate high-quality images suitable for social media posts. Always create visually striking, professional designs.`;
+
+    const userPrompt = `Create an image with these specifications:
+- Description: ${prompt}
+- Dimensions: ${dimText}
+- Style: ${styleText}
+- The image should be high quality and suitable for social media posting.${influenceText}`;
+
+    // Build message content (multimodal if reference image provided)
+    const content: any[] = [{ type: "text", text: userPrompt }];
+
     if (referenceImageBase64) {
-      console.log("Uploading reference image...");
-      initImageId = await uploadInitImage(referenceImageBase64, LEONARDO_API_KEY);
+      content.push({
+        type: "image_url",
+        image_url: { url: referenceImageBase64 },
+      });
     }
 
-    console.log("Generating image with Leonardo AI:", { prompt: enhancedPrompt, ...dim, hasReference: !!initImageId });
-
-    // Build generation body
-    const generationBody: Record<string, any> = {
-      prompt: enhancedPrompt,
-      width: dim.width,
-      height: dim.height,
-      num_images: 1,
-      modelId: "6b645e3a-d64f-4341-a6d8-7a3690fbf042", // Leonardo Phoenix
-      alchemy: true,
-      photoReal: false,
-      presetStyle: "DYNAMIC",
-    };
-
-    if (initImageId) {
-      generationBody.init_image_id = initImageId;
-      generationBody.init_strength = strength ?? 0.5;
-    }
-
-    // Create generation
-    const createRes = await fetch(`${LEONARDO_API}/generations`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LEONARDO_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(generationBody),
+    console.log("Generating image with Lovable AI Gateway (Gemini 3 Pro Image):", {
+      formato,
+      estilo,
+      hasReference: !!referenceImageBase64,
     });
 
-    if (!createRes.ok) {
-      const errText = await createRes.text();
-      console.error("Leonardo create error:", createRes.status, errText);
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-pro-image-preview",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content },
+        ],
+        modalities: ["image", "text"],
+      }),
+    });
 
-      if (createRes.status === 401 || createRes.status === 403) {
-        return new Response(
-          JSON.stringify({ error: "API key do Leonardo AI inválida ou sem permissão." }),
-          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("AI Gateway error:", response.status, errText);
 
-      if (createRes.status === 429) {
+      if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns instantes." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "Créditos insuficientes. Adicione créditos ao workspace." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       return new Response(
-        JSON.stringify({ error: "Erro ao iniciar geração da imagem." }),
+        JSON.stringify({ error: "Erro ao gerar imagem via IA." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const createData = await createRes.json();
-    const generationId = createData.sdGenerationJob?.generationId;
+    const data = await response.json();
+    const imageData = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
-    if (!generationId) {
-      console.error("No generationId in response:", createData);
-      throw new Error("Resposta inesperada do Leonardo AI");
+    if (!imageData) {
+      console.error("No image in response:", JSON.stringify(data).slice(0, 500));
+      throw new Error("Nenhuma imagem foi gerada. Tente novamente.");
     }
 
-    console.log("Generation started, polling for result:", generationId);
-
-    // Poll for completion
-    const imageUrl = await pollGeneration(generationId, LEONARDO_API_KEY);
-
-    console.log("Image generated successfully:", imageUrl);
+    console.log("Image generated successfully via Gemini 3 Pro Image");
 
     return new Response(
-      JSON.stringify({ imageUrl }),
+      JSON.stringify({ imageBase64: imageData }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
