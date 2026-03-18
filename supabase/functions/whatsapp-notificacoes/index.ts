@@ -61,6 +61,13 @@ async function sendWhatsApp(phone: string, message: string) {
   const rawFrom = Deno.env.get('TWILIO_WHATSAPP_FROM') || '+14155238886'
   const TWILIO_WHATSAPP_FROM = rawFrom.startsWith('whatsapp:') ? rawFrom : `whatsapp:${rawFrom}`
 
+  // Sanitize content: Twilio Content API rejects newlines, tabs, 4+ spaces
+  const sanitized = message
+    .replace(/\n\n/g, ' — ')
+    .replace(/\n/g, ' | ')
+    .replace(/\t/g, ' ')
+    .replace(/ {4,}/g, '   ')
+
   const response = await fetch(`${GATEWAY_URL}/Messages.json`, {
     method: 'POST',
     headers: {
@@ -72,7 +79,7 @@ async function sendWhatsApp(phone: string, message: string) {
       To: `whatsapp:${phone}`,
       From: TWILIO_WHATSAPP_FROM,
       ContentSid: TWILIO_CONTENT_SID,
-      ContentVariables: JSON.stringify({ "1": message }),
+      ContentVariables: JSON.stringify({ "1": sanitized }),
     }),
   })
 
