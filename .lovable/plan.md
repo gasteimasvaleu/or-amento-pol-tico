@@ -1,18 +1,27 @@
 
 
-## Plano: Testar envio de notificação WhatsApp
+## Plano: Corrigir prefixo do remetente WhatsApp
 
-Invocar manualmente a Edge Function `whatsapp-notificacoes` para verificar se o lembrete criado gera uma mensagem WhatsApp real para o número configurado.
+O erro "channel mismatch" ocorre porque o `From` precisa ter o prefixo `whatsapp:` para mensagens WhatsApp. O código usa o secret `TWILIO_WHATSAPP_FROM` diretamente como valor do `From`, então há duas opções:
 
-### Acao
+### Abordagem escolhida: Adicionar lógica no código
 
-1. Chamar `POST /whatsapp-notificacoes` via `supabase--curl_edge_functions`
-2. Verificar o resultado (status sent vs no_notifications)
-3. Se retornar `no_notifications`, verificar a data do lembrete criado -- a function busca lembretes para **amanha** (2026-03-19), entao o lembrete precisa ter `data_lembrete` nessa data
+Alterar a Edge Function `whatsapp-notificacoes` para garantir que o prefixo `whatsapp:` seja adicionado automaticamente caso o secret não o contenha. Isso é mais robusto.
 
-### Detalhes tecnicos
+### Alteração
 
-- A Edge Function filtra lembretes com `data_lembrete` entre `2026-03-19T00:00:00` e `2026-03-19T23:59:59` e `concluido = false`
-- Se o lembrete foi criado com data de hoje (2026-03-18), nao sera incluido na notificacao
-- Caso necessario, orientar o usuario a editar a data do lembrete para amanha
+**Arquivo:** `supabase/functions/whatsapp-notificacoes/index.ts` (linha 58)
+
+Trocar:
+```ts
+const TWILIO_WHATSAPP_FROM = Deno.env.get('TWILIO_WHATSAPP_FROM') || 'whatsapp:+14155238886'
+```
+
+Por:
+```ts
+const rawFrom = Deno.env.get('TWILIO_WHATSAPP_FROM') || '+14155238886'
+const TWILIO_WHATSAPP_FROM = rawFrom.startsWith('whatsapp:') ? rawFrom : `whatsapp:${rawFrom}`
+```
+
+Isso garante que independente de como o secret foi salvo (com ou sem prefixo), o valor enviado ao Twilio sempre terá `whatsapp:`. Após o deploy, invocar novamente a function para testar o envio real.
 
