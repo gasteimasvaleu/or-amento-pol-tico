@@ -55,6 +55,9 @@ async function sendWhatsApp(phone: string, message: string) {
   const TWILIO_API_KEY = Deno.env.get('TWILIO_API_KEY')
   if (!TWILIO_API_KEY) throw new Error('TWILIO_API_KEY is not configured')
 
+  const TWILIO_CONTENT_SID = Deno.env.get('TWILIO_CONTENT_SID')
+  if (!TWILIO_CONTENT_SID) throw new Error('TWILIO_CONTENT_SID is not configured')
+
   const rawFrom = Deno.env.get('TWILIO_WHATSAPP_FROM') || '+14155238886'
   const TWILIO_WHATSAPP_FROM = rawFrom.startsWith('whatsapp:') ? rawFrom : `whatsapp:${rawFrom}`
 
@@ -68,7 +71,8 @@ async function sendWhatsApp(phone: string, message: string) {
     body: new URLSearchParams({
       To: `whatsapp:${phone}`,
       From: TWILIO_WHATSAPP_FROM,
-      Body: message,
+      ContentSid: TWILIO_CONTENT_SID,
+      ContentVariables: JSON.stringify({ "1": message }),
     }),
   })
 
