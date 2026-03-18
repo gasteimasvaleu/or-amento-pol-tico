@@ -2,9 +2,10 @@ import { Layout } from "@/components/layout/Layout";
 import { useAssessores } from "@/hooks/useAssessores";
 import { AssessorModal } from "@/components/assessores/AssessorModal";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plus, User, Phone, Mail, Briefcase, Trash2, Loader2 } from "lucide-react";
+import { Plus, User, Phone, Mail, Briefcase, Trash2, Loader2, ArrowLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
