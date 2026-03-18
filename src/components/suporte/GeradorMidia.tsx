@@ -131,7 +131,7 @@ const GeradorMidia = ({ onBack }: Props) => {
       } else {
         const res = await fetch(imageUrl);
         blob = await res.blob();
-      }
+      const fileName = `${Date.now()}.png`;
       const filePath = `${user.id}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
