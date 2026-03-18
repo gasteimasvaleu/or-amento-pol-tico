@@ -22,11 +22,17 @@ import {
 export default function Assessores() {
   const { assessores, isLoading, createAssessor, deleteAssessor, isCreating } = useAssessores();
   const [modalOpen, setModalOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <Layout>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Assessores</h1>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/equipe")}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-2xl font-bold text-foreground">Assessores</h1>
+        </div>
         <Button onClick={() => setModalOpen(true)} size="sm">
           <Plus className="h-4 w-4 mr-1" />
           Novo

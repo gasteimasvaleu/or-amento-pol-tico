@@ -61,7 +61,8 @@ export default function Apoiadores() {
               <h1 className="text-xl font-bold text-foreground">Apoiadores</h1>
             <p className="text-xs text-muted-foreground">
               {apoiadores.length} apoiador{apoiadores.length !== 1 ? "es" : ""} cadastrado{apoiadores.length !== 1 ? "s" : ""}
-            </p>
+              </p>
+            </div>
           </div>
           <Button size="sm" onClick={() => setModalOpen(true)}>
             <Plus className="h-4 w-4 mr-1" /> Adicionar
