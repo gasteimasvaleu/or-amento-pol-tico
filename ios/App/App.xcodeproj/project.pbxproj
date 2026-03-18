@@ -303,8 +303,9 @@
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
-			VALIDATE_PRODUCT = YES;
-			DEVELOPMENT_TEAM = CASJQDDA7L;
+				VALIDATE_PRODUCT = YES;
+				DEVELOPMENT_TEAM = CASJQDDA7L;
+				CODE_SIGN_STYLE = Automatic;
 			};
 			name = Release;
 		};
