@@ -97,14 +97,19 @@ const GeradorMidia = ({ onBack }: Props) => {
   const handleDownload = async () => {
     if (!imageUrl) return;
     try {
-      const res = await fetch(imageUrl);
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
+      let url: string;
+      if (imageUrl.startsWith("data:")) {
+        url = imageUrl;
+      } else {
+        const res = await fetch(imageUrl);
+        const blob = await res.blob();
+        url = URL.createObjectURL(blob);
+      }
       const a = document.createElement("a");
       a.href = url;
       a.download = `post-${formato}-${Date.now()}.png`;
       a.click();
-      URL.revokeObjectURL(url);
+      if (!imageUrl.startsWith("data:")) URL.revokeObjectURL(url);
     } catch {
       toast({ title: "Erro ao baixar imagem", variant: "destructive" });
     }
