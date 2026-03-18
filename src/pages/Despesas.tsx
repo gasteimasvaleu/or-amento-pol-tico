@@ -31,20 +31,19 @@ const Despesas = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Controle de Despesas</h1>
-            <p className="text-sm text-muted-foreground">
-              Gerenciamento de despesas mensais para mandatos políticos
-            </p>
-          </div>
-          <Button asChild>
-            <Link to="/despesas/nova" className="gap-2">
-              <Plus className="h-4 w-4" />
-              Nova Despesa
-            </Link>
-          </Button>
+        <div>
+          <h1 className="text-xl font-bold text-foreground">Controle de Despesas</h1>
+          <p className="text-sm text-muted-foreground">
+            Gerenciamento de despesas mensais para mandatos políticos
+          </p>
         </div>
+
+        <Button asChild className="w-full">
+          <Link to="/despesas/nova" className="gap-2">
+            <Plus className="h-4 w-4" />
+            Nova Despesa
+          </Link>
+        </Button>
 
         <MonthlyStats
           despesas={despesas}
