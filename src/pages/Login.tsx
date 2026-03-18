@@ -104,7 +104,7 @@ const Login = () => {
     try {
       if (isNative) {
         const result = await nativeAppleSignIn();
-        const { error } = await supabase.auth.signInWithIdToken({
+        const { data: signInData, error } = await supabase.auth.signInWithIdToken({
           provider: "apple",
           token: result.identityToken,
         });
@@ -112,12 +112,19 @@ const Login = () => {
         if (error) {
           toast({ title: "Erro ao entrar", description: error.message, variant: "destructive" });
         } else {
-          // Save name to profile if available (Apple only sends on first auth)
-          if (result.givenName || result.familyName) {
-            const fullName = [result.givenName, result.familyName].filter(Boolean).join(" ");
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-              await supabase.from("profiles").update({ full_name: fullName }).eq("id", user.id);
+          const userId = signInData.user?.id;
+          if (userId) {
+            // Ensure profile exists (fallback if trigger failed)
+            const fullName = [result.givenName, result.familyName].filter(Boolean).join(" ") || null;
+            await supabase.from("profiles").upsert(
+              { id: userId, full_name: fullName || signInData.user?.email?.split("@")[0] || "Usuário" },
+              { onConflict: "id", ignoreDuplicates: true }
+            );
+
+            // If Apple provided a name, update profile and auth metadata
+            if (fullName) {
+              await supabase.from("profiles").update({ full_name: fullName }).eq("id", userId);
+              await supabase.auth.updateUser({ data: { full_name: fullName } });
             }
           }
           navigate("/");

@@ -83,10 +83,12 @@ const DashboardGeral = () => {
       .update({
         full_name: profile.full_name,
         avatar_url: profile.avatar_url,
-        // Cast to any for new columns not yet in generated types
-        ...({ phone: profile.phone, cargo: profile.cargo, endereco: profile.endereco, bairro: profile.bairro, complemento: profile.complemento, cidade: profile.cidade, estado: profile.estado, cep: profile.cep } as any),
+        phone: profile.phone, cargo: profile.cargo, endereco: profile.endereco, bairro: profile.bairro, complemento: profile.complemento, cidade: profile.cidade, estado: profile.estado, cep: profile.cep,
       })
       .eq("id", user!.id);
+
+    // Sync name to auth metadata so it's available everywhere
+    await supabase.auth.updateUser({ data: { full_name: profile.full_name } });
 
     setSaving(false);
     if (error) {
