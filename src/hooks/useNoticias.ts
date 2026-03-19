@@ -95,6 +95,17 @@ export function useNoticias() {
     },
   });
 
+  const deleteNoticia = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("noticias_resumos").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["noticias_resumos"] });
+      toast({ title: "Notícia removida" });
+    },
+  });
+
   const atualizarNoticias = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke("extrair-noticias", {
@@ -120,6 +131,7 @@ export function useNoticias() {
     addSite,
     toggleSite,
     deleteSite,
+    deleteNoticia,
     atualizarNoticias,
   };
 }

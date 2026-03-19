@@ -17,6 +17,16 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Plus, RefreshCw, Trash2, ExternalLink, Newspaper, Globe } from "lucide-react";
 
 export default function Noticias() {
@@ -28,12 +38,14 @@ export default function Noticias() {
     addSite,
     toggleSite,
     deleteSite,
+    deleteNoticia,
     atualizarNoticias,
   } = useNoticias();
 
   const [nome, setNome] = useState("");
   const [url, setUrl] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [noticiaToDelete, setNoticiaToDelete] = useState<string | null>(null);
 
   const handleAddSite = () => {
     if (!nome.trim() || !url.trim()) return;
@@ -201,14 +213,23 @@ export default function Noticias() {
                             <CardTitle className="text-sm leading-tight">
                               {noticia.titulo}
                             </CardTitle>
-                            <a
-                              href={noticia.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="shrink-0"
-                            >
-                              <ExternalLink className="h-4 w-4 text-muted-foreground hover:text-primary" />
-                            </a>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <a
+                                href={noticia.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <ExternalLink className="h-4 w-4 text-muted-foreground hover:text-primary" />
+                              </a>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 text-destructive"
+                                onClick={() => setNoticiaToDelete(noticia.id)}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
                           </div>
                           <CardDescription className="text-xs">
                             {new Date(noticia.data_extracao).toLocaleDateString("pt-BR", {
@@ -230,6 +251,30 @@ export default function Noticias() {
               ))}
           </div>
         )}
+
+        <AlertDialog open={!!noticiaToDelete} onOpenChange={(open) => !open && setNoticiaToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Remover notícia?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  if (noticiaToDelete) {
+                    deleteNoticia.mutate(noticiaToDelete);
+                    setNoticiaToDelete(null);
+                  }
+                }}
+              >
+                Remover
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </Layout>
   );
