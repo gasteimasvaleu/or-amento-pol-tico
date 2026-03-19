@@ -111,6 +111,9 @@ export function useCreateDespesa() {
 
   return useMutation({
     mutationFn: async (data: DespesaFormData) => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error('Usuário não autenticado');
+
       const { data: result, error } = await supabase
         .from('despesas_politicas')
         .insert([{
@@ -125,6 +128,7 @@ export function useCreateDespesa() {
             : data.ultimo_pagamento.toISOString().split('T')[0],
           valor: data.valor,
           observacao: data.observacao,
+          user_id: userData.user.id,
         }])
         .select()
         .single();
