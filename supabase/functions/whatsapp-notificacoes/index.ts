@@ -149,6 +149,8 @@ Deno.serve(async (req) => {
           despesasAtrasadas: [],
           lembretes: [],
           compromissos: [],
+          lembretesHoje: [],
+          compromissosHoje: [],
         }
 
         // Despesas com vencimento amanhã (sem pagamento feito)
