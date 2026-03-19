@@ -17,6 +17,16 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Plus, RefreshCw, Trash2, ExternalLink, Newspaper, Globe } from "lucide-react";
 
 export default function Noticias() {
@@ -28,12 +38,14 @@ export default function Noticias() {
     addSite,
     toggleSite,
     deleteSite,
+    deleteNoticia,
     atualizarNoticias,
   } = useNoticias();
 
   const [nome, setNome] = useState("");
   const [url, setUrl] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [noticiaToDelete, setNoticiaToDelete] = useState<string | null>(null);
 
   const handleAddSite = () => {
     if (!nome.trim() || !url.trim()) return;
