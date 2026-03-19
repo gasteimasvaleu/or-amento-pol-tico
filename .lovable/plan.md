@@ -1,42 +1,27 @@
 
 
-## Plano: Restaurar Status de Pagamento
+## Plano: Upload da imagem gerada para Storage ao invés de retornar Base64
 
-### Situacao Atual
+### Problema
+A imagem gerada pelo Gemini é retornada como base64 (vários MBs). No WKWebView do iOS, isso pode falhar intermitentemente ao renderizar em `<img>`, explicando por que às vezes funciona e às vezes não.
 
-Nenhuma despesa foi excluida! Elas apenas tiveram o campo `pagamento_feito_em` limpo para `null`, fazendo com que aparecam como "Pendente" em vez de "Pago".
+### Mudanças
 
-### Acao: Restaurar `pagamento_feito_em` para as despesas afetadas
+**1. Edge Function `supabase/functions/gerar-midia/index.ts`**
+- Após receber o base64 do Gemini, decodificar para `Uint8Array`
+- Extrair o `user_id` do JWT no header Authorization
+- Fazer upload para o bucket `midias` (path: `generated/{user_id}/{timestamp}.png`) usando `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`
+- Retornar `{ imageUrl: "<public_url>" }` ao invés de `{ imageBase64: "data:..." }`
+- Fallback: se o upload falhar, retornar o base64 como antes
 
-Vou executar um UPDATE no banco para restaurar o campo `pagamento_feito_em = '2026-02-09'` nas despesas que foram desmarcadas:
+**2. Frontend `src/components/suporte/GeradorMidia.tsx`**
+- `handleGenerate`: já tem `data.imageBase64 || data.imageUrl` — inverter para priorizar `data.imageUrl || data.imageBase64`
+- `handleSaveToGallery`: detectar se `imageUrl` já é do bucket `midias` e evitar re-upload redundante — apenas inserir o registro na tabela `midias`
+- `handleDownload`: funciona sem mudanças (já trata URLs normais)
 
-| Municipio | Responsavel | ID |
-|-----------|-------------|-----|
-| Aroeira | Itamar | 5594343a... |
-| Juazeirinho | Bevilacqua | 2bbaa610... |
-| Bonito de Santa Fe | Sabino | 201560a9... |
-| Sume | Ze Mario | 2cec5382... |
-| Joao Pessoa | Jailson | 990001de... |
-| Sousa | Vitor | 51e0080c... |
-
-### Comando SQL
-
-```sql
-UPDATE despesas_politicas 
-SET pagamento_feito_em = '2026-02-09'
-WHERE id IN (
-  '5594343a-a10e-4ea2-bb33-8bc5398ddc40',
-  '2bbaa610-e38e-44e0-9817-356253ef77ed',
-  '201560a9-aa52-4772-93a0-80f842e2a4d0',
-  '2cec5382-26af-4b57-aecc-658593567fe7',
-  '990001de-61c5-452b-b237-039e479e74a0',
-  '51e0080c-af8e-439e-9c06-e8f7284c71d7'
-);
-```
-
-Apos executar o UPDATE, basta recarregar a pagina e todas voltarao a aparecer como "Pago".
-
-### Resultado
-
-Todas as 6 despesas voltarao ao status "Pago" com data 09/02/2026, exatamente como estavam antes.
+### Detalhes Técnicos
+- Secrets necessários: `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` — já configurados
+- Bucket `midias` já existe e é público
+- Nenhuma migração de banco necessária
+- Backward compatible com respostas base64 existentes
 
