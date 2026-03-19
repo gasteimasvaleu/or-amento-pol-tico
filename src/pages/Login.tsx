@@ -100,9 +100,11 @@ const Login = () => {
   };
 
   const handleAppleSignIn = async () => {
+    console.log("[Login] Apple Sign In button tapped, isNative:", isNative, "hasPurchased:", hasPurchased);
     setAppleLoading(true);
     try {
       if (isNative) {
+        console.log("[Login] Calling nativeAppleSignIn()...");
         const result = await nativeAppleSignIn();
         const { data: signInData, error } = await supabase.auth.signInWithIdToken({
           provider: "apple",
