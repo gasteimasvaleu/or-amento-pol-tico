@@ -213,14 +213,23 @@ export default function Noticias() {
                             <CardTitle className="text-sm leading-tight">
                               {noticia.titulo}
                             </CardTitle>
-                            <a
-                              href={noticia.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="shrink-0"
-                            >
-                              <ExternalLink className="h-4 w-4 text-muted-foreground hover:text-primary" />
-                            </a>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <a
+                                href={noticia.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <ExternalLink className="h-4 w-4 text-muted-foreground hover:text-primary" />
+                              </a>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 text-destructive"
+                                onClick={() => setNoticiaToDelete(noticia.id)}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
                           </div>
                           <CardDescription className="text-xs">
                             {new Date(noticia.data_extracao).toLocaleDateString("pt-BR", {
