@@ -23,6 +23,20 @@ function formatCurrency(value: number): string {
 function buildMessage(data: NotificationData): string | null {
   const sections: string[] = []
 
+  if (data.lembretesHoje.length > 0) {
+    const items = data.lembretesHoje.map(l => `• ${l.titulo} (${l.prioridade})`).join('\n')
+    sections.push(`📋 *Lembretes para hoje:*\n${items}`)
+  }
+
+  if (data.compromissosHoje.length > 0) {
+    const items = data.compromissosHoje.map(c => {
+      const hora = new Date(c.data_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })
+      const local = c.local ? `, ${c.local}` : ''
+      return `• ${c.titulo} - ${hora}${local}`
+    }).join('\n')
+    sections.push(`📅 *Compromissos hoje:*\n${items}`)
+  }
+
   if (data.lembretes.length > 0) {
     const items = data.lembretes.map(l => `• ${l.titulo} (${l.prioridade})`).join('\n')
     sections.push(`📋 *Lembretes para amanhã:*\n${items}`)
