@@ -12,6 +12,8 @@ interface NotificationData {
   despesasAtrasadas: Array<{ responsavel: string; valor: number; cargo: string; dias_atraso: number }>
   lembretes: Array<{ titulo: string; prioridade: string }>
   compromissos: Array<{ titulo: string; data_inicio: string; local: string | null; tipo: string }>
+  lembretesHoje: Array<{ titulo: string; prioridade: string }>
+  compromissosHoje: Array<{ titulo: string; data_inicio: string; local: string | null; tipo: string }>
 }
 
 function formatCurrency(value: number): string {
