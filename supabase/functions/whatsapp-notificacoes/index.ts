@@ -12,6 +12,8 @@ interface NotificationData {
   despesasAtrasadas: Array<{ responsavel: string; valor: number; cargo: string; dias_atraso: number }>
   lembretes: Array<{ titulo: string; prioridade: string }>
   compromissos: Array<{ titulo: string; data_inicio: string; local: string | null; tipo: string }>
+  lembretesHoje: Array<{ titulo: string; prioridade: string }>
+  compromissosHoje: Array<{ titulo: string; data_inicio: string; local: string | null; tipo: string }>
 }
 
 function formatCurrency(value: number): string {
@@ -20,6 +22,20 @@ function formatCurrency(value: number): string {
 
 function buildMessage(data: NotificationData): string | null {
   const sections: string[] = []
+
+  if (data.lembretesHoje.length > 0) {
+    const items = data.lembretesHoje.map(l => `• ${l.titulo} (${l.prioridade})`).join('\n')
+    sections.push(`📋 *Lembretes para hoje:*\n${items}`)
+  }
+
+  if (data.compromissosHoje.length > 0) {
+    const items = data.compromissosHoje.map(c => {
+      const hora = new Date(c.data_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })
+      const local = c.local ? `, ${c.local}` : ''
+      return `• ${c.titulo} - ${hora}${local}`
+    }).join('\n')
+    sections.push(`📅 *Compromissos hoje:*\n${items}`)
+  }
 
   if (data.lembretes.length > 0) {
     const items = data.lembretes.map(l => `• ${l.titulo} (${l.prioridade})`).join('\n')
@@ -133,6 +149,8 @@ Deno.serve(async (req) => {
           despesasAtrasadas: [],
           lembretes: [],
           compromissos: [],
+          lembretesHoje: [],
+          compromissosHoje: [],
         }
 
         // Despesas com vencimento amanhã (sem pagamento feito)
@@ -164,11 +182,24 @@ Deno.serve(async (req) => {
           }
         }
 
-        // Lembretes para amanhã (não concluídos)
+        // Lembretes para hoje (não concluídos)
         if (config.notif_lembretes) {
+          const todayStart = `${todayStr}T00:00:00`
+          const todayEnd = `${todayStr}T23:59:59`
           const tomorrowStart = `${tomorrowStr}T00:00:00`
           const tomorrowEnd = `${tomorrowStr}T23:59:59`
 
+          const { data: lembretesHoje } = await supabase
+            .from('lembretes')
+            .select('titulo, prioridade')
+            .eq('user_id', config.user_id)
+            .eq('concluido', false)
+            .gte('data_lembrete', todayStart)
+            .lte('data_lembrete', todayEnd)
+
+          if (lembretesHoje) notifData.lembretesHoje = lembretesHoje
+
+          // Lembretes para amanhã (não concluídos)
           const { data: lembretes } = await supabase
             .from('lembretes')
             .select('titulo, prioridade')
@@ -180,11 +211,23 @@ Deno.serve(async (req) => {
           if (lembretes) notifData.lembretes = lembretes
         }
 
-        // Compromissos amanhã
+        // Compromissos hoje
         if (config.notif_agenda) {
+          const todayStart = `${todayStr}T00:00:00`
+          const todayEnd = `${todayStr}T23:59:59`
           const tomorrowStart = `${tomorrowStr}T00:00:00`
           const tomorrowEnd = `${tomorrowStr}T23:59:59`
 
+          const { data: compromissosHoje } = await supabase
+            .from('compromissos')
+            .select('titulo, data_inicio, local, tipo')
+            .eq('user_id', config.user_id)
+            .gte('data_inicio', todayStart)
+            .lte('data_inicio', todayEnd)
+
+          if (compromissosHoje) notifData.compromissosHoje = compromissosHoje
+
+          // Compromissos amanhã
           const { data: compromissos } = await supabase
             .from('compromissos')
             .select('titulo, data_inicio, local, tipo')
