@@ -1,27 +1,17 @@
 
 
-## Plano: Upload da imagem gerada para Storage ao invés de retornar Base64
+## Plano: Adicionar botao de remover noticias individuais
 
-### Problema
-A imagem gerada pelo Gemini é retornada como base64 (vários MBs). No WKWebView do iOS, isso pode falhar intermitentemente ao renderizar em `<img>`, explicando por que às vezes funciona e às vezes não.
+### Mudancas
 
-### Mudanças
+**1. Hook `useNoticias.ts`**
+- Adicionar mutation `deleteNoticia` que faz `DELETE` na tabela `noticias_resumos` pelo `id`
+- Invalidar query `noticias_resumos` no `onSuccess`
 
-**1. Edge Function `supabase/functions/gerar-midia/index.ts`**
-- Após receber o base64 do Gemini, decodificar para `Uint8Array`
-- Extrair o `user_id` do JWT no header Authorization
-- Fazer upload para o bucket `midias` (path: `generated/{user_id}/{timestamp}.png`) usando `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`
-- Retornar `{ imageUrl: "<public_url>" }` ao invés de `{ imageBase64: "data:..." }`
-- Fallback: se o upload falhar, retornar o base64 como antes
+**2. Pagina `Noticias.tsx`**
+- Adicionar botao `Trash2` ao lado do link externo em cada card de noticia
+- Usar `AlertDialog` para confirmar antes de deletar
+- Chamar `deleteNoticia.mutate(id)` na confirmacao
 
-**2. Frontend `src/components/suporte/GeradorMidia.tsx`**
-- `handleGenerate`: já tem `data.imageBase64 || data.imageUrl` — inverter para priorizar `data.imageUrl || data.imageBase64`
-- `handleSaveToGallery`: detectar se `imageUrl` já é do bucket `midias` e evitar re-upload redundante — apenas inserir o registro na tabela `midias`
-- `handleDownload`: funciona sem mudanças (já trata URLs normais)
-
-### Detalhes Técnicos
-- Secrets necessários: `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` — já configurados
-- Bucket `midias` já existe e é público
-- Nenhuma migração de banco necessária
-- Backward compatible com respostas base64 existentes
+Nenhuma migracao necessaria — a tabela `noticias_resumos` ja tem policy de DELETE para o usuario autenticado.
 
