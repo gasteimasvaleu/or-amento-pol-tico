@@ -172,8 +172,8 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-[100dvh] flex items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-md pointer-events-auto">
         <CardHeader className="text-center">
           <div className="mx-auto bg-primary p-3 rounded-xl w-fit mb-4">
             <Landmark className="h-8 w-8 text-primary-foreground" />
