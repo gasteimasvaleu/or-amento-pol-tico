@@ -1,28 +1,66 @@
 
+Objetivo: corrigir o problema de “botão Continuar com Apple sem resposta” especificamente no iPad, sem alterar sua regra de negócio de assinatura.
 
-## Plano: Corrigir isolamento de dados nas despesas
+Diagnóstico atual (com base no código e no relatório da Apple):
+- O problema reportado é de interação no iPad (tap sem efeito aparente).
+- Do I know what the issue is? Ainda não com 100% de certeza; hoje há 2 hipóteses técnicas fortes:
+  1) problema de camada/área de toque (UI responsiva no iPad);
+  2) problema nativo na apresentação do Apple Sign In (anchor/window em iPadOS).
+- Vou tratar as duas frentes no mesmo pacote para eliminar falsos negativos no Review.
 
-### Problema
-A tabela `despesas_politicas` tem RLS com `USING (true)` — qualquer usuário autenticado vê todas as despesas de todos os usuários. Além disso, todos os registros existentes têm `user_id = NULL`.
+Plano de implementação
 
-### Correções
+1) Instrumentar o fluxo de toque no botão Apple (sem mudar UX final)
+- Arquivo: `src/pages/Login.tsx`
+- Adicionar logs explícitos antes/depois do `nativeAppleSignIn()` (tap recebido, plugin disponível, início/fim da chamada).
+- Diferenciar erros de:
+  - plugin indisponível;
+  - cancelamento;
+  - falha de apresentação nativa.
+- Resultado esperado: saber se o tap chega no JS e em qual etapa para.
 
-**1. Migration SQL**
-- Atualizar todos os registros existentes com `user_id = NULL` para o ID do Caio (`5b37e6e6-01d5-4ead-bd96-5b81d13e2324`), já que ele é o dono original dos dados
-- Tornar `user_id` NOT NULL com default
-- Substituir as 4 políticas RLS abertas por políticas vinculadas ao `user_id`:
-  - SELECT: `auth.uid() = user_id`
-  - INSERT: `auth.uid() = user_id`
-  - UPDATE: `auth.uid() = user_id`
-  - DELETE: `auth.uid() = user_id`
+2) Blindar interação responsiva no iPad (hit area/touch)
+- Arquivo: `src/pages/Login.tsx`
+- Ajustar classes do botão/container para robustez de toque em tablet:
+  - `touch-manipulation`;
+  - garantir `pointer-events-auto` no card/conteúdo interativo;
+  - revisar `min-h-screen` para `min-h-[100dvh]` na tela de login para evitar comportamento estranho em iPad com barras dinâmicas.
+- Resultado esperado: remover qualquer chance de camada invisível bloquear o toque.
 
-**2. Código (useDespesas.ts e hooks relacionados)**
-- Garantir que ao criar uma despesa, o `user_id` seja enviado com `(await supabase.auth.getUser()).data.user.id`
-- Verificar `useCreateDespesa` para incluir `user_id` no insert
+3) Harden no plugin nativo para iPadOS (ponto mais crítico)
+- Arquivo: `ios/App/App/NativeAppleSignInPlugin.swift`
+- Melhorar `presentationAnchor(for:)` para buscar a janela ativa da cena atual (fallback seguro), em vez de depender apenas de `bridge?.viewController?.view.window`.
+- Manter referência forte do `ASAuthorizationController` durante o fluxo (evita edge cases de lifecycle).
+- Garantir limpeza da referência após sucesso/erro.
+- Resultado esperado: tela nativa de Apple Sign In sempre abre em iPad (portrait/landscape/multitarefa).
 
-**3. Código (DespesaForm / NovaDespesa)**
-- Nenhuma mudança visual necessária, apenas garantir que o `user_id` seja passado no mutation
+4) Fail-safe quando nativo não abrir
+- Arquivos: `src/lib/nativeAppleSignIn.ts` e `src/pages/Login.tsx`
+- Se plugin nativo falhar por disponibilidade/contexto, exibir feedback claro e fallback controlado (ao menos mensagem explícita, sem parecer “botão morto”).
+- Resultado esperado: reviewer nunca vê botão “sem resposta”; sempre há reação visível.
 
-### Resultado
-Cada usuário verá apenas suas próprias despesas, e os dados existentes serão atribuídos ao Caio.
+5) QA direcionado para App Review (iPad)
+- Cenários obrigatórios:
+  - iPad Air 11" em portrait e landscape;
+  - app recém-instalado (sem cache/sessão);
+  - app atualizado sobre versão anterior;
+  - com e sem assinatura ativa.
+- Verificar:
+  - tap no botão sempre produz ação imediata;
+  - sheet nativa Apple aparece;
+  - erro/cancelamento mostra feedback.
+- Critério de aceite:
+  - zero estado de “tap sem resposta”;
+  - logs confirmando sequência de execução completa.
 
+Detalhes técnicos (resumo)
+- Frontend: `src/pages/Login.tsx`, `src/lib/nativeAppleSignIn.ts`
+- iOS nativo: `ios/App/App/NativeAppleSignInPlugin.swift`
+- Não envolve migração de banco.
+- Mantém sua regra atual de assinatura (não vou obrigar mudança de modelo neste plano).
+- Após implementar no código nativo: você faz `git pull` e roda `npx cap sync ios` antes de gerar novo build para envio.
+
+Entrega esperada
+- Correção focada em iPad (responsividade + apresentação nativa robusta).
+- Evidência via logs para anexar no Resolution Center se necessário.
+- Fluxo de Sign in with Apple sem “unresponsive” no review.
