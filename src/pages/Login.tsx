@@ -100,9 +100,11 @@ const Login = () => {
   };
 
   const handleAppleSignIn = async () => {
+    console.log("[Login] Apple Sign In button tapped, isNative:", isNative, "hasPurchased:", hasPurchased);
     setAppleLoading(true);
     try {
       if (isNative) {
+        console.log("[Login] Calling nativeAppleSignIn()...");
         const result = await nativeAppleSignIn();
         const { data: signInData, error } = await supabase.auth.signInWithIdToken({
           provider: "apple",
@@ -170,8 +172,8 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-[100dvh] flex items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-md pointer-events-auto">
         <CardHeader className="text-center">
           <div className="mx-auto bg-primary p-3 rounded-xl w-fit mb-4">
             <Landmark className="h-8 w-8 text-primary-foreground" />
@@ -183,7 +185,7 @@ const Login = () => {
         <CardContent className="space-y-4">
           {/* Sign in with Apple button */}
           <Button
-            className="w-full h-12 text-base font-semibold bg-black text-white hover:bg-black/90"
+            className="w-full h-12 text-base font-semibold bg-black text-white hover:bg-black/90 touch-manipulation"
             onClick={handleAppleSignIn}
             disabled={appleLoading || (!hasPurchased && isNative)}
           >
