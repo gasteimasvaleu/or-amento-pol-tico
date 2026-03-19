@@ -1,28 +1,28 @@
 
 
-## Plano: Notificações no dia para lembretes e compromissos
+## Plano: Corrigir isolamento de dados nas despesas
 
-Atualmente o sistema só avisa sobre lembretes e compromissos de **amanhã**. Vamos adicionar avisos para os de **hoje** também.
+### Problema
+A tabela `despesas_politicas` tem RLS com `USING (true)` — qualquer usuário autenticado vê todas as despesas de todos os usuários. Além disso, todos os registros existentes têm `user_id = NULL`.
 
-### Mudanças
+### Correções
 
-**Edge Function `whatsapp-notificacoes/index.ts`**
+**1. Migration SQL**
+- Atualizar todos os registros existentes com `user_id = NULL` para o ID do Caio (`5b37e6e6-01d5-4ead-bd96-5b81d13e2324`), já que ele é o dono original dos dados
+- Tornar `user_id` NOT NULL com default
+- Substituir as 4 políticas RLS abertas por políticas vinculadas ao `user_id`:
+  - SELECT: `auth.uid() = user_id`
+  - INSERT: `auth.uid() = user_id`
+  - UPDATE: `auth.uid() = user_id`
+  - DELETE: `auth.uid() = user_id`
 
-1. Expandir a interface `NotificationData` com dois novos campos: `lembretesHoje` e `compromissosHoje`
-2. Adicionar queries para buscar lembretes e compromissos do dia atual (usando `todayStr` que já existe)
-3. Atualizar `buildMessage()` para incluir as novas seções:
-   - `📋 *Lembretes para hoje:*` — lista lembretes pendentes com `data_lembrete` = hoje
-   - `📅 *Compromissos hoje:*` — lista compromissos com `data_inicio` = hoje
-4. As seções de "hoje" aparecem antes das de "amanhã" na mensagem
+**2. Código (useDespesas.ts e hooks relacionados)**
+- Garantir que ao criar uma despesa, o `user_id` seja enviado com `(await supabase.auth.getUser()).data.user.id`
+- Verificar `useCreateDespesa` para incluir `user_id` no insert
 
-### Ordem da mensagem final
+**3. Código (DespesaForm / NovaDespesa)**
+- Nenhuma mudança visual necessária, apenas garantir que o `user_id` seja passado no mutation
 
-1. Lembretes hoje
-2. Compromissos hoje
-3. Lembretes amanhã
-4. Compromissos amanhã
-5. Despesas amanhã
-6. Despesas atrasadas
-
-Nenhuma migração necessária — apenas alteração na Edge Function.
+### Resultado
+Cada usuário verá apenas suas próprias despesas, e os dados existentes serão atribuídos ao Caio.
 
