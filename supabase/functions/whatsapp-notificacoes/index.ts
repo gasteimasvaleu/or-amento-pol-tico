@@ -182,11 +182,24 @@ Deno.serve(async (req) => {
           }
         }
 
-        // Lembretes para amanhã (não concluídos)
+        // Lembretes para hoje (não concluídos)
         if (config.notif_lembretes) {
+          const todayStart = `${todayStr}T00:00:00`
+          const todayEnd = `${todayStr}T23:59:59`
           const tomorrowStart = `${tomorrowStr}T00:00:00`
           const tomorrowEnd = `${tomorrowStr}T23:59:59`
 
+          const { data: lembretesHoje } = await supabase
+            .from('lembretes')
+            .select('titulo, prioridade')
+            .eq('user_id', config.user_id)
+            .eq('concluido', false)
+            .gte('data_lembrete', todayStart)
+            .lte('data_lembrete', todayEnd)
+
+          if (lembretesHoje) notifData.lembretesHoje = lembretesHoje
+
+          // Lembretes para amanhã (não concluídos)
           const { data: lembretes } = await supabase
             .from('lembretes')
             .select('titulo, prioridade')
@@ -198,11 +211,23 @@ Deno.serve(async (req) => {
           if (lembretes) notifData.lembretes = lembretes
         }
 
-        // Compromissos amanhã
+        // Compromissos hoje
         if (config.notif_agenda) {
+          const todayStart = `${todayStr}T00:00:00`
+          const todayEnd = `${todayStr}T23:59:59`
           const tomorrowStart = `${tomorrowStr}T00:00:00`
           const tomorrowEnd = `${tomorrowStr}T23:59:59`
 
+          const { data: compromissosHoje } = await supabase
+            .from('compromissos')
+            .select('titulo, data_inicio, local, tipo')
+            .eq('user_id', config.user_id)
+            .gte('data_inicio', todayStart)
+            .lte('data_inicio', todayEnd)
+
+          if (compromissosHoje) notifData.compromissosHoje = compromissosHoje
+
+          // Compromissos amanhã
           const { data: compromissos } = await supabase
             .from('compromissos')
             .select('titulo, data_inicio, local, tipo')
