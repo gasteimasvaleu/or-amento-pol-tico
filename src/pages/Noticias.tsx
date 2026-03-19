@@ -251,6 +251,30 @@ export default function Noticias() {
               ))}
           </div>
         )}
+
+        <AlertDialog open={!!noticiaToDelete} onOpenChange={(open) => !open && setNoticiaToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Remover notícia?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  if (noticiaToDelete) {
+                    deleteNoticia.mutate(noticiaToDelete);
+                    setNoticiaToDelete(null);
+                  }
+                }}
+              >
+                Remover
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </Layout>
   );

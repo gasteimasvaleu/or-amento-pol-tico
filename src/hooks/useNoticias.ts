@@ -120,6 +120,7 @@ export function useNoticias() {
     addSite,
     toggleSite,
     deleteSite,
+    deleteNoticia,
     atualizarNoticias,
   };
 }
