@@ -470,7 +470,7 @@ export type Database = {
           tipo: string
           ultimo_pagamento: string
           updated_at: string | null
-          user_id: string | null
+          user_id: string
           valor: number
         }
         Insert: {
@@ -486,7 +486,7 @@ export type Database = {
           tipo: string
           ultimo_pagamento: string
           updated_at?: string | null
-          user_id?: string | null
+          user_id?: string
           valor?: number
         }
         Update: {
@@ -502,7 +502,7 @@ export type Database = {
           tipo?: string
           ultimo_pagamento?: string
           updated_at?: string | null
-          user_id?: string | null
+          user_id?: string
           valor?: number
         }
         Relationships: []
