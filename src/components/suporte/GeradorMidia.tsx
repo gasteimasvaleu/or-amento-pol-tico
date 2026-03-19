@@ -76,8 +76,8 @@ const GeradorMidia = ({ onBack }: Props) => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      // Gateway returns base64 data URL
-      setImageUrl(data.imageBase64 || data.imageUrl);
+      // Prioritize URL from Storage over base64
+      setImageUrl(data.imageUrl || data.imageBase64);
       toast({ title: "Imagem gerada com sucesso!" });
       // Log generation
       if (user) {
@@ -120,40 +120,57 @@ const GeradorMidia = ({ onBack }: Props) => {
     setSaving(true);
 
     try {
-      let blob: Blob;
-      if (imageUrl.startsWith("data:")) {
-        const [header, base64] = imageUrl.split(",");
-        const mime = header.match(/:(.*?);/)?.[1] || "image/png";
-        const binary = atob(base64);
-        const array = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) array[i] = binary.charCodeAt(i);
-        blob = new Blob([array], { type: mime });
+      const isAlreadyInStorage = imageUrl.includes("/storage/v1/object/public/midias/");
+
+      let finalUrl = imageUrl;
+      let fileSize = 0;
+      let fileName = `${Date.now()}.png`;
+
+      if (isAlreadyInStorage) {
+        // Image already uploaded by edge function — just fetch size
+        try {
+          const res = await fetch(imageUrl, { method: "HEAD" });
+          fileSize = parseInt(res.headers.get("content-length") || "0", 10);
+        } catch { /* ignore */ }
       } else {
-        const res = await fetch(imageUrl);
-        blob = await res.blob();
+        // Upload from base64 or external URL
+        let blob: Blob;
+        if (imageUrl.startsWith("data:")) {
+          const [header, base64] = imageUrl.split(",");
+          const mime = header.match(/:(.*?);/)?.[1] || "image/png";
+          const binary = atob(base64);
+          const array = new Uint8Array(binary.length);
+          for (let i = 0; i < binary.length; i++) array[i] = binary.charCodeAt(i);
+          blob = new Blob([array], { type: mime });
+        } else {
+          const res = await fetch(imageUrl);
+          blob = await res.blob();
+        }
+
+        const filePath = `${user.id}/${fileName}`;
+        const { error: uploadError } = await supabase.storage
+          .from("midias")
+          .upload(filePath, blob, { contentType: "image/png" });
+
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage
+          .from("midias")
+          .getPublicUrl(filePath);
+
+        finalUrl = urlData.publicUrl;
+        fileSize = blob.size;
       }
-      const fileName = `${Date.now()}.png`;
-      const filePath = `${user.id}/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("midias")
-        .upload(filePath, blob, { contentType: "image/png" });
-
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage
-        .from("midias")
-        .getPublicUrl(filePath);
 
       const { error: insertError } = await supabase.from("midias").insert({
         user_id: user.id,
         titulo: prompt.slice(0, 80),
         descricao: `Gerado por IA - Formato: ${formato}, Estilo: ${estilo}`,
         categoria: "criativo",
-        arquivo_url: urlData.publicUrl,
+        arquivo_url: finalUrl,
         arquivo_nome: fileName,
         arquivo_tipo: "image/png",
-        arquivo_tamanho: blob.size,
+        arquivo_tamanho: fileSize,
         tags: ["ia", "gerado", formato, estilo],
       });
 
