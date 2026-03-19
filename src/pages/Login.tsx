@@ -183,7 +183,7 @@ const Login = () => {
         <CardContent className="space-y-4">
           {/* Sign in with Apple button */}
           <Button
-            className="w-full h-12 text-base font-semibold bg-black text-white hover:bg-black/90"
+            className="w-full h-12 text-base font-semibold bg-black text-white hover:bg-black/90 touch-manipulation"
             onClick={handleAppleSignIn}
             disabled={appleLoading || (!hasPurchased && isNative)}
           >

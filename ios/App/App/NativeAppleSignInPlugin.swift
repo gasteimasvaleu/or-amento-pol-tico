@@ -6,6 +6,7 @@ import AuthenticationServices
 public class NativeAppleSignInPlugin: CAPPlugin, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
 
     var call: CAPPluginCall?
+    var authController: ASAuthorizationController?
 
     @objc func authorize(_ call: CAPPluginCall) {
         self.call = call
@@ -14,16 +15,32 @@ public class NativeAppleSignInPlugin: CAPPlugin, ASAuthorizationControllerDelega
         let controller = ASAuthorizationController(authorizationRequests: [request])
         controller.delegate = self
         controller.presentationContextProvider = self
+        self.authController = controller // Strong reference to prevent dealloc
         DispatchQueue.main.async {
             controller.performRequests()
         }
     }
 
     public func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-        return self.bridge!.viewController!.view.window!
+        // iPadOS-safe: find the active window through connected scenes
+        if #available(iOS 15.0, *) {
+            if let windowScene = UIApplication.shared.connectedScenes
+                .compactMap({ $0 as? UIWindowScene })
+                .first(where: { $0.activationState == .foregroundActive }),
+               let window = windowScene.windows.first(where: { $0.isKeyWindow }) ?? windowScene.windows.first {
+                return window
+            }
+        }
+        // Fallback for older iOS / edge cases
+        if let window = self.bridge?.viewController?.view.window {
+            return window
+        }
+        // Last resort
+        return UIApplication.shared.windows.first { $0.isKeyWindow } ?? UIApplication.shared.windows.first!
     }
 
     public func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
+        defer { self.authController = nil }
         guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential else {
             call?.reject("Invalid credential type")
             return
@@ -49,6 +66,7 @@ public class NativeAppleSignInPlugin: CAPPlugin, ASAuthorizationControllerDelega
     }
 
     public func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
+        defer { self.authController = nil }
         if let authError = error as? ASAuthorizationError, authError.code == .canceled {
             call?.reject("User cancelled", "1001")
         } else {
