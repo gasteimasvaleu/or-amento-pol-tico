@@ -76,8 +76,8 @@ const GeradorMidia = ({ onBack }: Props) => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      // Gateway returns base64 data URL
-      setImageUrl(data.imageBase64 || data.imageUrl);
+      // Prioritize URL from Storage over base64
+      setImageUrl(data.imageUrl || data.imageBase64);
       toast({ title: "Imagem gerada com sucesso!" });
       // Log generation
       if (user) {

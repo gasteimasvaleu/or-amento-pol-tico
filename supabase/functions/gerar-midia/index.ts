@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,6 +18,17 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY não configurada");
     }
 
+    // Extract user_id from JWT
+    const authHeader = req.headers.get("authorization") ?? "";
+    let userId = "anonymous";
+    if (authHeader.startsWith("Bearer ")) {
+      try {
+        const token = authHeader.replace("Bearer ", "");
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        userId = payload.sub || "anonymous";
+      } catch { /* ignore parse errors */ }
+    }
+
     const { prompt, formato, estilo, referenceImageBase64, strength } = await req.json();
 
     if (!prompt) {
@@ -26,7 +38,6 @@ serve(async (req) => {
       );
     }
 
-    // Map formato to dimensions for prompt context
     const dimensoes: Record<string, string> = {
       story: "1080x1920 pixels (9:16 vertical/story format)",
       feed_quadrado: "1080x1080 pixels (1:1 square format)",
@@ -35,7 +46,6 @@ serve(async (req) => {
 
     const dimText = dimensoes[formato] || dimensoes.feed_quadrado;
 
-    // Build enhanced prompt with style
     const estiloMap: Record<string, string> = {
       moderno: "modern, vibrant, clean design, social media style",
       minimalista: "minimalist, clean, simple, elegant design",
@@ -57,7 +67,6 @@ serve(async (req) => {
 - Style: ${styleText}
 - The image should be high quality and suitable for social media posting.${influenceText}`;
 
-    // Build message content (multimodal if reference image provided)
     const content: any[] = [{ type: "text", text: userPrompt }];
 
     if (referenceImageBase64) {
@@ -71,6 +80,7 @@ serve(async (req) => {
       formato,
       estilo,
       hasReference: !!referenceImageBase64,
+      userId,
     });
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -114,17 +124,61 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const imageData = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    const imageBase64 = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
-    if (!imageData) {
+    if (!imageBase64) {
       console.error("No image in response:", JSON.stringify(data).slice(0, 500));
       throw new Error("Nenhuma imagem foi gerada. Tente novamente.");
     }
 
     console.log("Image generated successfully via Gemini 3 Pro Image");
 
+    // Upload to Supabase Storage instead of returning base64
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+      try {
+        // Decode base64 to bytes
+        let rawBase64 = imageBase64;
+        if (rawBase64.startsWith("data:")) {
+          rawBase64 = rawBase64.split(",")[1];
+        }
+        const binaryStr = atob(rawBase64);
+        const bytes = new Uint8Array(binaryStr.length);
+        for (let i = 0; i < binaryStr.length; i++) {
+          bytes[i] = binaryStr.charCodeAt(i);
+        }
+
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        const filePath = `generated/${userId}/${Date.now()}.png`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("midias")
+          .upload(filePath, bytes, { contentType: "image/png", upsert: false });
+
+        if (uploadError) {
+          console.error("Storage upload error, falling back to base64:", uploadError.message);
+        } else {
+          const { data: urlData } = supabase.storage
+            .from("midias")
+            .getPublicUrl(filePath);
+
+          console.log("Image uploaded to Storage:", filePath);
+
+          return new Response(
+            JSON.stringify({ imageUrl: urlData.publicUrl }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      } catch (uploadErr) {
+        console.error("Storage upload exception, falling back to base64:", uploadErr);
+      }
+    }
+
+    // Fallback: return base64
     return new Response(
-      JSON.stringify({ imageBase64: imageData }),
+      JSON.stringify({ imageBase64: imageBase64 }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
