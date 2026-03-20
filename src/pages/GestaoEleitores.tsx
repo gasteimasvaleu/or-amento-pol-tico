@@ -81,6 +81,7 @@ export default function GestaoEleitores() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+        <p className="text-xs text-muted-foreground">Para cadastrar demanda, clique no eleitor</p>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
