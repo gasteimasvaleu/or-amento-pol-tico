@@ -37,6 +37,11 @@ export default function Apoiadores() {
   const [busca, setBusca] = useState("");
   const navigate = useNavigate();
 
+  const handleWhatsApp = (telefone: string) => {
+    const clean = telefone.replace(/\D/g, "");
+    window.open(`https://wa.me/55${clean}`, "_blank");
+  };
+
   const filtered = apoiadores.filter((a) => {
     if (!busca) return true;
     const q = busca.toLowerCase();
