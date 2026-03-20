@@ -1,11 +1,18 @@
 
 
-## Plano: Adicionar aviso abaixo da busca
+## Plano: Adicionar botão WhatsApp nos cards de Assessores e Apoiadores
 
-Adicionar uma linha de texto informativo entre o campo de busca e a listagem de eleitores.
+Replicar o padrão já existente em `GestaoEleitores.tsx` (botão com ícone SVG do WhatsApp que abre `https://wa.me/55{telefone}`) nos cards de ambas as páginas.
 
-### Mudança
+### Mudanças
 
-**`src/pages/GestaoEleitores.tsx`** (após linha 83, depois do `</div>` do input de busca):
-- Inserir um `<p>` com texto "Para cadastrar demanda, clique no eleitor" em estilo `text-xs text-muted-foreground` com ícone informativo opcional.
+**1. `src/pages/Assessores.tsx`**
+- Adicionar função `handleWhatsApp` (mesma lógica: limpa telefone e abre `wa.me`).
+- No card de cada assessor, ao lado do botão de lixeira (antes dele), inserir o botão WhatsApp condicionado a `a.telefone` existir. Usar mesmo estilo: `variant="ghost" size="icon" className="h-7 w-7"` com SVG verde.
+- Adicionar `e.stopPropagation()` no onClick.
+
+**2. `src/pages/Apoiadores.tsx`**
+- Adicionar função `handleWhatsApp` idêntica.
+- No card de cada apoiador, ao lado do botão de lixeira, inserir o botão WhatsApp condicionado a `a.telefone` ou `a.whatsapp` existir (o tipo `Apoiador` tem campo `whatsapp` separado — usar `a.whatsapp || a.telefone`).
+- Mesmo estilo e padrão.
 
