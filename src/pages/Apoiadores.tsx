@@ -189,6 +189,7 @@ export default function Apoiadores() {
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
+                  </div>
                 </div>
               </Card>
             ))}

@@ -134,6 +134,7 @@ export default function Assessores() {
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
+                </div>
               </div>
             </Card>
           ))}
