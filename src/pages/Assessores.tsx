@@ -24,6 +24,11 @@ export default function Assessores() {
   const [modalOpen, setModalOpen] = useState(false);
   const navigate = useNavigate();
 
+  const handleWhatsApp = (telefone: string) => {
+    const clean = telefone.replace(/\D/g, "");
+    window.open(`https://wa.me/55${clean}`, "_blank");
+  };
+
   return (
     <Layout>
       <div className="flex items-center justify-between mb-6">
