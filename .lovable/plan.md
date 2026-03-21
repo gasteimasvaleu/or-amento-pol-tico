@@ -1,18 +1,43 @@
 
 
-## Plano: Adicionar botão WhatsApp nos cards de Assessores e Apoiadores
+## Plano: 4 melhorias aprovadas
 
-Replicar o padrão já existente em `GestaoEleitores.tsx` (botão com ícone SVG do WhatsApp que abre `https://wa.me/55{telefone}`) nos cards de ambas as páginas.
+### 1. Relatório PDF das despesas
 
-### Mudanças
+**Arquivo: `src/pages/Despesas.tsx`**
+- Adicionar botão "Gerar PDF" ao lado do botão "Nova Despesa"
+- Usar `jspdf` + `jspdf-autotable` para gerar o PDF no client-side
+- O PDF incluirá: cabeçalho com mês/ano, tabela com todas as despesas do mês filtrado, totais, e rodapé com data de geração
+- Instalar dependência: `jspdf` e `jspdf-autotable`
 
-**1. `src/pages/Assessores.tsx`**
-- Adicionar função `handleWhatsApp` (mesma lógica: limpa telefone e abre `wa.me`).
-- No card de cada assessor, ao lado do botão de lixeira (antes dele), inserir o botão WhatsApp condicionado a `a.telefone` existir. Usar mesmo estilo: `variant="ghost" size="icon" className="h-7 w-7"` com SVG verde.
-- Adicionar `e.stopPropagation()` no onClick.
+**Novo arquivo: `src/lib/exportPDF.ts`**
+- Função `exportDespesasToPDF(despesas, month, year)` que gera o PDF com:
+  - Título: "Relatório de Despesas - Mês/Ano"
+  - Tabela: Município, Responsável, Cargo, Tipo, Valor, Status Pagamento
+  - Rodapé: Total geral e data de geração
 
-**2. `src/pages/Apoiadores.tsx`**
-- Adicionar função `handleWhatsApp` idêntica.
-- No card de cada apoiador, ao lado do botão de lixeira, inserir o botão WhatsApp condicionado a `a.telefone` ou `a.whatsapp` existir (o tipo `Apoiador` tem campo `whatsapp` separado — usar `a.whatsapp || a.telefone`).
-- Mesmo estilo e padrão.
+### 2. Política de Privacidade pública
+
+**Arquivo: `src/App.tsx`**
+- Mover a rota `/politica-de-privacidade` para fora do `ProtectedRoute`, tornando-a acessível sem login
+
+### 3. Pull-to-refresh nas listagens
+
+**Arquivos: `src/pages/Despesas.tsx`, `src/pages/GestaoEleitores.tsx`, `src/pages/Agenda.tsx`, `src/pages/Apoiadores.tsx`, `src/pages/Assessores.tsx`, `src/pages/Lembretes.tsx`**
+- Implementar pull-to-refresh usando evento de touch (touchstart/touchmove/touchend)
+- Criar hook reutilizável `src/hooks/usePullToRefresh.ts` que:
+  - Detecta gesto de puxar para baixo quando no topo da página
+  - Mostra indicador de loading (spinner)
+  - Chama `queryClient.invalidateQueries()` para recarregar dados
+  - Retorna ref para o container e estado de refreshing
+- Integrar o hook em cada página de listagem
+
+### 4. Corrigir hooks em loop no Histórico
+
+**Sobre o bug:** No React, hooks (como `useDespesas`) precisam ser chamados sempre na mesma ordem e quantidade. No `Historico.tsx`, o hook é chamado dentro de um `.map()` — ou seja, 12 vezes em loop. Se o número mudar, o React quebra. Funciona "por sorte" porque são sempre 12, mas é uma violação das regras e pode causar bugs difíceis de debugar.
+
+**Arquivo: `src/pages/Historico.tsx`**
+- Substituir as 12 chamadas de `useDespesas` em loop por uma única query que busca todas as despesas do ano selecionado (sem filtro de mês)
+- Agrupar os resultados por mês no client-side usando `reduce()`
+- Resultado: 1 query ao invés de 12, código correto e mais performático
 
