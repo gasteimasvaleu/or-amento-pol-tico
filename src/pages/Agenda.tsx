@@ -115,7 +115,8 @@ const Agenda = () => {
 
   return (
     <Layout>
-      <div className="flex flex-col gap-4 pb-20">
+      <div ref={containerRef} className="flex flex-col gap-4 pb-20 overflow-auto">
+        <PullToRefreshIndicator refreshing={refreshing} pullDistance={pullDistance} />
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-foreground">Agenda</h1>

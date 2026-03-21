@@ -58,7 +58,8 @@ export default function Apoiadores() {
 
   return (
     <Layout>
-      <div className="space-y-4">
+      <div ref={containerRef} className="space-y-4 overflow-auto">
+        <PullToRefreshIndicator refreshing={refreshing} pullDistance={pullDistance} />
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

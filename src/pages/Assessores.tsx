@@ -23,6 +23,7 @@ import {
 
 export default function Assessores() {
   const { assessores, isLoading, createAssessor, deleteAssessor, isCreating } = useAssessores();
+  const { containerRef, refreshing, pullDistance } = usePullToRefresh({ queryKeys: [['assessores']] });
   const [modalOpen, setModalOpen] = useState(false);
   const navigate = useNavigate();
 
