@@ -27,13 +27,15 @@ const Despesas = () => {
   });
 
   const { data: despesas = [], isLoading } = useDespesas(filters);
+  const { containerRef, refreshing, pullDistance } = usePullToRefresh({ queryKeys: [['despesas']] });
 
   const municipios = Array.from(new Set(despesas.map(d => d.municipio))).sort();
   const cargos = Array.from(new Set(despesas.map(d => d.cargo))).sort();
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div ref={containerRef} className="space-y-6 overflow-auto">
+        <PullToRefreshIndicator refreshing={refreshing} pullDistance={pullDistance} />
         <div>
           <h1 className="text-xl font-bold text-foreground">Controle de Despesas</h1>
           <p className="text-sm text-muted-foreground">
@@ -41,12 +43,22 @@ const Despesas = () => {
           </p>
         </div>
 
-        <Button asChild className="w-full">
-          <Link to="/despesas/nova" className="gap-2">
-            <Plus className="h-4 w-4" />
-            Nova Despesa
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild className="flex-1">
+            <Link to="/despesas/nova" className="gap-2">
+              <Plus className="h-4 w-4" />
+              Nova Despesa
+            </Link>
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => exportDespesasToPDF(despesas, filters.month!, filters.year!)}
+            disabled={despesas.length === 0}
+          >
+            <FileDown className="h-4 w-4" />
+            PDF
+          </Button>
+        </div>
 
         <MonthlyStats
           despesas={despesas}
