@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -6,19 +6,45 @@ import { useDespesas } from "@/hooks/useDespesas";
 import { Button } from "@/components/ui/button";
 import { Download, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { exportToCSV } from "@/lib/exportCSV";
+import { Despesa } from "@/types/despesa";
 
 const Historico = () => {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
   
   const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
-  const months = Array.from({ length: 12 }, (_, i) => i);
 
-  const monthsData = months.map(month => {
-    const { data: despesas = [] } = useDespesas({ month, year: selectedYear });
-    const total = despesas.reduce((sum, d) => sum + Number(d.valor), 0);
-    return { month, total, count: despesas.length, despesas };
-  });
+  // Single query for the entire year (no month filter)
+  const { data: allDespesas = [] } = useDespesas({ year: selectedYear });
+
+  // Group by month client-side
+  const monthsData = useMemo(() => {
+    const grouped: Record<number, Despesa[]> = {};
+    for (let i = 0; i < 12; i++) grouped[i] = [];
+
+    allDespesas.forEach((d) => {
+      const date = new Date(d.ultimo_pagamento);
+      if (date.getFullYear() === selectedYear) {
+        grouped[date.getMonth()].push(d);
+      }
+      // Recorrentes: also count for months after registration
+      if (d.tipo === "Recorrente") {
+        const startMonth = date.getFullYear() === selectedYear ? date.getMonth() : 0;
+        for (let m = startMonth; m < 12; m++) {
+          if (!grouped[m].find((existing) => existing.id === d.id)) {
+            grouped[m].push(d);
+          }
+        }
+      }
+    });
+
+    return Array.from({ length: 12 }, (_, month) => ({
+      month,
+      total: grouped[month].reduce((sum, d) => sum + Number(d.valor), 0),
+      count: grouped[month].length,
+      despesas: grouped[month],
+    }));
+  }, [allDespesas, selectedYear]);
 
   const totalYear = monthsData.reduce((sum, m) => sum + m.total, 0);
   const avgMonth = totalYear / 12;
@@ -43,8 +69,10 @@ const Historico = () => {
   };
 
   const exportYearData = () => {
-    const allDespesas = monthsData.flatMap(m => m.despesas);
-    exportToCSV(allDespesas, `historico-${selectedYear}`);
+    const allDespesasFlat = monthsData.flatMap(m => m.despesas);
+    // Deduplicate by id
+    const unique = [...new Map(allDespesasFlat.map(d => [d.id, d])).values()];
+    exportToCSV(unique, `historico-${selectedYear}`);
   };
 
   return (
