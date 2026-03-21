@@ -28,6 +28,7 @@ export default function GestaoEleitores() {
   const [selectedEleitor, setSelectedEleitor] = useState<Eleitor | null>(null);
   const { eleitores, isLoading, createEleitor, updateEleitor, deleteEleitor, isCreating } = useEleitores();
   const { demandas } = useDemandas();
+  const { containerRef, refreshing, pullDistance } = usePullToRefresh({ queryKeys: [['eleitores'], ['demandas']] });
 
   const demandasAbertasPorEleitor = useMemo(() => {
     const map: Record<string, number> = {};
