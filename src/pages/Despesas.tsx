@@ -8,7 +8,10 @@ import { DespesasTable } from "@/components/despesas/DespesasTable";
 import { useDespesas } from "@/hooks/useDespesas";
 import { DespesaFilters } from "@/types/despesa";
 import { Button } from "@/components/ui/button";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Plus, FileDown } from "lucide-react";
+import { exportDespesasToPDF } from "@/lib/exportPDF";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { PullToRefreshIndicator } from "@/components/ui/PullToRefreshIndicator";
 
 const Despesas = () => {
   const currentMonth = new Date().getMonth();
