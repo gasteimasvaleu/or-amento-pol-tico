@@ -34,6 +34,7 @@ const emptyForm = {
 const Agenda = () => {
   const { user } = useAuth();
   const { compromissos, isLoading, create, update, remove, isCreating, isUpdating } = useCompromissos();
+  const { containerRef, refreshing, pullDistance } = usePullToRefresh({ queryKeys: [['compromissos']] });
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
