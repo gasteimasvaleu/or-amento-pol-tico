@@ -2,6 +2,8 @@ import { Layout } from "@/components/layout/Layout";
 import { useAssessores } from "@/hooks/useAssessores";
 import { AssessorModal } from "@/components/assessores/AssessorModal";
 import { useState } from "react";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { PullToRefreshIndicator } from "@/components/ui/PullToRefreshIndicator";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
