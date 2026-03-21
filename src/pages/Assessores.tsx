@@ -152,6 +152,7 @@ export default function Assessores() {
         onSubmit={createAssessor}
         isSubmitting={isCreating}
       />
+      </div>
     </Layout>
   );
 }
