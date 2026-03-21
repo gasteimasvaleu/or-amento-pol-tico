@@ -2,6 +2,8 @@ import { Layout } from "@/components/layout/Layout";
 import { useAssessores } from "@/hooks/useAssessores";
 import { AssessorModal } from "@/components/assessores/AssessorModal";
 import { useState } from "react";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { PullToRefreshIndicator } from "@/components/ui/PullToRefreshIndicator";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -21,6 +23,7 @@ import {
 
 export default function Assessores() {
   const { assessores, isLoading, createAssessor, deleteAssessor, isCreating } = useAssessores();
+  const { containerRef, refreshing, pullDistance } = usePullToRefresh({ queryKeys: [['assessores']] });
   const [modalOpen, setModalOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -31,6 +34,8 @@ export default function Assessores() {
 
   return (
     <Layout>
+      <div ref={containerRef} className="overflow-auto">
+        <PullToRefreshIndicator refreshing={refreshing} pullDistance={pullDistance} />
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" onClick={() => navigate("/equipe")}>
@@ -147,6 +152,7 @@ export default function Assessores() {
         onSubmit={createAssessor}
         isSubmitting={isCreating}
       />
+      </div>
     </Layout>
   );
 }

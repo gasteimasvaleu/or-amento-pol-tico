@@ -5,6 +5,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Bell, Plus, Pencil, Trash2, CheckCircle2, Circle } from "lucide-react";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { PullToRefreshIndicator } from "@/components/ui/PullToRefreshIndicator";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +28,7 @@ import { LembreteModal } from "@/components/lembretes/LembreteModal";
 export default function Lembretes() {
   const { user } = useAuth();
   const { lembretes, isLoading, create, update, remove } = useLembretes();
+  const { containerRef, refreshing, pullDistance } = usePullToRefresh({ queryKeys: [['lembretes']] });
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Lembrete | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -114,7 +117,8 @@ export default function Lembretes() {
 
   return (
     <Layout>
-      <div className="flex flex-col gap-4 pb-20">
+      <div ref={containerRef} className="flex flex-col gap-4 pb-20 overflow-auto">
+        <PullToRefreshIndicator refreshing={refreshing} pullDistance={pullDistance} />
         <div className="flex items-center justify-between gap-4">
           <div>
             <h1 className="text-xl font-bold text-foreground">Lembretes</h1>

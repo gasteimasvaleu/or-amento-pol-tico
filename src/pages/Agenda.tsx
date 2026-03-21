@@ -1,4 +1,6 @@
 import { useState, useMemo } from "react";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { PullToRefreshIndicator } from "@/components/ui/PullToRefreshIndicator";
 import { Layout } from "@/components/layout/Layout";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
@@ -32,6 +34,7 @@ const emptyForm = {
 const Agenda = () => {
   const { user } = useAuth();
   const { compromissos, isLoading, create, update, remove, isCreating, isUpdating } = useCompromissos();
+  const { containerRef, refreshing, pullDistance } = usePullToRefresh({ queryKeys: [['compromissos']] });
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -112,7 +115,8 @@ const Agenda = () => {
 
   return (
     <Layout>
-      <div className="flex flex-col gap-4 pb-20">
+      <div ref={containerRef} className="flex flex-col gap-4 pb-20 overflow-auto">
+        <PullToRefreshIndicator refreshing={refreshing} pullDistance={pullDistance} />
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-foreground">Agenda</h1>

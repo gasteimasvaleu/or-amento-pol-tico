@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { PullToRefreshIndicator } from "@/components/ui/PullToRefreshIndicator";
 import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { useApoiadores } from "@/hooks/useApoiadores";
@@ -33,6 +35,7 @@ import {
 
 export default function Apoiadores() {
   const { apoiadores, isLoading, createApoiador, deleteApoiador, isCreating } = useApoiadores();
+  const { containerRef, refreshing, pullDistance } = usePullToRefresh({ queryKeys: [['apoiadores']] });
   const [modalOpen, setModalOpen] = useState(false);
   const [busca, setBusca] = useState("");
   const navigate = useNavigate();
@@ -55,7 +58,8 @@ export default function Apoiadores() {
 
   return (
     <Layout>
-      <div className="space-y-4">
+      <div ref={containerRef} className="space-y-4 overflow-auto">
+        <PullToRefreshIndicator refreshing={refreshing} pullDistance={pullDistance} />
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
