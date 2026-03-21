@@ -34,6 +34,8 @@ export default function Assessores() {
 
   return (
     <Layout>
+      <div ref={containerRef} className="overflow-auto">
+        <PullToRefreshIndicator refreshing={refreshing} pullDistance={pullDistance} />
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" onClick={() => navigate("/equipe")}>
