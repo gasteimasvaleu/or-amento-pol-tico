@@ -28,6 +28,7 @@ import { LembreteModal } from "@/components/lembretes/LembreteModal";
 export default function Lembretes() {
   const { user } = useAuth();
   const { lembretes, isLoading, create, update, remove } = useLembretes();
+  const { containerRef, refreshing, pullDistance } = usePullToRefresh({ queryKeys: [['lembretes']] });
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Lembrete | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
