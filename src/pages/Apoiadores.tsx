@@ -35,6 +35,7 @@ import {
 
 export default function Apoiadores() {
   const { apoiadores, isLoading, createApoiador, deleteApoiador, isCreating } = useApoiadores();
+  const { containerRef, refreshing, pullDistance } = usePullToRefresh({ queryKeys: [['apoiadores']] });
   const [modalOpen, setModalOpen] = useState(false);
   const [busca, setBusca] = useState("");
   const navigate = useNavigate();
