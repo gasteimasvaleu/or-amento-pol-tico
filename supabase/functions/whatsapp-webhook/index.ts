@@ -290,9 +290,11 @@ Por cidade:
 ${cidadeLines || '  Nenhum cadastrado'}
 
 ## Despesas do mês (${currentMonth}/${currentYear}):
-- Total: ${formatCurrency(totalDespesasMes)}
+- Total: ${formatCurrency(totalDespesasMes)} (${despesasMes.length} despesas)
 - Pendentes: ${pendentes.length} (${formatCurrency(totalPendente)})
 - Atrasadas: ${atrasadas.length} (${formatCurrency(totalAtrasado)})
+Detalhamento:
+${despesaLines || '  Nenhuma despesa no mês'}
 
 ## Próximos compromissos:
 ${compLines || '  Nenhum agendado'}
