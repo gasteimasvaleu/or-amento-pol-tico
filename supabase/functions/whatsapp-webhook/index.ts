@@ -543,7 +543,12 @@ async function processMessage(
       console.log('Transcribed audio:', userText?.substring(0, 100))
     } catch (err: any) {
       console.error('STT error:', err.message)
-      userText = messageBody || '[áudio não reconhecido]'
+      // Don't silently mask the error — inform user and stop processing
+      await sendWhatsAppReply(from, '⚠️ Não consegui processar seu áudio agora. Tente reenviar em 1 minuto ou envie como texto.')
+      return new Response(
+        '<?xml version="1.0" encoding="UTF-8"?><Response></Response>',
+        { headers: { ...corsHeaders, 'Content-Type': 'text/xml' } }
+      )
     }
   }
 
