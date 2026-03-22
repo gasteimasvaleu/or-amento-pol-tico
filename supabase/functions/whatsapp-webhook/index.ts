@@ -151,7 +151,12 @@ async function transcribeAudio(audioUrl: string, mediaContentType: string): Prom
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')!
   const TWILIO_API_KEY = Deno.env.get('TWILIO_API_KEY')!
 
-  const audioResponse = await fetch(audioUrl, {
+  const gatewayAudioUrl = audioUrl.replace(
+    /^https?:\/\/api\.twilio\.com/,
+    'https://connector-gateway.lovable.dev/twilio'
+  )
+  console.log('Downloading audio via gateway:', gatewayAudioUrl)
+  const audioResponse = await fetch(gatewayAudioUrl, {
     headers: {
       'Authorization': `Bearer ${LOVABLE_API_KEY}`,
       'X-Connection-Api-Key': TWILIO_API_KEY,
