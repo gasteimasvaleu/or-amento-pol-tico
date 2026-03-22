@@ -6,7 +6,7 @@ const corsHeaders = {
 }
 
 const GATEWAY_URL = 'https://connector-gateway.lovable.dev/twilio'
-const AI_GATEWAY_URL = 'https://ai-gateway.lovable.dev/v1/chat/completions'
+const AI_GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions'
 
 // ─── Tool Definitions ───
 
