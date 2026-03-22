@@ -243,15 +243,17 @@ async function loadUserContext(supabase: any, userId: string): Promise<string> {
   const endOfMonthStr = endOfMonth.toISOString().split('T')[0]
   const startOfMonthStr = startOfMonth.toISOString().split('T')[0]
 
+  console.log(`Despesas debug — userId: ${userId} | total loaded: ${despesas.length} | month: ${currentMonth}/${currentYear} | range: ${startOfMonthStr} to ${endOfMonthStr}`)
+
   const despesasMes = despesas.filter((d: any) => {
     if (d.tipo === 'Recorrente') {
-      // Recorrentes appear every month from their registration date onwards
       return d.ultimo_pagamento <= endOfMonthStr
     } else {
-      // Extra: only if pagamento_agendado falls within current month
       return d.pagamento_agendado >= startOfMonthStr && d.pagamento_agendado <= endOfMonthStr
     }
   })
+
+  console.log(`Despesas debug — after filter: ${despesasMes.length} (recorrentes: ${despesasMes.filter((d:any)=>d.tipo==='Recorrente').length}, extras: ${despesasMes.filter((d:any)=>d.tipo==='Extra').length})`)
   const totalDespesasMes = despesasMes.reduce((s: number, d: any) => s + Number(d.valor), 0)
   const pendentes = despesasMes.filter((d: any) => !d.pagamento_feito_em)
   const totalPendente = pendentes.reduce((s: number, d: any) => s + Number(d.valor), 0)
