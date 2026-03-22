@@ -206,7 +206,7 @@ async function loadUserContext(supabase: any, userId: string): Promise<string> {
   ] = await Promise.all([
     supabase.from('eleitores').select('classificacao', { count: 'exact' }).eq('user_id', userId),
     supabase.from('eleitores').select('cidade, classificacao').eq('user_id', userId),
-    supabase.from('despesas_politicas').select('valor, pagamento_agendado, pagamento_feito_em').eq('user_id', userId),
+    supabase.from('despesas_politicas').select('valor, tipo, ultimo_pagamento, pagamento_agendado, pagamento_feito_em, responsavel, municipio, cargo').eq('user_id', userId),
     supabase.from('compromissos').select('titulo, data_inicio, local, tipo').eq('user_id', userId).gte('data_inicio', `${todayStr}T00:00:00`).order('data_inicio').limit(15),
     supabase.from('lembretes').select('titulo, data_lembrete, prioridade').eq('user_id', userId).eq('concluido', false).order('data_lembrete').limit(15),
     supabase.from('apoiadores').select('id', { count: 'exact' }).eq('user_id', userId),
