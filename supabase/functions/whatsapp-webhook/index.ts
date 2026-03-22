@@ -236,17 +236,33 @@ async function loadUserContext(supabase: any, userId: string): Promise<string> {
     .map(([c, v]) => `  ${c}: ${v.total} (${v.positivo}+, ${v.neutro}~, ${v.negativo}-)`)
     .join('\n')
 
-  // Process despesas
+  // Process despesas - mirror useDespesas logic
   const despesas = despesasRes.data || []
+  const endOfMonth = new Date(currentYear, currentMonth, 0) // last day of current month
+  const startOfMonth = new Date(currentYear, currentMonth - 1, 1)
+  const endOfMonthStr = endOfMonth.toISOString().split('T')[0]
+  const startOfMonthStr = startOfMonth.toISOString().split('T')[0]
+
   const despesasMes = despesas.filter((d: any) => {
-    const dt = new Date(d.pagamento_agendado)
-    return dt.getMonth() + 1 === currentMonth && dt.getFullYear() === currentYear
+    if (d.tipo === 'Recorrente') {
+      // Recorrentes appear every month from their registration date onwards
+      return d.ultimo_pagamento <= endOfMonthStr
+    } else {
+      // Extra: only if pagamento_agendado falls within current month
+      return d.pagamento_agendado >= startOfMonthStr && d.pagamento_agendado <= endOfMonthStr
+    }
   })
   const totalDespesasMes = despesasMes.reduce((s: number, d: any) => s + Number(d.valor), 0)
   const pendentes = despesasMes.filter((d: any) => !d.pagamento_feito_em)
   const totalPendente = pendentes.reduce((s: number, d: any) => s + Number(d.valor), 0)
   const atrasadas = pendentes.filter((d: any) => new Date(d.pagamento_agendado) < now)
   const totalAtrasado = atrasadas.reduce((s: number, d: any) => s + Number(d.valor), 0)
+
+  // Build detailed expense list for AI context
+  const despesaLines = despesasMes
+    .sort((a: any, b: any) => Number(b.valor) - Number(a.valor))
+    .map((d: any) => `  ${d.responsavel} (${d.municipio}/${d.cargo}) - ${formatCurrency(Number(d.valor))} [${d.tipo}] ${d.pagamento_feito_em ? '✅ Pago' : '⏳ Pendente'}`)
+    .join('\n')
 
   // Compromissos
   const compromissos = compromissosRes.data || []
@@ -274,9 +290,11 @@ Por cidade:
 ${cidadeLines || '  Nenhum cadastrado'}
 
 ## Despesas do mês (${currentMonth}/${currentYear}):
-- Total: ${formatCurrency(totalDespesasMes)}
+- Total: ${formatCurrency(totalDespesasMes)} (${despesasMes.length} despesas)
 - Pendentes: ${pendentes.length} (${formatCurrency(totalPendente)})
 - Atrasadas: ${atrasadas.length} (${formatCurrency(totalAtrasado)})
+Detalhamento:
+${despesaLines || '  Nenhuma despesa no mês'}
 
 ## Próximos compromissos:
 ${compLines || '  Nenhum agendado'}
