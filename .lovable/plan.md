@@ -1,43 +1,77 @@
 
 
-## Plano: 4 melhorias aprovadas
+## Plano: Agente IA no WhatsApp
 
-### 1. Relatório PDF das despesas
+### Pré-requisito
+- Conectar ElevenLabs como connector (para STT de áudios recebidos)
 
-**Arquivo: `src/pages/Despesas.tsx`**
-- Adicionar botão "Gerar PDF" ao lado do botão "Nova Despesa"
-- Usar `jspdf` + `jspdf-autotable` para gerar o PDF no client-side
-- O PDF incluirá: cabeçalho com mês/ano, tabela com todas as despesas do mês filtrado, totais, e rodapé com data de geração
-- Instalar dependência: `jspdf` e `jspdf-autotable`
+### 1. Migration: tabela `whatsapp_conversas`
 
-**Novo arquivo: `src/lib/exportPDF.ts`**
-- Função `exportDespesasToPDF(despesas, month, year)` que gera o PDF com:
-  - Título: "Relatório de Despesas - Mês/Ano"
-  - Tabela: Município, Responsável, Cargo, Tipo, Valor, Status Pagamento
-  - Rodapé: Total geral e data de geração
+```sql
+CREATE TABLE public.whatsapp_conversas (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  role text NOT NULL, -- 'user' ou 'assistant'
+  content text NOT NULL,
+  created_at timestamptz DEFAULT now()
+);
+ALTER TABLE public.whatsapp_conversas ENABLE ROW LEVEL SECURITY;
+-- Apenas service_role acessa (webhook não tem JWT)
+CREATE POLICY "Service role full access" ON public.whatsapp_conversas
+  FOR ALL TO service_role USING (true) WITH CHECK (true);
+```
 
-### 2. Política de Privacidade pública
+### 2. Reescrever `supabase/functions/whatsapp-webhook/index.ts`
 
-**Arquivo: `src/App.tsx`**
-- Mover a rota `/politica-de-privacidade` para fora do `ProtectedRoute`, tornando-a acessível sem login
+Transformar de "log e ignora" para agente completo:
 
-### 3. Pull-to-refresh nas listagens
+- **Parse da mensagem**: extrair `Body`, `From`, `NumMedia`, `MediaUrl0`, `MediaContentType0`
+- **Identificar usuário**: buscar `notificacao_config` onde `whatsapp_phone` = número remetente (sem `whatsapp:` prefix) → obter `user_id`
+- **Processar áudio** (se `NumMedia > 0` e tipo áudio): baixar via `MediaUrl0`, enviar para ElevenLabs STT (`scribe_v2`) → transcrever para texto
+- **Carregar contexto do usuário** (via `service_role`):
+  - Contagem de eleitores (total, por cidade, por classificação)
+  - Despesas do mês atual (total, pendentes, atrasadas)
+  - Compromissos dos próximos 7 dias
+  - Lembretes pendentes
+  - Total de apoiadores e assessores
+- **Buscar histórico**: últimas 10 mensagens de `whatsapp_conversas` para o user
+- **Chamar Lovable AI Gateway** (`google/gemini-3-flash-preview`) com:
+  - System prompt em português instruindo sobre capacidades (consulta + cadastro)
+  - Contexto resumido do banco
+  - Histórico de conversa
+  - Mensagem atual
+  - Tool calling para ações estruturadas (criar eleitor, lembrete, compromisso, apoiador, despesa)
+- **Executar ações**: se a IA retornar tool call, fazer INSERT no Supabase
+- **Salvar mensagens**: gravar user + assistant em `whatsapp_conversas`
+- **Responder via Twilio**: usar Content API (mesmo padrão atual de `whatsapp-notificacoes`) para enviar resposta de texto
+- **Rate limiting**: máximo 30 msgs/hora por user (contagem via `whatsapp_conversas`)
+- **Fallback**: se user não cadastrado → resposta padrão "Número não cadastrado"
 
-**Arquivos: `src/pages/Despesas.tsx`, `src/pages/GestaoEleitores.tsx`, `src/pages/Agenda.tsx`, `src/pages/Apoiadores.tsx`, `src/pages/Assessores.tsx`, `src/pages/Lembretes.tsx`**
-- Implementar pull-to-refresh usando evento de touch (touchstart/touchmove/touchend)
-- Criar hook reutilizável `src/hooks/usePullToRefresh.ts` que:
-  - Detecta gesto de puxar para baixo quando no topo da página
-  - Mostra indicador de loading (spinner)
-  - Chama `queryClient.invalidateQueries()` para recarregar dados
-  - Retorna ref para o container e estado de refreshing
-- Integrar o hook em cada página de listagem
+### 3. System prompt do agente
 
-### 4. Corrigir hooks em loop no Histórico
+Instruções em português com:
+- Conhecimento das tabelas: eleitores, despesas_politicas, compromissos, lembretes, apoiadores, assessores, cidades, demandas
+- Consultas: totais, filtros por cidade/bairro/classificação, resumo do dia/semana/mês
+- Cadastros: eleitor, lembrete, compromisso, apoiador, despesa (campos obrigatórios e opcionais)
+- Tom: profissional, conciso, usa emojis moderados
+- Limitações claras: não edita/exclui registros (v1)
 
-**Sobre o bug:** No React, hooks (como `useDespesas`) precisam ser chamados sempre na mesma ordem e quantidade. No `Historico.tsx`, o hook é chamado dentro de um `.map()` — ou seja, 12 vezes em loop. Se o número mudar, o React quebra. Funciona "por sorte" porque são sempre 12, mas é uma violação das regras e pode causar bugs difíceis de debugar.
+### 4. Tool definitions para structured output
 
-**Arquivo: `src/pages/Historico.tsx`**
-- Substituir as 12 chamadas de `useDespesas` em loop por uma única query que busca todas as despesas do ano selecionado (sem filtro de mês)
-- Agrupar os resultados por mês no client-side usando `reduce()`
-- Resultado: 1 query ao invés de 12, código correto e mais performático
+5 tools definidos via tool calling:
+- `criar_eleitor(nome, cidade, bairro?, telefone?, classificacao?)`
+- `criar_lembrete(titulo, data_lembrete, prioridade?, descricao?)`
+- `criar_compromisso(titulo, data_inicio, tipo?, local?, descricao?)`
+- `criar_apoiador(nome, cidade?, telefone?, partido?)`
+- `criar_despesa(responsavel, municipio, cargo, valor, tipo?, conta_pix?)`
+
+### 5. Atualizar `supabase/config.toml`
+
+Já tem `[functions.whatsapp-webhook] verify_jwt = false` — manter.
+
+### Resultado
+
+Usuário manda "quantos eleitores tenho em João Pessoa?" → recebe "Você tem 47 eleitores em João Pessoa (32 positivos, 10 neutros, 5 negativos)."
+
+Usuário manda áudio "cadastra um lembrete pra amanhã: ligar pro prefeito" → transcreve → cria lembrete → responde "Lembrete criado: 'Ligar pro prefeito' para 23/03/2026."
 
