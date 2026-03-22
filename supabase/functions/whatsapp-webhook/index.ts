@@ -445,31 +445,40 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Identify user by phone
+    // Identify user by phone — normalize Brazilian numbers (12 vs 13 digits)
     const phone = cleanPhone(from)
+    const variants = new Set<string>()
+    variants.add(`+${phone}`)
+    variants.add(phone)
+
+    // Brazilian mobile: +55 + DDD(2) + 9 + number(8) = 13 digits
+    // Some carriers/Twilio omit the 9: +55 + DDD(2) + number(8) = 12 digits
+    if (phone.startsWith('55') && phone.length === 12) {
+      // 12 digits → add variant with 9 after DDD
+      const withNine = `55${phone.substring(2, 4)}9${phone.substring(4)}`
+      variants.add(`+${withNine}`)
+      variants.add(withNine)
+    } else if (phone.startsWith('55') && phone.length === 13) {
+      // 13 digits → add variant without 9 after DDD
+      const withoutNine = `55${phone.substring(2, 4)}${phone.substring(5)}`
+      variants.add(`+${withoutNine}`)
+      variants.add(withoutNine)
+    }
+
+    console.log('Phone variants for lookup:', Array.from(variants))
+
     const { data: config } = await supabase
       .from('notificacao_config')
       .select('user_id')
-      .eq('whatsapp_phone', `+${phone}`)
+      .in('whatsapp_phone', Array.from(variants))
       .maybeSingle()
 
     if (!config) {
-      // Try without + prefix
-      const { data: config2 } = await supabase
-        .from('notificacao_config')
-        .select('user_id')
-        .eq('whatsapp_phone', phone)
-        .maybeSingle()
-
-      if (!config2) {
-        await sendWhatsAppReply(from, '❌ Número não cadastrado. Configure seu WhatsApp no app para usar o assistente.')
-        return new Response(
-          '<?xml version="1.0" encoding="UTF-8"?><Response></Response>',
-          { headers: { ...corsHeaders, 'Content-Type': 'text/xml' } }
-        )
-      }
-      // Use config2
-      return await processMessage(supabase, config2.user_id, from, messageBody, numMedia, mediaUrl0, mediaContentType0)
+      await sendWhatsAppReply(from, '❌ Número não cadastrado. Configure seu WhatsApp no app para usar o assistente.')
+      return new Response(
+        '<?xml version="1.0" encoding="UTF-8"?><Response></Response>',
+        { headers: { ...corsHeaders, 'Content-Type': 'text/xml' } }
+      )
     }
 
     return await processMessage(supabase, config.user_id, from, messageBody, numMedia, mediaUrl0, mediaContentType0)
