@@ -510,7 +510,14 @@ async function processMessage(
 
   // Transcribe audio if present
   let userText = messageBody
-  if (numMedia > 0 && mediaContentType0.startsWith('audio/')) {
+  const isAudio = numMedia > 0 && (
+    mediaContentType0.startsWith('audio/') ||
+    mediaContentType0 === 'application/ogg' ||
+    mediaContentType0.includes('opus') ||
+    mediaContentType0.includes('ogg')
+  )
+  console.log('Media check — NumMedia:', numMedia, '| ContentType:', mediaContentType0, '| isAudio:', isAudio)
+  if (isAudio) {
     try {
       const transcribed = await transcribeAudio(mediaUrl0, mediaContentType0)
       userText = transcribed || messageBody
