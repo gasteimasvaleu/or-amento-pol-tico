@@ -151,10 +151,11 @@ async function transcribeAudio(audioUrl: string, mediaContentType: string): Prom
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')!
   const TWILIO_API_KEY = Deno.env.get('TWILIO_API_KEY')!
 
-  const gatewayAudioUrl = audioUrl.replace(
-    /^https?:\/\/api\.twilio\.com/,
-    'https://connector-gateway.lovable.dev/twilio'
-  )
+  // Extract relative path: strip /2010-04-01/Accounts/{AccountSid} since gateway adds it automatically
+  const urlObj = new URL(audioUrl)
+  const pathMatch = urlObj.pathname.match(/\/2010-04-01\/Accounts\/[^/]+\/(.+)/)
+  const relativePath = pathMatch ? `/${pathMatch[1]}` : urlObj.pathname
+  const gatewayAudioUrl = `https://connector-gateway.lovable.dev/twilio${relativePath}${urlObj.search}`
   console.log('Downloading audio via gateway:', gatewayAudioUrl)
   const audioResponse = await fetch(gatewayAudioUrl, {
     headers: {
@@ -162,7 +163,11 @@ async function transcribeAudio(audioUrl: string, mediaContentType: string): Prom
       'X-Connection-Api-Key': TWILIO_API_KEY,
     },
   })
-  if (!audioResponse.ok) throw new Error(`Failed to download audio: ${audioResponse.status}`)
+  if (!audioResponse.ok) {
+    const errBody = await audioResponse.text().catch(() => 'no body')
+    console.error(`Audio download failed [${audioResponse.status}]: ${errBody.substring(0, 300)}`)
+    throw new Error(`Failed to download audio: ${audioResponse.status}`)
+  }
   const audioBuffer = await audioResponse.arrayBuffer()
 
   // Send to ElevenLabs STT
