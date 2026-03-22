@@ -1,21 +1,47 @@
 
+## Plano de correção: “zero despesas” no agente WhatsApp
 
-## Plano: Corrigir consulta de despesas recorrentes no agente WhatsApp
+### Diagnóstico confirmado
+Encontrei a causa no `loadUserContext` da função `supabase/functions/whatsapp-webhook/index.ts`:
 
-### Problema
-A função `loadUserContext` no webhook filtra despesas por `pagamento_agendado` do mês atual. Despesas recorrentes ficam com o `pagamento_agendado` original (jan/fev), então nunca aparecem em março. O dashboard web tem lógica especial para recorrentes (mostra desde o mês de cadastro em diante), mas o webhook não replica isso.
+- A query de despesas busca só: `valor, pagamento_agendado, pagamento_feito_em`.
+- Mas a lógica de filtro usa também `tipo` e `ultimo_pagamento` para recorrentes.
+- Como `tipo` não vem no select, ele fica `undefined`, então todas as despesas caem no ramo de “Extra” e são filtradas apenas por `pagamento_agendado` no mês atual.
+- Resultado: despesas recorrentes cadastradas em jan/fev são excluídas em março e o agente responde “R$ 0,00”.
 
-### Correção
+Validação de contexto:
+- `notificacao_config` do número está ligado ao `user_id` correto (`5b37e6e6-...`).
+- Esse `user_id` tem 39 despesas em `despesas_politicas`.
+- Ou seja: o problema não é mapeamento de usuário, é filtro com campos faltando no select.
 
-**Arquivo: `supabase/functions/whatsapp-webhook/index.ts`** (função `loadUserContext`, linhas ~239-249)
+### Implementação proposta
+1. **Corrigir select de despesas no webhook**
+   - Arquivo: `supabase/functions/whatsapp-webhook/index.ts`
+   - Em `loadUserContext`, trocar:
+     - `select('valor, pagamento_agendado, pagamento_feito_em')`
+   - Para incluir os campos usados no filtro e no detalhamento:
+     - `select('valor, tipo, ultimo_pagamento, pagamento_agendado, pagamento_feito_em, responsavel, municipio, cargo')`
 
-Substituir o filtro simples por lógica equivalente ao `useDespesas`:
+2. **Manter e garantir lógica espelhada do dashboard**
+   - Recorrente: incluir quando `ultimo_pagamento <= fim do mês selecionado`.
+   - Extra: incluir apenas quando `pagamento_agendado` estiver dentro do mês.
 
-- **Recorrentes**: incluir se `ultimo_pagamento <= último dia do mês atual` (aparecem todo mês a partir do cadastro)
-- **Extra**: incluir apenas se `pagamento_agendado` cai no mês atual
+3. **Aprimorar observabilidade (log técnico curto)**
+   - Adicionar log temporário em `loadUserContext` com:
+     - `userId`
+     - `despesas total carregadas`
+     - `despesasMes após filtro`
+     - `mês/ano usados`
+   - Isso acelera diagnóstico se houver novo caso de “zero despesas”.
 
-Também incluir no contexto uma lista resumida das despesas do mês (responsável, município, valor, status pago/pendente) para que a IA possa responder com detalhes, em vez de apenas totais.
+4. **Validar após ajuste**
+   - Teste real: enviar “Quais as minhas despesas do mês?” (texto e áudio).
+   - Conferir em logs da edge function:
+     - `despesas total > 0`
+     - `despesasMes > 0` para esse usuário
+   - Conferir em `whatsapp_conversas` que a resposta não volta com total zerado.
 
-### Resultado
-O agente WhatsApp verá as mesmas despesas que o dashboard web e poderá responder corretamente sobre despesas do mês.
-
+### Detalhes técnicos (objetivo)
+- Não envolve migração de banco nem RLS.
+- O erro é exclusivamente de projeção de colunas na query da edge function.
+- A correção mantém a arquitetura atual e alinha definitivamente o WhatsApp com a regra já usada no dashboard web.
