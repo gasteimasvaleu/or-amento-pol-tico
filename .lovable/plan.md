@@ -1,25 +1,32 @@
 
 
-## Plano: Corrigir normalização de telefone brasileiro no webhook
+## Plano: Corrigir download de áudio do Twilio via Gateway
 
 ### Problema
-O número armazenado em `notificacao_config` é `+5583988615781` (formato completo com o 9 do celular), mas o Twilio envia `+558388615781` (12 dígitos, sem o 9). A busca por `eq('whatsapp_phone', ...)` falha porque os formatos não batem.
+`STT error: Failed to download audio: 401` — todas as tentativas de áudio falham. O código na função `transcribeAudio` (linha 154) faz `fetch(audioUrl, ...)` onde `audioUrl` é a URL direta do Twilio (`https://api.twilio.com/2010-04-01/Accounts/.../Messages/.../Media/...`). Os headers `Authorization: Bearer LOVABLE_API_KEY` + `X-Connection-Api-Key` só funcionam contra o gateway, não contra a API do Twilio diretamente.
 
 ### Correção
 
-**Arquivo: `supabase/functions/whatsapp-webhook/index.ts`**
+**Arquivo: `supabase/functions/whatsapp-webhook/index.ts`** (função `transcribeAudio`, linha ~154)
 
-Alterar a lógica de identificação do usuário (linhas ~448-473) para:
+Transformar a URL do Twilio para passar pelo gateway antes de fazer o fetch:
 
-1. Normalizar o telefone recebido extraindo DDD e número
-2. Se o número tem 12 dígitos (55 + DDD + 8 dígitos), adicionar o "9" para gerar variante com 13 dígitos
-3. Se tem 13 dígitos (55 + DDD + 9 + 8 dígitos), gerar variante sem o "9"
-4. Buscar na tabela `notificacao_config` usando `.in('whatsapp_phone', [variante1, variante2, ...])`
+```typescript
+// Antes (falha com 401):
+const audioResponse = await fetch(audioUrl, { headers: { ... } })
 
-Isso cobre todas as combinações:
-- `+5583988615781` (armazenado) vs `+558388615781` (recebido do Twilio)
-- Com e sem prefixo `+`
+// Depois (roteia pelo gateway):
+const gatewayAudioUrl = audioUrl.replace(
+  /^https?:\/\/api\.twilio\.com/,
+  'https://connector-gateway.lovable.dev/twilio'
+)
+const audioResponse = await fetch(gatewayAudioUrl, { headers: { ... } })
+```
+
+O gateway cuida da autenticação com o Twilio automaticamente, igual já faz para envio de mensagens.
 
 ### Resultado
-O webhook vai encontrar o `user_id` independente de como o número foi salvo ou como o Twilio o envia.
+- Áudio baixado com sucesso via gateway
+- ElevenLabs STT recebe o arquivo e transcreve
+- O agente entende a pergunta e responde corretamente
 
