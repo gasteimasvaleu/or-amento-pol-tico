@@ -206,7 +206,7 @@ async function loadUserContext(supabase: any, userId: string): Promise<string> {
   ] = await Promise.all([
     supabase.from('eleitores').select('classificacao', { count: 'exact' }).eq('user_id', userId),
     supabase.from('eleitores').select('cidade, classificacao').eq('user_id', userId),
-    supabase.from('despesas_politicas').select('valor, pagamento_agendado, pagamento_feito_em').eq('user_id', userId),
+    supabase.from('despesas_politicas').select('valor, tipo, ultimo_pagamento, pagamento_agendado, pagamento_feito_em, responsavel, municipio, cargo').eq('user_id', userId),
     supabase.from('compromissos').select('titulo, data_inicio, local, tipo').eq('user_id', userId).gte('data_inicio', `${todayStr}T00:00:00`).order('data_inicio').limit(15),
     supabase.from('lembretes').select('titulo, data_lembrete, prioridade').eq('user_id', userId).eq('concluido', false).order('data_lembrete').limit(15),
     supabase.from('apoiadores').select('id', { count: 'exact' }).eq('user_id', userId),
@@ -243,15 +243,17 @@ async function loadUserContext(supabase: any, userId: string): Promise<string> {
   const endOfMonthStr = endOfMonth.toISOString().split('T')[0]
   const startOfMonthStr = startOfMonth.toISOString().split('T')[0]
 
+  console.log(`Despesas debug — userId: ${userId} | total loaded: ${despesas.length} | month: ${currentMonth}/${currentYear} | range: ${startOfMonthStr} to ${endOfMonthStr}`)
+
   const despesasMes = despesas.filter((d: any) => {
     if (d.tipo === 'Recorrente') {
-      // Recorrentes appear every month from their registration date onwards
       return d.ultimo_pagamento <= endOfMonthStr
     } else {
-      // Extra: only if pagamento_agendado falls within current month
       return d.pagamento_agendado >= startOfMonthStr && d.pagamento_agendado <= endOfMonthStr
     }
   })
+
+  console.log(`Despesas debug — after filter: ${despesasMes.length} (recorrentes: ${despesasMes.filter((d:any)=>d.tipo==='Recorrente').length}, extras: ${despesasMes.filter((d:any)=>d.tipo==='Extra').length})`)
   const totalDespesasMes = despesasMes.reduce((s: number, d: any) => s + Number(d.valor), 0)
   const pendentes = despesasMes.filter((d: any) => !d.pagamento_feito_em)
   const totalPendente = pendentes.reduce((s: number, d: any) => s + Number(d.valor), 0)
