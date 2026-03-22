@@ -410,8 +410,15 @@ Deno.serve(async (req) => {
       body = await req.json().catch(() => ({}))
     }
 
-    // Status callbacks (delivery receipts) — just acknowledge
-    if (body.MessageStatus || body.SmsStatus) {
+    // Determine if this is an inbound message vs a status callback.
+    // Twilio sends SmsStatus=received on INBOUND messages too, so we check
+    // for the presence of From + (Body or NumMedia) to identify real messages.
+    const hasFrom = !!body.From
+    const hasBody = !!body.Body
+    const hasMedia = parseInt(body.NumMedia || '0', 10) > 0
+    const isInbound = hasFrom && (hasBody || hasMedia)
+
+    if (!isInbound && (body.MessageStatus || body.SmsStatus)) {
       console.log('Status callback:', body.MessageStatus || body.SmsStatus, body.MessageSid)
       return new Response(
         '<?xml version="1.0" encoding="UTF-8"?><Response></Response>',
