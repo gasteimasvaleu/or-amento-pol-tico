@@ -15,7 +15,7 @@ import {
   initRevenueCat,
   purchaseMonthly,
   restorePurchases,
-  checkSubscriptionStatus,
+  getSubscriptionPrice,
 } from "@/lib/revenuecat";
 import { nativeAppleSignIn } from "@/lib/nativeAppleSignIn";
 
@@ -28,6 +28,7 @@ const Login = () => {
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [appleLoading, setAppleLoading] = useState(false);
+  const [priceLabel, setPriceLabel] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { session, loading: authLoading } = useAuth();
@@ -49,6 +50,8 @@ const Login = () => {
       await initRevenueCat();
       const active = await restorePurchases();
       if (active) setHasPurchased(true);
+      const price = await getSubscriptionPrice();
+      if (price) setPriceLabel(price);
     };
     init();
   }, [isNative]);
@@ -116,14 +119,11 @@ const Login = () => {
         } else {
           const userId = signInData.user?.id;
           if (userId) {
-            // Ensure profile exists (fallback if trigger failed)
             const fullName = [result.givenName, result.familyName].filter(Boolean).join(" ") || null;
             await supabase.from("profiles").upsert(
               { id: userId, full_name: fullName || signInData.user?.email?.split("@")[0] || "Usuário" },
               { onConflict: "id", ignoreDuplicates: true }
             );
-
-            // If Apple provided a name, update profile and auth metadata
             if (fullName) {
               await supabase.from("profiles").update({ full_name: fullName }).eq("id", userId);
               await supabase.auth.updateUser({ data: { full_name: fullName } });
@@ -132,11 +132,9 @@ const Login = () => {
           navigate("/");
         }
       } else {
-        // Web fallback
         await supabase.auth.signInWithOAuth({ provider: "apple" });
       }
     } catch (error: any) {
-      // Check for Apple Sign In cancellation (code 1001)
       if (error?.message?.includes("1001")) return;
       toast({ title: "Erro ao entrar", description: error?.message || "Falha na autenticação", variant: "destructive" });
     } finally {
@@ -183,6 +181,20 @@ const Login = () => {
         </CardHeader>
 
         <CardContent className="space-y-4">
+          {/* Subscription info block - Apple Guideline 3.1.2c */}
+          {isNative && !hasPurchased && (
+            <div className="rounded-xl border border-border bg-muted/50 p-4 text-center space-y-2">
+              <h3 className="text-base font-bold text-foreground">Mandato Intelligence Pro</h3>
+              <p className="text-2xl font-extrabold text-primary">
+                {priceLabel || "Carregando preço..."}
+                <span className="text-sm font-medium text-muted-foreground">/mês</span>
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Assinatura Mensal · Renovação automática
+              </p>
+            </div>
+          )}
+
           {/* Sign in with Apple button */}
           <Button
             className="w-full h-12 text-base font-semibold bg-black text-white hover:bg-black/90 touch-manipulation"
@@ -216,7 +228,11 @@ const Login = () => {
               ) : (
                 <ShoppingBag className="h-5 w-5 mr-2" />
               )}
-              {hasPurchased ? "Assinatura ativa ✓" : "Assinar via App Store"}
+              {hasPurchased
+                ? "Assinatura ativa ✓"
+                : priceLabel
+                  ? `Assinar — ${priceLabel}/mês`
+                  : "Assinar via App Store"}
             </Button>
           )}
 
@@ -261,6 +277,7 @@ const Login = () => {
             <p className="text-[10px] text-muted-foreground text-center leading-tight">
               Assinatura mensal com renovação automática. O pagamento será cobrado na sua conta Apple ID.
               A assinatura renova automaticamente a menos que seja cancelada até 24h antes do fim do período.
+              Gerencie suas assinaturas nos Ajustes da conta Apple ID.
             </p>
           )}
 

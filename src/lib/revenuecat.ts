@@ -78,6 +78,22 @@ export async function purchaseMonthly(): Promise<{
   }
 }
 
+export async function getSubscriptionPrice(): Promise<string | null> {
+  if (!Capacitor.isNativePlatform()) return null;
+  try {
+    const { Purchases } = await import("@revenuecat/purchases-capacitor");
+    const offerings = await Purchases.getOfferings();
+    const pkg = offerings.current?.availablePackages?.[0];
+    if (pkg) {
+      return (pkg as any).product?.priceString || null;
+    }
+    return null;
+  } catch (error) {
+    console.error("Failed to get subscription price:", error);
+    return null;
+  }
+}
+
 export async function checkSubscriptionStatus(): Promise<boolean> {
   if (!Capacitor.isNativePlatform()) return false;
   try {

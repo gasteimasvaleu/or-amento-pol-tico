@@ -44,6 +44,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
+import { DeleteAccountDialog } from "@/components/layout/DeleteAccountDialog";
 
 const despesasItems = [
   { title: "Painel", url: "/despesas", icon: Receipt },
@@ -301,12 +302,13 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4">
+      <SidebarFooter className="p-4 space-y-1">
         {!collapsed && user && (
           <p className="text-xs text-muted-foreground truncate mb-2">
             {user.email}
           </p>
         )}
+        <DeleteAccountDialog variant="sidebar" collapsed={collapsed} />
         <Button
           variant="ghost"
           size={collapsed ? "icon" : "default"}
