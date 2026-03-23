@@ -1,77 +1,52 @@
 
 
-## Plano: Cadastro Institucional com Token Único
+## Plano: Painel Admin para Geração de Convites em Lote
 
-### Fluxo
-1. Você (admin) gera tokens na tabela `convites_institucionais` com validade de 1 ano
-2. Envia link tipo `seuapp.com/cadastro-institucional?token=ABC123`
-3. O usuário abre, preenche nome/email/senha, o sistema valida o token
-4. Ao cadastrar: cria usuário no Auth, profile via trigger, e insere na `subscribers` com `status = 'active'` e `expires_at` = data definida no convite
-5. Marca o token como `usado`
+### Resumo
+Criar uma página `/admin` acessível apenas por `caiorobbb@gmail.com`, com formulário para gerar convites institucionais em lote. Cada convite terá um campo de telefone para envio futuro via Z-API (WhatsApp). Link para o painel aparece na sidebar e no menu mobile.
 
-### 1. Migração: tabela `convites_institucionais`
+### 1. Nova página: `src/pages/Admin.tsx`
 
-```sql
-CREATE TABLE public.convites_institucionais (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  token text NOT NULL UNIQUE DEFAULT encode(gen_random_bytes(16), 'hex'),
-  orgao text NOT NULL,
-  duracao_dias integer NOT NULL DEFAULT 365,
-  usado boolean NOT NULL DEFAULT false,
-  usado_por uuid REFERENCES auth.users(id) ON DELETE SET NULL,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  usado_em timestamptz
-);
+**Funcionalidades:**
+- Verificação de acesso: se `user.email !== 'caiorobbb@gmail.com'`, redireciona para `/`
+- Formulário com:
+  - Nome do órgão (text)
+  - Duração em dias (number, default 365)
+  - Quantidade de convites (number)
+- Botão "Gerar Convites" que chama uma edge function `gerar-convites`
+- Após geração, exibe tabela com:
+  - Link do token (copiável)
+  - Campo de telefone ao lado de cada token (para uso futuro com Z-API)
+  - Botão copiar link individual
+- Seção abaixo: lista de convites já gerados (da tabela `convites_institucionais`), mostrando token, órgão, status (usado/disponível)
 
-ALTER TABLE public.convites_institucionais ENABLE ROW LEVEL SECURITY;
+### 2. Edge Function: `supabase/functions/gerar-convites/index.ts`
 
--- Leitura pública (necessário para validar token sem estar logado)
-CREATE POLICY "Anyone can read convites by token"
-  ON public.convites_institucionais FOR SELECT
-  TO anon, authenticated
-  USING (true);
-```
+- Recebe `{ orgao, duracaoDias, quantidade, userEmail }`
+- Valida que `userEmail === 'caiorobbb@gmail.com'`
+- Usa `SUPABASE_SERVICE_ROLE_KEY` para inserir N registros na tabela `convites_institucionais`
+- Retorna os tokens gerados
 
-Inserção/update dos convites será feita via SQL Editor ou futuramente via painel admin (somente service_role ou admin).
+### 3. Navegação
 
-### 2. Edge Function: `cadastro-institucional`
+**AppSidebar.tsx** — Adicionar item "Admin" com ícone `Settings` (ou `Crown`), visível apenas quando `user.email === 'caiorobbb@gmail.com'`
 
-Recebe `{ token, fullName, email, password }` e:
-- Valida token (existe, não usado)
-- Cria usuário via `supabase.auth.admin.createUser` (confirma email automaticamente)
-- Insere na `subscribers` com `status = 'active'`, `expires_at = now() + duracao_dias`
-- Marca convite como `usado = true`, `usado_por`, `usado_em`
-- Retorna sucesso ou erro
+**BottomNav.tsx** — Adicionar link "Admin" no menu "Mais", com mesma condição de email
 
-Usa `SUPABASE_SERVICE_ROLE_KEY` (já configurado nos secrets).
+### 4. Rota em `App.tsx`
 
-### 3. Nova página: `/cadastro-institucional`
+Adicionar rota protegida: `/admin` → `<ProtectedRoute><Admin /></ProtectedRoute>`
 
-- Rota pública em `App.tsx`
-- Lê `?token=` da URL
-- Se token inválido/usado: mostra mensagem de erro
-- Se válido: formulário com nome do órgão (readonly), nome completo, email, senha
-- Ao submeter: chama edge function
-- Sucesso: redireciona para `/login` com toast de confirmação
+### 5. Configuração
 
-### 4. Estrutura dos arquivos
+- Adicionar função ao `supabase/config.toml` com `verify_jwt = false`
+- Telefones ficam armazenados apenas no estado local da página por enquanto (não persistidos no banco); quando você fornecer as keys do Z-API, implementamos o envio e podemos adicionar coluna `telefone` à tabela `convites_institucionais` se necessário
 
-- `supabase/functions/cadastro-institucional/index.ts` — edge function
-- `src/pages/CadastroInstitucional.tsx` — página do formulário
-- `src/App.tsx` — nova rota `/cadastro-institucional`
-
-### Como gerar convites (para você, admin)
-
-No SQL Editor do Supabase:
-```sql
--- Gerar 50 convites para um órgão
-INSERT INTO convites_institucionais (orgao, duracao_dias)
-SELECT 'Câmara Municipal de XYZ', 365
-FROM generate_series(1, 50);
-
--- Ver tokens gerados
-SELECT token, orgao, usado FROM convites_institucionais WHERE orgao = 'Câmara Municipal de XYZ';
-```
-
-Cada token gera um link: `https://seuapp.com/cadastro-institucional?token=<token>`
+### Estrutura de arquivos
+- `src/pages/Admin.tsx` — nova página
+- `supabase/functions/gerar-convites/index.ts` — nova edge function
+- `src/App.tsx` — nova rota
+- `src/components/layout/AppSidebar.tsx` — link admin
+- `src/components/layout/BottomNav.tsx` — link admin
+- `supabase/config.toml` — registrar função
 
