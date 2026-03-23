@@ -26,6 +26,7 @@ import GestaoEleitores from "./pages/GestaoEleitores";
 import GestaoCidades from "./pages/GestaoCidades";
 import Lembretes from "./pages/Lembretes";
 import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
