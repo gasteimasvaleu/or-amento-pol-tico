@@ -96,6 +96,16 @@ export function BottomNav() {
             <Shield className="h-5 w-5" />
             <span>Política de Privacidade</span>
           </NavLink>
+          {user?.email === "caiorobbb@gmail.com" && (
+            <NavLink
+              to="/admin"
+              onClick={() => setMoreOpen(false)}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-foreground hover:bg-muted transition-colors w-full"
+            >
+              <Crown className="h-5 w-5" />
+              <span>Admin</span>
+            </NavLink>
+          )}
           <button
             onClick={() => { setMoreOpen(false); signOut(); }}
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-destructive hover:bg-muted transition-colors w-full"

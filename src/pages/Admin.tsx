@@ -40,13 +40,11 @@ export default function Admin() {
   const [convitesExistentes, setConvitesExistentes] = useState<ConviteExistente[]>([]);
   const [loadingExistentes, setLoadingExistentes] = useState(true);
 
-  if (user?.email !== ADMIN_EMAIL) {
-    return <Navigate to="/" replace />;
-  }
+  const isAdmin = user?.email === ADMIN_EMAIL;
 
   useEffect(() => {
-    fetchConvites();
-  }, []);
+    if (isAdmin) fetchConvites();
+  }, [isAdmin]);
 
   const fetchConvites = async () => {
     setLoadingExistentes(true);
@@ -60,6 +58,10 @@ export default function Admin() {
     }
     setLoadingExistentes(false);
   };
+
+  if (!isAdmin) {
+    return <Navigate to="/" replace />;
+  }
 
   const handleGerar = async () => {
     if (!orgao.trim()) {
@@ -112,7 +114,6 @@ export default function Admin() {
           <h1 className="text-2xl font-bold text-foreground">Painel Admin</h1>
         </div>
 
-        {/* Formulário de geração */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Gerar Convites Institucionais</CardTitle>
@@ -121,33 +122,15 @@ export default function Admin() {
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="orgao">Nome do Órgão</Label>
-                <Input
-                  id="orgao"
-                  placeholder="Câmara Municipal de..."
-                  value={orgao}
-                  onChange={(e) => setOrgao(e.target.value)}
-                />
+                <Input id="orgao" placeholder="Câmara Municipal de..." value={orgao} onChange={(e) => setOrgao(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="duracao">Duração (dias)</Label>
-                <Input
-                  id="duracao"
-                  type="number"
-                  min={1}
-                  value={duracaoDias}
-                  onChange={(e) => setDuracaoDias(Number(e.target.value))}
-                />
+                <Input id="duracao" type="number" min={1} value={duracaoDias} onChange={(e) => setDuracaoDias(Number(e.target.value))} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="qtd">Quantidade</Label>
-                <Input
-                  id="qtd"
-                  type="number"
-                  min={1}
-                  max={500}
-                  value={quantidade}
-                  onChange={(e) => setQuantidade(Number(e.target.value))}
-                />
+                <Input id="qtd" type="number" min={1} max={500} value={quantidade} onChange={(e) => setQuantidade(Number(e.target.value))} />
               </div>
             </div>
             <Button onClick={handleGerar} disabled={loading}>
@@ -157,7 +140,6 @@ export default function Admin() {
           </CardContent>
         </Card>
 
-        {/* Convites recém-gerados */}
         {convitesGerados.length > 0 && (
           <Card>
             <CardHeader>
@@ -171,9 +153,7 @@ export default function Admin() {
                       <TableHead className="w-10">#</TableHead>
                       <TableHead>Link</TableHead>
                       <TableHead className="w-48">
-                        <div className="flex items-center gap-1">
-                          <Phone className="h-3.5 w-3.5" /> Telefone
-                        </div>
+                        <div className="flex items-center gap-1"><Phone className="h-3.5 w-3.5" /> Telefone</div>
                       </TableHead>
                       <TableHead className="w-20">Copiar</TableHead>
                     </TableRow>
@@ -182,21 +162,12 @@ export default function Admin() {
                     {convitesGerados.map((c, i) => (
                       <TableRow key={c.token}>
                         <TableCell className="text-muted-foreground">{i + 1}</TableCell>
-                        <TableCell className="font-mono text-xs break-all">
-                          {`${APP_URL}/cadastro-institucional?token=${c.token}`}
+                        <TableCell className="font-mono text-xs break-all">{`${APP_URL}/cadastro-institucional?token=${c.token}`}</TableCell>
+                        <TableCell>
+                          <Input placeholder="5583999999999" value={c.telefone} onChange={(e) => updateTelefone(i, e.target.value)} className="h-8 text-sm" />
                         </TableCell>
                         <TableCell>
-                          <Input
-                            placeholder="5583999999999"
-                            value={c.telefone}
-                            onChange={(e) => updateTelefone(i, e.target.value)}
-                            className="h-8 text-sm"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Button size="icon" variant="ghost" onClick={() => copyLink(c.token)}>
-                            <Copy className="h-4 w-4" />
-                          </Button>
+                          <Button size="icon" variant="ghost" onClick={() => copyLink(c.token)}><Copy className="h-4 w-4" /></Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -207,16 +178,13 @@ export default function Admin() {
           </Card>
         )}
 
-        {/* Convites existentes */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Todos os Convites</CardTitle>
           </CardHeader>
           <CardContent>
             {loadingExistentes ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
+              <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
             ) : convitesExistentes.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">Nenhum convite gerado ainda.</p>
             ) : (
@@ -238,20 +206,14 @@ export default function Admin() {
                         <TableCell>
                           <div className="flex items-center gap-1">
                             <span className="font-mono text-xs">{c.token.slice(0, 12)}…</span>
-                            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => copyLink(c.token)}>
-                              <Copy className="h-3 w-3" />
-                            </Button>
+                            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => copyLink(c.token)}><Copy className="h-3 w-3" /></Button>
                           </div>
                         </TableCell>
                         <TableCell>{c.duracao_dias} dias</TableCell>
                         <TableCell>
-                          <Badge variant={c.usado ? "secondary" : "default"}>
-                            {c.usado ? "Usado" : "Disponível"}
-                          </Badge>
+                          <Badge variant={c.usado ? "secondary" : "default"}>{c.usado ? "Usado" : "Disponível"}</Badge>
                         </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {new Date(c.created_at).toLocaleDateString("pt-BR")}
-                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{new Date(c.created_at).toLocaleDateString("pt-BR")}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

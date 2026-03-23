@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.cadastro-institucional]
 verify_jwt = false
+
+[functions.gerar-convites]
+verify_jwt = false

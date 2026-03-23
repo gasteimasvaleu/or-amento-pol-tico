@@ -60,6 +60,7 @@ const App = () => (
             <Route path="/gestao-de-cidades" element={<ProtectedRoute><GestaoCidades /></ProtectedRoute>} />
             <Route path="/lembretes" element={<ProtectedRoute><Lembretes /></ProtectedRoute>} />
             <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
+            <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
