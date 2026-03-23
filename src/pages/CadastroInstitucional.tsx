@@ -120,23 +120,23 @@ const CadastroInstitucional = () => {
           <CardTitle className="text-2xl">Cadastro Institucional</CardTitle>
           <CardDescription>Convite de: <strong>{orgao}</strong></CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} autoComplete="off">
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="orgao">Órgão / Instituição</Label>
-              <Input id="orgao" value={orgao} disabled />
+              <Label htmlFor="inst-orgao">Órgão / Instituição</Label>
+              <Input id="inst-orgao" value={orgao} disabled />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="name">Nome completo</Label>
-              <Input id="name" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+              <Label htmlFor="inst-name">Nome completo</Label>
+              <Input id="inst-name" value={fullName} onChange={(e) => setFullName(e.target.value)} required autoComplete="off" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <Label htmlFor="inst-email">E-mail</Label>
+              <Input id="inst-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="new-username" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+              <Label htmlFor="inst-password">Senha</Label>
+              <Input id="inst-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} autoComplete="new-password" />
             </div>
           </CardContent>
           <CardFooter>
