@@ -26,20 +26,35 @@ export function useDashboardStats() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("despesas_politicas")
-        .select("valor, pagamento_agendado")
-        .gte("pagamento_agendado", since.slice(0, 10));
+        .select("valor, tipo, ultimo_pagamento, pagamento_agendado");
       if (error) throw error;
 
-      const byMonth: Record<string, number> = {};
-      (data ?? []).forEach((d) => {
-        const key = d.pagamento_agendado?.slice(0, 7);
-        if (key) byMonth[key] = (byMonth[key] ?? 0) + Number(d.valor);
-      });
+      const allDespesas = data ?? [];
 
-      return months.map((m) => ({
-        month: m.label,
-        valor: byMonth[m.key] ?? 0,
-      }));
+      return months.map((m) => {
+        const [year, month] = m.key.split("-").map(Number);
+        const firstDay = `${m.key}-01`;
+        const lastDay = new Date(year, month, 0).toISOString().split("T")[0];
+
+        let total = 0;
+        allDespesas.forEach((d) => {
+          const valor = Number(d.valor);
+          if (d.tipo === "Recorrente") {
+            // Recorrente aparece todo mês a partir do cadastro
+            if (d.ultimo_pagamento && d.ultimo_pagamento <= lastDay) {
+              total += valor;
+            }
+          } else {
+            // Extra: apenas se pagamento_agendado cai no mês
+            const pa = d.pagamento_agendado;
+            if (pa && pa >= firstDay && pa <= lastDay) {
+              total += valor;
+            }
+          }
+        });
+
+        return { month: m.label, valor: total };
+      });
     },
     enabled: !!user,
   });
