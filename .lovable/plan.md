@@ -1,47 +1,46 @@
 
-## Plano de correção: “zero despesas” no agente WhatsApp
 
-### Diagnóstico confirmado
-Encontrei a causa no `loadUserContext` da função `supabase/functions/whatsapp-webhook/index.ts`:
+## Plano: Atualizar card e adicionar modal com instruções + número do assistente
 
-- A query de despesas busca só: `valor, pagamento_agendado, pagamento_feito_em`.
-- Mas a lógica de filtro usa também `tipo` e `ultimo_pagamento` para recorrentes.
-- Como `tipo` não vem no select, ele fica `undefined`, então todas as despesas caem no ramo de “Extra” e são filtradas apenas por `pagamento_agendado` no mês atual.
-- Resultado: despesas recorrentes cadastradas em jan/fev são excluídas em março e o agente responde “R$ 0,00”.
+### Alterações em `src/components/notificacoes/NotificacoesConfig.tsx`
 
-Validação de contexto:
-- `notificacao_config` do número está ligado ao `user_id` correto (`5b37e6e6-...`).
-- Esse `user_id` tem 39 despesas em `despesas_politicas`.
-- Ou seja: o problema não é mapeamento de usuário, é filtro com campos faltando no select.
+**1. Título e botão**
+- Título: "Notificações e Comandos WhatsApp"
+- Botão salvar: "Salvar Configurações"
 
-### Implementação proposta
-1. **Corrigir select de despesas no webhook**
-   - Arquivo: `supabase/functions/whatsapp-webhook/index.ts`
-   - Em `loadUserContext`, trocar:
-     - `select('valor, pagamento_agendado, pagamento_feito_em')`
-   - Para incluir os campos usados no filtro e no detalhamento:
-     - `select('valor, tipo, ultimo_pagamento, pagamento_agendado, pagamento_feito_em, responsavel, municipio, cargo')`
+**2. Número do assistente**
+- Acima do campo "Número do WhatsApp", adicionar um bloco informativo com o número do assistente: **+1 (555) 934-6984**
+- Texto: "Salve este número nos seus contatos e envie uma mensagem para começar a usar o assistente por voz ou texto."
 
-2. **Manter e garantir lógica espelhada do dashboard**
-   - Recorrente: incluir quando `ultimo_pagamento <= fim do mês selecionado`.
-   - Extra: incluir apenas quando `pagamento_agendado` estiver dentro do mês.
+**3. Novo botão "Instruções de Comando por Voz"** abaixo do salvar, com ícone `Mic`, variante `outline`
 
-3. **Aprimorar observabilidade (log técnico curto)**
-   - Adicionar log temporário em `loadUserContext` com:
-     - `userId`
-     - `despesas total carregadas`
-     - `despesasMes após filtro`
-     - `mês/ano usados`
-   - Isso acelera diagnóstico se houver novo caso de “zero despesas”.
+**4. Modal com instruções detalhadas (Dialog + ScrollArea)**
 
-4. **Validar após ajuste**
-   - Teste real: enviar “Quais as minhas despesas do mês?” (texto e áudio).
-   - Conferir em logs da edge function:
-     - `despesas total > 0`
-     - `despesasMes > 0` para esse usuário
-   - Conferir em `whatsapp_conversas` que a resposta não volta com total zerado.
+Conteúdo organizado em seções com exemplos literais:
 
-### Detalhes técnicos (objetivo)
-- Não envolve migração de banco nem RLS.
-- O erro é exclusivamente de projeção de colunas na query da edge function.
-- A correção mantém a arquitetura atual e alinha definitivamente o WhatsApp com a regra já usada no dashboard web.
+**📊 Consultas**
+- "Quais são minhas despesas do mês?"
+- "Quanto tenho de despesas pendentes?"
+- "Quantos eleitores eu tenho cadastrados?"
+- "Quais meus compromissos da semana?"
+- "Quais são meus lembretes pendentes?"
+- "Me dê um resumo geral do meu dashboard"
+
+**📝 Cadastros**
+- "Cadastre o eleitor João Silva da cidade de Campina Grande, bairro Centro, telefone 83999999999, classificação positivo"
+- "Crie um lembrete para ligar para o vereador amanhã, prioridade alta"
+- "Agende um compromisso de reunião para amanhã às 14h no gabinete"
+- "Cadastre o apoiador Maria Santos de João Pessoa, partido PSD, telefone 83988888888"
+- "Cadastre uma despesa de R$ 1.500 para João Silva, município Campina Grande, cargo assessor"
+
+**💡 Dicas**
+- Pode enviar áudio ou texto
+- Se faltar algum dado obrigatório, o assistente vai pedir
+- Pergunte de forma natural, como se estivesse conversando
+
+### Imports adicionais
+- `Dialog, DialogContent, DialogHeader, DialogTitle` de `@/components/ui/dialog`
+- `ScrollArea` de `@/components/ui/scroll-area`
+- `Mic, Info` de `lucide-react`
+- Estado `showInstructions` para controlar abertura do modal
+
