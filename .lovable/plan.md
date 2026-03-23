@@ -1,46 +1,24 @@
 
 
-## Plano: Atualizar card e adicionar modal com instruções + número do assistente
+## Plano: Corrigir gráfico de despesas no dashboard para incluir recorrentes
 
-### Alterações em `src/components/notificacoes/NotificacoesConfig.tsx`
+### Problema
+O `useDashboardStats` agrupa despesas pelo `pagamento_agendado` literal. Despesas recorrentes têm `pagamento_agendado` fixo em jan/fev, então março fica zerado. A página de Despesas (`useDespesas`) já resolve isso buscando recorrentes com `ultimo_pagamento <= fim do mês`, mas o dashboard não replica essa lógica.
 
-**1. Título e botão**
-- Título: "Notificações e Comandos WhatsApp"
-- Botão salvar: "Salvar Configurações"
+### Correção
 
-**2. Número do assistente**
-- Acima do campo "Número do WhatsApp", adicionar um bloco informativo com o número do assistente: **+1 (555) 934-6984**
-- Texto: "Salve este número nos seus contatos e envie uma mensagem para começar a usar o assistente por voz ou texto."
+**Arquivo: `src/hooks/useDashboardStats.ts`** (query de despesas, linhas 24-45)
 
-**3. Novo botão "Instruções de Comando por Voz"** abaixo do salvar, com ícone `Mic`, variante `outline`
+Substituir a query simples por lógica equivalente ao `useDespesas`:
 
-**4. Modal com instruções detalhadas (Dialog + ScrollArea)**
+1. Buscar todas as despesas com `select('valor, tipo, ultimo_pagamento, pagamento_agendado')`  sem filtro por data (para pegar recorrentes antigas)
+2. Para cada mês dos últimos 6:
+   - **Recorrente**: somar valor se `ultimo_pagamento <= último dia do mês`
+   - **Extra**: somar valor se `pagamento_agendado` cai dentro do mês
+3. Montar o array `byMonth` com os totais corretos
 
-Conteúdo organizado em seções com exemplos literais:
+Isso alinha o gráfico do dashboard com a mesma regra usada na tela de despesas e no webhook WhatsApp.
 
-**📊 Consultas**
-- "Quais são minhas despesas do mês?"
-- "Quanto tenho de despesas pendentes?"
-- "Quantos eleitores eu tenho cadastrados?"
-- "Quais meus compromissos da semana?"
-- "Quais são meus lembretes pendentes?"
-- "Me dê um resumo geral do meu dashboard"
-
-**📝 Cadastros**
-- "Cadastre o eleitor João Silva da cidade de Campina Grande, bairro Centro, telefone 83999999999, classificação positivo"
-- "Crie um lembrete para ligar para o vereador amanhã, prioridade alta"
-- "Agende um compromisso de reunião para amanhã às 14h no gabinete"
-- "Cadastre o apoiador Maria Santos de João Pessoa, partido PSD, telefone 83988888888"
-- "Cadastre uma despesa de R$ 1.500 para João Silva, município Campina Grande, cargo assessor"
-
-**💡 Dicas**
-- Pode enviar áudio ou texto
-- Se faltar algum dado obrigatório, o assistente vai pedir
-- Pergunte de forma natural, como se estivesse conversando
-
-### Imports adicionais
-- `Dialog, DialogContent, DialogHeader, DialogTitle` de `@/components/ui/dialog`
-- `ScrollArea` de `@/components/ui/scroll-area`
-- `Mic, Info` de `lucide-react`
-- Estado `showInstructions` para controlar abertura do modal
+### Resultado
+O gráfico "Evolução de Despesas" mostrará corretamente o total de março (e todos os meses), incluindo despesas recorrentes.
 
