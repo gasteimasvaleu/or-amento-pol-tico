@@ -26,6 +26,7 @@ import GestaoEleitores from "./pages/GestaoEleitores";
 import GestaoCidades from "./pages/GestaoCidades";
 import Lembretes from "./pages/Lembretes";
 import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -59,6 +60,7 @@ const App = () => (
             <Route path="/gestao-de-cidades" element={<ProtectedRoute><GestaoCidades /></ProtectedRoute>} />
             <Route path="/lembretes" element={<ProtectedRoute><Lembretes /></ProtectedRoute>} />
             <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
+            <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
