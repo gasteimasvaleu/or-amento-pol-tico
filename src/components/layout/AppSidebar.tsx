@@ -44,6 +44,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
+import { DeleteAccountDialog } from "@/components/layout/DeleteAccountDialog";
 
 const despesasItems = [
   { title: "Painel", url: "/despesas", icon: Receipt },
