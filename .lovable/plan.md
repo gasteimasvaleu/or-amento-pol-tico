@@ -1,24 +1,77 @@
 
 
-## Plano: Corrigir gráfico de despesas no dashboard para incluir recorrentes
+## Plano: Cadastro Institucional com Token Único
 
-### Problema
-O `useDashboardStats` agrupa despesas pelo `pagamento_agendado` literal. Despesas recorrentes têm `pagamento_agendado` fixo em jan/fev, então março fica zerado. A página de Despesas (`useDespesas`) já resolve isso buscando recorrentes com `ultimo_pagamento <= fim do mês`, mas o dashboard não replica essa lógica.
+### Fluxo
+1. Você (admin) gera tokens na tabela `convites_institucionais` com validade de 1 ano
+2. Envia link tipo `seuapp.com/cadastro-institucional?token=ABC123`
+3. O usuário abre, preenche nome/email/senha, o sistema valida o token
+4. Ao cadastrar: cria usuário no Auth, profile via trigger, e insere na `subscribers` com `status = 'active'` e `expires_at` = data definida no convite
+5. Marca o token como `usado`
 
-### Correção
+### 1. Migração: tabela `convites_institucionais`
 
-**Arquivo: `src/hooks/useDashboardStats.ts`** (query de despesas, linhas 24-45)
+```sql
+CREATE TABLE public.convites_institucionais (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  token text NOT NULL UNIQUE DEFAULT encode(gen_random_bytes(16), 'hex'),
+  orgao text NOT NULL,
+  duracao_dias integer NOT NULL DEFAULT 365,
+  usado boolean NOT NULL DEFAULT false,
+  usado_por uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  usado_em timestamptz
+);
 
-Substituir a query simples por lógica equivalente ao `useDespesas`:
+ALTER TABLE public.convites_institucionais ENABLE ROW LEVEL SECURITY;
 
-1. Buscar todas as despesas com `select('valor, tipo, ultimo_pagamento, pagamento_agendado')`  sem filtro por data (para pegar recorrentes antigas)
-2. Para cada mês dos últimos 6:
-   - **Recorrente**: somar valor se `ultimo_pagamento <= último dia do mês`
-   - **Extra**: somar valor se `pagamento_agendado` cai dentro do mês
-3. Montar o array `byMonth` com os totais corretos
+-- Leitura pública (necessário para validar token sem estar logado)
+CREATE POLICY "Anyone can read convites by token"
+  ON public.convites_institucionais FOR SELECT
+  TO anon, authenticated
+  USING (true);
+```
 
-Isso alinha o gráfico do dashboard com a mesma regra usada na tela de despesas e no webhook WhatsApp.
+Inserção/update dos convites será feita via SQL Editor ou futuramente via painel admin (somente service_role ou admin).
 
-### Resultado
-O gráfico "Evolução de Despesas" mostrará corretamente o total de março (e todos os meses), incluindo despesas recorrentes.
+### 2. Edge Function: `cadastro-institucional`
+
+Recebe `{ token, fullName, email, password }` e:
+- Valida token (existe, não usado)
+- Cria usuário via `supabase.auth.admin.createUser` (confirma email automaticamente)
+- Insere na `subscribers` com `status = 'active'`, `expires_at = now() + duracao_dias`
+- Marca convite como `usado = true`, `usado_por`, `usado_em`
+- Retorna sucesso ou erro
+
+Usa `SUPABASE_SERVICE_ROLE_KEY` (já configurado nos secrets).
+
+### 3. Nova página: `/cadastro-institucional`
+
+- Rota pública em `App.tsx`
+- Lê `?token=` da URL
+- Se token inválido/usado: mostra mensagem de erro
+- Se válido: formulário com nome do órgão (readonly), nome completo, email, senha
+- Ao submeter: chama edge function
+- Sucesso: redireciona para `/login` com toast de confirmação
+
+### 4. Estrutura dos arquivos
+
+- `supabase/functions/cadastro-institucional/index.ts` — edge function
+- `src/pages/CadastroInstitucional.tsx` — página do formulário
+- `src/App.tsx` — nova rota `/cadastro-institucional`
+
+### Como gerar convites (para você, admin)
+
+No SQL Editor do Supabase:
+```sql
+-- Gerar 50 convites para um órgão
+INSERT INTO convites_institucionais (orgao, duracao_dias)
+SELECT 'Câmara Municipal de XYZ', 365
+FROM generate_series(1, 50);
+
+-- Ver tokens gerados
+SELECT token, orgao, usado FROM convites_institucionais WHERE orgao = 'Câmara Municipal de XYZ';
+```
+
+Cada token gera um link: `https://seuapp.com/cadastro-institucional?token=<token>`
 
