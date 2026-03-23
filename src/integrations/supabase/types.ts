@@ -300,6 +300,39 @@ export type Database = {
         }
         Relationships: []
       }
+      convites_institucionais: {
+        Row: {
+          created_at: string
+          duracao_dias: number
+          id: string
+          orgao: string
+          token: string
+          usado: boolean
+          usado_em: string | null
+          usado_por: string | null
+        }
+        Insert: {
+          created_at?: string
+          duracao_dias?: number
+          id?: string
+          orgao: string
+          token?: string
+          usado?: boolean
+          usado_em?: string | null
+          usado_por?: string | null
+        }
+        Update: {
+          created_at?: string
+          duracao_dias?: number
+          id?: string
+          orgao?: string
+          token?: string
+          usado?: boolean
+          usado_em?: string | null
+          usado_por?: string | null
+        }
+        Relationships: []
+      }
       dados_eleitorais_cache: {
         Row: {
           ano_eleicao: number
