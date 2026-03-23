@@ -14,7 +14,7 @@ const mainItems = [
 export function BottomNav() {
   const [moreOpen, setMoreOpen] = useState(false);
   const location = useLocation();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
 
   return (
     <>
