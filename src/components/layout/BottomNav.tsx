@@ -3,6 +3,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
+import { DeleteAccountDialog } from "@/components/layout/DeleteAccountDialog";
 
 const mainItems = [
   { title: "Início", url: "/", icon: Home },
