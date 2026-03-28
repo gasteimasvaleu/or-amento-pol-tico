@@ -7,7 +7,7 @@ const config: CapacitorConfig = {
   ios: {
     backgroundColor: '#FFFFFF',
     scheme: 'mandatointeligente',
-    buildNumber: '5',
+    buildNumber: '6',
   },
   plugins: {
     Camera: {
