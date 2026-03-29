@@ -135,7 +135,12 @@ const Login = () => {
         await supabase.auth.signInWithOAuth({ provider: "apple" });
       }
     } catch (error: any) {
-      if (error?.message?.includes("1001")) return;
+      console.error("[Login] Apple Sign In full error:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
+      if (error?.message?.includes("1001") || error?.message?.includes("cancelled") || error?.message?.includes("canceled")) return;
+      if (error?.message?.includes("1000")) {
+        toast({ title: "Erro ao entrar", description: "Não foi possível conectar ao Apple Sign In. Tente novamente.", variant: "destructive" });
+        return;
+      }
       toast({ title: "Erro ao entrar", description: error?.message || "Falha na autenticação", variant: "destructive" });
     } finally {
       setAppleLoading(false);
@@ -171,7 +176,7 @@ const Login = () => {
 
   return (
     <div className="min-h-[100dvh] flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md pointer-events-auto">
+      <Card className="w-full max-w-md pointer-events-auto overflow-y-auto max-h-[90dvh]">
         <CardHeader className="text-center">
           <div className="mx-auto bg-primary p-3 rounded-xl w-fit mb-4">
             <Landmark className="h-8 w-8 text-primary-foreground" />
@@ -183,13 +188,21 @@ const Login = () => {
         <CardContent className="space-y-4">
           {/* Subscription info block - Apple Guideline 3.1.2c */}
           {isNative && !hasPurchased && (
-            <div className="rounded-xl border border-border bg-muted/50 p-4 text-center space-y-2">
-              <h3 className="text-base font-bold text-foreground">Mandato Intelligence Pro</h3>
-              <p className="text-2xl font-extrabold text-primary">
+            <div className="rounded-xl border border-border bg-muted/50 p-4 space-y-3">
+              <h3 className="text-base font-bold text-foreground text-center">Mandato Intelligence Pro</h3>
+              <p className="text-2xl font-extrabold text-primary text-center">
                 {priceLabel || "Carregando preço..."}
                 <span className="text-sm font-medium text-muted-foreground">/mês</span>
               </p>
-              <p className="text-xs text-muted-foreground">
+              <ul className="text-xs text-muted-foreground space-y-1 pl-1">
+                <li>✓ Gestão completa de eleitores e apoiadores</li>
+                <li>✓ Agenda e compromissos parlamentares</li>
+                <li>✓ Controle de despesas de mandato</li>
+                <li>✓ Geração de discursos e projetos de lei com IA</li>
+                <li>✓ Análise de notícias e geração de mídias</li>
+                <li>✓ Suporte prioritário</li>
+              </ul>
+              <p className="text-xs text-muted-foreground text-center">
                 Assinatura Mensal · Renovação automática
               </p>
             </div>
