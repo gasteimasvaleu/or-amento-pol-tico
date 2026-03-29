@@ -15,28 +15,30 @@ public class NativeAppleSignInPlugin: CAPPlugin, ASAuthorizationControllerDelega
         let controller = ASAuthorizationController(authorizationRequests: [request])
         controller.delegate = self
         controller.presentationContextProvider = self
-        self.authController = controller // Strong reference to prevent dealloc
+        self.authController = controller
         DispatchQueue.main.async {
             controller.performRequests()
         }
     }
 
     public func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-        // iPadOS-safe: find the active window through connected scenes
-        if #available(iOS 15.0, *) {
-            if let windowScene = UIApplication.shared.connectedScenes
-                .compactMap({ $0 as? UIWindowScene })
-                .first(where: { $0.activationState == .foregroundActive }),
-               let window = windowScene.windows.first(where: { $0.isKeyWindow }) ?? windowScene.windows.first {
-                return window
-            }
-        }
-        // Fallback for older iOS / edge cases
-        if let window = self.bridge?.viewController?.view.window {
+        // Use UIWindowScene API (required for iPadOS 26+)
+        if let windowScene = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .first(where: { $0.activationState == .foregroundActive }),
+           let window = windowScene.windows.first(where: { $0.isKeyWindow }) ?? windowScene.windows.first {
+            NSLog("[NativeAppleSignIn] presentationAnchor via connectedScenes: \(window)")
             return window
         }
-        // Last resort
-        return UIApplication.shared.windows.first { $0.isKeyWindow } ?? UIApplication.shared.windows.first!
+        // Fallback: bridge viewController window
+        if let window = self.bridge?.viewController?.view.window {
+            NSLog("[NativeAppleSignIn] presentationAnchor via bridge: \(window)")
+            return window
+        }
+        // Last resort — avoid force unwrap
+        let fallback = UIApplication.shared.windows.first(where: { $0.isKeyWindow }) ?? UIApplication.shared.windows.first ?? UIWindow()
+        NSLog("[NativeAppleSignIn] presentationAnchor fallback: \(fallback)")
+        return fallback
     }
 
     public func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
@@ -67,6 +69,7 @@ public class NativeAppleSignInPlugin: CAPPlugin, ASAuthorizationControllerDelega
 
     public func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
         defer { self.authController = nil }
+        NSLog("[NativeAppleSignIn] authorizationController error: \(error)")
         if let authError = error as? ASAuthorizationError, authError.code == .canceled {
             call?.reject("User cancelled", "1001")
         } else {
