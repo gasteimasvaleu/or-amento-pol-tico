@@ -6,17 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Landmark, Apple, ShoppingBag } from "lucide-react";
+import { Loader2, Landmark, Apple } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
-import {
-  isNativePlatform,
-  initRevenueCat,
-  purchaseMonthly,
-  restorePurchases,
-  getSubscriptionPrice,
-} from "@/lib/revenuecat";
+import { isNativePlatform } from "@/lib/revenuecat";
 import { nativeAppleSignIn } from "@/lib/nativeAppleSignIn";
 
 const Login = () => {
@@ -24,11 +18,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showSplash, setShowSplash] = useState(false);
-  const [hasPurchased, setHasPurchased] = useState(false);
-  const [purchasing, setPurchasing] = useState(false);
-  const [restoring, setRestoring] = useState(false);
   const [appleLoading, setAppleLoading] = useState(false);
-  const [priceLabel, setPriceLabel] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { session, loading: authLoading } = useAuth();
@@ -42,19 +32,6 @@ const Login = () => {
       sessionStorage.setItem("splashShown", "1");
     }
   }, [isMobile]);
-
-  // Initialize RevenueCat and check for existing purchases on mount
-  useEffect(() => {
-    if (!isNative) return;
-    const init = async () => {
-      await initRevenueCat();
-      const active = await restorePurchases();
-      if (active) setHasPurchased(true);
-      const price = await getSubscriptionPrice();
-      if (price) setPriceLabel(price);
-    };
-    init();
-  }, [isNative]);
 
   if (showSplash) {
     return (
@@ -84,26 +61,8 @@ const Login = () => {
     return <Navigate to="/" replace />;
   }
 
-  const handleAppStorePurchase = async () => {
-    setPurchasing(true);
-    try {
-      const result = await purchaseMonthly();
-      if (result.success) {
-        setHasPurchased(true);
-        toast({
-          title: "Assinatura realizada!",
-          description: "Agora toque em 'Continuar com Apple' para acessar o app.",
-        });
-      } else if (result.error !== "cancelled") {
-        toast({ title: "Erro na compra", description: result.error, variant: "destructive" });
-      }
-    } finally {
-      setPurchasing(false);
-    }
-  };
-
   const handleAppleSignIn = async () => {
-    console.log("[Login] Apple Sign In button tapped, isNative:", isNative, "hasPurchased:", hasPurchased);
+    console.log("[Login] Apple Sign In button tapped, isNative:", isNative);
     setAppleLoading(true);
     try {
       if (isNative) {
@@ -147,21 +106,6 @@ const Login = () => {
     }
   };
 
-  const handleRestore = async () => {
-    setRestoring(true);
-    try {
-      const active = await restorePurchases();
-      if (active) {
-        setHasPurchased(true);
-        toast({ title: "Compra restaurada!", description: "Toque em 'Continuar com Apple' para acessar." });
-      } else {
-        toast({ title: "Nenhuma assinatura encontrada", description: "Nenhuma compra anterior foi encontrada.", variant: "destructive" });
-      }
-    } finally {
-      setRestoring(false);
-    }
-  };
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -186,33 +130,11 @@ const Login = () => {
         </CardHeader>
 
         <CardContent className="space-y-4">
-          {/* Subscription info block - Apple Guideline 3.1.2c */}
-          {isNative && !hasPurchased && (
-            <div className="rounded-xl border border-border bg-muted/50 p-4 space-y-3">
-              <h3 className="text-base font-bold text-foreground text-center">Mandato Intelligence Pro</h3>
-              <p className="text-2xl font-extrabold text-primary text-center">
-                {priceLabel || "Carregando preço..."}
-                <span className="text-sm font-medium text-muted-foreground">/mês</span>
-              </p>
-              <ul className="text-xs text-muted-foreground space-y-1 pl-1">
-                <li>✓ Gestão completa de eleitores e apoiadores</li>
-                <li>✓ Agenda e compromissos parlamentares</li>
-                <li>✓ Controle de despesas de mandato</li>
-                <li>✓ Geração de discursos e projetos de lei com IA</li>
-                <li>✓ Análise de notícias e geração de mídias</li>
-                <li>✓ Suporte prioritário</li>
-              </ul>
-              <p className="text-xs text-muted-foreground text-center">
-                Assinatura Mensal · Renovação automática
-              </p>
-            </div>
-          )}
-
-          {/* Sign in with Apple button */}
+          {/* Sign in with Apple - always enabled */}
           <Button
             className="w-full h-12 text-base font-semibold bg-black text-white hover:bg-black/90 touch-manipulation"
             onClick={handleAppleSignIn}
-            disabled={appleLoading || (!hasPurchased && isNative)}
+            disabled={appleLoading}
           >
             {appleLoading ? (
               <Loader2 className="h-5 w-5 animate-spin mr-2" />
@@ -221,33 +143,6 @@ const Login = () => {
             )}
             Continuar com Apple
           </Button>
-
-          {!hasPurchased && isNative && (
-            <p className="text-xs text-muted-foreground text-center">
-              Assine primeiro abaixo para habilitar o login com Apple
-            </p>
-          )}
-
-          {/* App Store purchase button */}
-          {isNative && (
-            <Button
-              variant="outline"
-              className="w-full h-12 text-base"
-              onClick={handleAppStorePurchase}
-              disabled={purchasing || hasPurchased}
-            >
-              {purchasing ? (
-                <Loader2 className="h-5 w-5 animate-spin mr-2" />
-              ) : (
-                <ShoppingBag className="h-5 w-5 mr-2" />
-              )}
-              {hasPurchased
-                ? "Assinatura ativa ✓"
-                : priceLabel
-                  ? `Assinar — ${priceLabel}/mês`
-                  : "Assinar via App Store"}
-            </Button>
-          )}
 
           {/* Divider */}
           <div className="relative">
@@ -277,23 +172,6 @@ const Login = () => {
         </CardContent>
 
         <CardFooter className="flex-col gap-3 pt-0">
-          {/* Restore purchases */}
-          {isNative && (
-            <Button variant="ghost" className="w-full text-sm" onClick={handleRestore} disabled={restoring}>
-              {restoring && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              Restaurar Compras
-            </Button>
-          )}
-
-          {/* Subscription info (Apple Guideline) */}
-          {isNative && (
-            <p className="text-[10px] text-muted-foreground text-center leading-tight">
-              Assinatura mensal com renovação automática. O pagamento será cobrado na sua conta Apple ID.
-              A assinatura renova automaticamente a menos que seja cancelada até 24h antes do fim do período.
-              Gerencie suas assinaturas nos Ajustes da conta Apple ID.
-            </p>
-          )}
-
           {/* Required links */}
           <div className="flex gap-4 justify-center">
             <a
