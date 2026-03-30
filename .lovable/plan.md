@@ -1,14 +1,13 @@
 
 
-## Atualizar Build Number para 8
+## Corrigir rota de editar despesa (erro 404)
 
-Ambos os arquivos estao atualmente no build `7`. Precisa incrementar para `8` nos dois locais:
+**Problema:** O botao de editar em `DespesasTable.tsx` navega para `/editar/:id` mas a rota definida no `App.tsx` eh `/despesas/editar/:id`.
 
-| Arquivo | Campo | Atual | Novo |
-|---------|-------|-------|------|
-| `capacitor.config.ts` | `buildNumber` | `'7'` | `'8'` |
-| `ios/App/App.xcodeproj/project.pbxproj` | `CURRENT_PROJECT_VERSION` (Debug) | `7` | `8` |
-| `ios/App/App.xcodeproj/project.pbxproj` | `CURRENT_PROJECT_VERSION` (Release) | `7` | `8` |
+**Correcao:** Em `src/components/despesas/DespesasTable.tsx`, alterar as duas ocorrencias:
 
-Apenas 2 arquivos, 3 linhas alteradas.
+- Linha 172: `/editar/${despesa.id}` → `/despesas/editar/${despesa.id}`
+- Linha 292: `/editar/${selectedDespesa.id}` → `/despesas/editar/${selectedDespesa.id}`
+
+1 arquivo, 2 linhas.
 
