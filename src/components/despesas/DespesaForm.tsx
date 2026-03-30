@@ -54,7 +54,7 @@ export function DespesaForm({ onSubmit, defaultValues, isLoading }: DespesaFormP
       cargo: "",
       tipo: "Recorrente",
       conta_pix: "",
-      valor: 0,
+      valor: undefined,
       observacao: "",
     },
   });
@@ -160,8 +160,14 @@ export function DespesaForm({ onSubmit, defaultValues, isLoading }: DespesaFormP
                     type="number" 
                     step="0.01" 
                     placeholder="0.00" 
-                    {...field}
-                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    value={field.value || ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      field.onChange(val === '' ? 0 : parseFloat(val));
+                    }}
+                    onBlur={field.onBlur}
+                    name={field.name}
+                    ref={field.ref}
                   />
                 </FormControl>
                 <FormDescription>
