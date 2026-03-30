@@ -169,7 +169,7 @@ export function DespesasTable({ despesas, selectedMonth, selectedYear }: Despesa
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => navigate(`/editar/${despesa.id}`)}
+                        onClick={() => navigate(`/despesas/editar/${despesa.id}`)}
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -289,7 +289,7 @@ export function DespesasTable({ despesas, selectedMonth, selectedYear }: Despesa
                   size="icon"
                   onClick={() => {
                     setSheetOpen(false);
-                    navigate(`/editar/${selectedDespesa.id}`);
+                    navigate(`/despesas/editar/${selectedDespesa.id}`);
                   }}
                 >
                   <Pencil className="h-4 w-4" />
