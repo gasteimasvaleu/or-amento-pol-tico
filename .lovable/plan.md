@@ -1,49 +1,83 @@
 
+Objetivo: corrigir os 3 motivos da reprovação da Apple com o menor risco possível para a próxima submissão.
 
-## Problema: Apple Sign In bloqueado por paywall
+1. Corrigir o bug real do “Continuar com Apple”
+- Ajustar a inicialização do bridge nativo iOS para garantir que `MyViewController` seja realmente usado no app.
+- Hoje há um forte indício de inconsistência: o `Main.storyboard` ainda aponta para `CAPBridgeViewController`, enquanto o plugin local depende de `MyViewController.capacitorDidLoad()` para registrar `NativeAppleSignIn`.
+- Em iPad/iPadOS isso pode fazer o plugin não ser registrado corretamente, causando o erro ao tocar em “Continuar com Apple”.
+- Implementação prevista:
+  - trocar o controller do storyboard para `MyViewController` ou alinhar a inicialização nativa para remover a ambiguidade;
+  - revisar o registro do plugin local para manter compatibilidade com o Capacitor atual;
+  - reforçar o tratamento de erro no login para diferenciar:
+    - plugin indisponível,
+    - erro nativo Apple Sign In,
+    - erro do `supabase.auth.signInWithIdToken(...)`.
+- Revisar também o fluxo nativo do `signInWithIdToken`, porque a documentação do Supabase para Apple nativo destaca uso de `nonce`; se necessário, adaptar o plugin e o login para enviar o nonce corretamente.
 
-A Apple rejeitou porque o botão "Continuar com Apple" esta **desabilitado** ate o usuario comprar a assinatura. A Apple exige que o Sign in with Apple funcione sem pre-condicoes. Gatear autenticacao atras de uma compra viola as diretrizes.
+2. Garantir o fluxo correto de primeira abertura
+- Manter o login sempre acessível primeiro.
+- Exibir o paywall somente após autenticação bem-sucedida e ausência de assinatura.
+- Adicionar uma saída segura no paywall (“Sair da conta”) para evitar ficar preso em sessão cacheada ao trocar de conta durante review/testes.
 
-## Solucao
+3. Corrigir as purpose strings de privacidade
+- Atualizar as descrições em:
+  - `ios/App/App/Info.plist`
+  - `capacitor.config.ts`
+- Substituir textos genéricos por textos específicos e exemplificados.
+- Exemplo de direção:
+  - câmera: explicar que será usada para fotografar comprovantes, registros de agenda, documentos ou imagens de atividades parlamentares;
+  - biblioteca: explicar seleção e envio de fotos/mídias para cadastro e galeria;
+  - salvar na galeria: explicar que imagens geradas/baixadas pelo app podem ser salvas no dispositivo.
 
-Inverter o fluxo: permitir o login com Apple **primeiro**, e exibir o paywall **depois** do login, antes de acessar o app.
+4. Corrigir o problema de metadata 2.3.2
+- Revisar textos expostos no app e preparar orientação para App Store Connect.
+- No app, garantir que recursos pagos estejam claramente associados ao plano “Mandato Intelligence Pro”.
+- Em App Store Connect, atualizar descrição, subtítulo, screenshots e textos promocionais para deixar explícito que certos recursos requerem assinatura/in-app purchase.
+- Evitar frases ambíguas que façam parecer que tudo já está incluído gratuitamente.
 
-### Arquitetura
+5. Atualizar build para 12
+- Sincronizar:
+  - `capacitor.config.ts` → `buildNumber: '12'`
+  - `ios/App/App.xcodeproj/project.pbxproj` → `CURRENT_PROJECT_VERSION = 12` em Debug e Release
 
+Arquivos com maior chance de alteração
+- `ios/App/App/Base.lproj/Main.storyboard`
+- `ios/App/App/AppDelegate.swift`
+- `ios/App/App/MyViewController.swift`
+- `ios/App/App/NativeAppleSignInPlugin.swift`
+- `src/lib/nativeAppleSignIn.ts`
+- `src/pages/Login.tsx`
+- `src/components/layout/ProtectedRoute.tsx`
+- `src/components/paywall/PaywallScreen.tsx`
+- `ios/App/App/Info.plist`
+- `capacitor.config.ts`
+- `ios/App/App.xcodeproj/project.pbxproj`
+
+Resumo técnico
 ```text
-Login (Apple/Email) → Verifica assinatura → Paywall (se nao assinante) → App
+Problema mais provável do Apple Sign In:
+Storyboard/boot nativo não está alinhado com o controller customizado.
+Sem MyViewController ativo -> plugin local pode não registrar.
+Sem plugin registrado -> erro ao tocar “Continuar com Apple”.
+
+Fluxo desejado:
+Primeira abertura -> Login
+Login OK -> checa assinatura
+Sem assinatura -> Paywall
+Com assinatura -> App
 ```
 
-### Alteracoes
-
-**1. `src/pages/Login.tsx`**
-- Remover a condicao `disabled={!hasPurchased && isNative}` do botao Apple Sign In
-- Remover o bloco de assinatura/paywall da tela de login (preco, botao "Assinar", textos de assinatura)
-- Manter apenas: botao Apple Sign In (sempre habilitado) + formulario email/senha + links obrigatorios
-- Manter "Restaurar Compras" e textos legais na tela de login para compliance
-
-**2. `src/components/layout/ProtectedRoute.tsx`** (ou novo componente `Paywall.tsx`)
-- Apos login, verificar se o usuario tem assinatura ativa via RevenueCat
-- Se nao tiver, exibir tela de paywall com botao de compra e restaurar compras
-- Se tiver, renderizar o app normalmente
-- No ambiente web (nao nativo), pular a verificacao de assinatura
-
-**3. Novo arquivo: `src/components/paywall/PaywallScreen.tsx`**
-- Mover a logica de compra (purchaseMonthly, restorePurchases, priceLabel) para este componente
-- Exibir as informacoes da assinatura Pro, botao de compra, restaurar compras e textos legais
-- Apos compra bem-sucedida, liberar acesso ao app
-
-### Fluxo revisado
-
-1. Usuario abre o app → tela de login com Apple Sign In **habilitado**
-2. Faz login com Apple → autenticado no Supabase
-3. ProtectedRoute verifica assinatura RevenueCat (apenas em nativo)
-4. Sem assinatura → PaywallScreen
-5. Com assinatura → app normal
-
-### Build number
-- `capacitor.config.ts`: `'10'` → `'11'`
-- `project.pbxproj`: `CURRENT_PROJECT_VERSION` 10 → 11
-
-3 arquivos modificados, 1 arquivo novo.
-
+Validação antes de reenviar
+- Testar end-to-end em iPhone e iPad:
+  - instalação limpa;
+  - atualização sobre build anterior;
+  - Apple Sign In com conta nova;
+  - Apple Sign In com conta já existente;
+  - login email/senha;
+  - restauração de compras;
+  - paywall pós-login;
+  - permissões de câmera/galeria.
+- Depois preparar novas notas de revisão explicando:
+  - correção do Apple Sign In no iPad,
+  - identificação clara dos recursos pagos,
+  - atualização das purpose strings.
