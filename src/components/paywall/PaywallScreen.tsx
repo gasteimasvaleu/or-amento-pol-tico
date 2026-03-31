@@ -85,7 +85,7 @@ export function PaywallScreen({ onSubscribed }: PaywallScreenProps) {
         <CardContent className="space-y-4">
           <div className="rounded-xl border border-border bg-muted/50 p-4 space-y-3">
             <p className="text-2xl font-extrabold text-primary text-center">
-              {priceLabel || "Carregando preço..."}
+              {priceLabel || "R$ 79,90"}
               <span className="text-sm font-medium text-muted-foreground">/mês</span>
             </p>
             <ul className="text-xs text-muted-foreground space-y-1 pl-1">
