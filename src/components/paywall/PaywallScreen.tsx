@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, ShoppingBag, Landmark } from "lucide-react";
+import { Loader2, ShoppingBag, Landmark, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   purchaseMonthly,
   restorePurchases,
@@ -16,8 +17,10 @@ interface PaywallScreenProps {
 export function PaywallScreen({ onSubscribed }: PaywallScreenProps) {
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const [priceLabel, setPriceLabel] = useState<string | null>(null);
   const { toast } = useToast();
+  const { signOut } = useAuth();
 
   useEffect(() => {
     getSubscriptionPrice().then((price) => {
@@ -55,6 +58,17 @@ export function PaywallScreen({ onSubscribed }: PaywallScreenProps) {
     }
   };
 
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    try {
+      await signOut();
+    } catch {
+      toast({ title: "Erro ao sair", variant: "destructive" });
+    } finally {
+      setSigningOut(false);
+    }
+  };
+
   return (
     <div className="min-h-[100dvh] flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md pointer-events-auto overflow-y-auto max-h-[90dvh]">
@@ -63,6 +77,9 @@ export function PaywallScreen({ onSubscribed }: PaywallScreenProps) {
             <Landmark className="h-8 w-8 text-primary-foreground" />
           </div>
           <CardTitle className="text-xl">Mandato Intelligence Pro</CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            Assinatura necessária para acessar o app
+          </p>
         </CardHeader>
 
         <CardContent className="space-y-4">
@@ -130,6 +147,21 @@ export function PaywallScreen({ onSubscribed }: PaywallScreenProps) {
               Termos de Uso
             </a>
           </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full mt-2 text-muted-foreground"
+            onClick={handleSignOut}
+            disabled={signingOut}
+          >
+            {signingOut ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            ) : (
+              <LogOut className="h-4 w-4 mr-2" />
+            )}
+            Sair da conta
+          </Button>
         </CardFooter>
       </Card>
     </div>

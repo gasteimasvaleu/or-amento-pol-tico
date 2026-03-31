@@ -68,9 +68,11 @@ const Login = () => {
       if (isNative) {
         console.log("[Login] Calling nativeAppleSignIn()...");
         const result = await nativeAppleSignIn();
+        console.log("[Login] nativeAppleSignIn result received, signing in with Supabase...");
         const { data: signInData, error } = await supabase.auth.signInWithIdToken({
           provider: "apple",
           token: result.identityToken,
+          nonce: "nonce", // Supabase requires a nonce param but Apple native flow doesn't use one
         });
 
         if (error) {

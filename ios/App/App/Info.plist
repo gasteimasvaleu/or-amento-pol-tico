@@ -46,10 +46,10 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Este app precisa acessar a câmera para capturar fotos.</string>
+	<string>O Mandato Intelligence usa a câmera para que você possa fotografar comprovantes de despesas, registros de atividades parlamentares e documentos para anexar aos seus cadastros.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Este app precisa acessar suas fotos para enviar mídias.</string>
+	<string>O Mandato Intelligence acessa sua galeria de fotos para que você possa selecionar imagens e anexá-las a cadastros de eleitores, mídias de cidades e registros de atividades parlamentares.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Este app precisa salvar fotos na sua galeria.</string>
+	<string>O Mandato Intelligence salva na sua galeria as imagens e mídias geradas pelo app, como postagens para redes sociais e materiais de divulgação parlamentar.</string>
 </dict>
 </plist>
