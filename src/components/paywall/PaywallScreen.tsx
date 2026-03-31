@@ -111,7 +111,7 @@ export function PaywallScreen({ onSubscribed }: PaywallScreenProps) {
             ) : (
               <ShoppingBag className="h-5 w-5 mr-2" />
             )}
-            {priceLabel ? `Assinar — ${priceLabel}/mês` : "Assinar via App Store"}
+            {priceLabel ? `Assinar — ${priceLabel}/mês` : "Assinar — R$ 79,90/mês"}
           </Button>
 
           <Button
