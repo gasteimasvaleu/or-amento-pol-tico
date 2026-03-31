@@ -85,7 +85,7 @@ export function PaywallScreen({ onSubscribed }: PaywallScreenProps) {
         <CardContent className="space-y-4">
           <div className="rounded-xl border border-border bg-muted/50 p-4 space-y-3">
             <p className="text-2xl font-extrabold text-primary text-center">
-              {priceLabel || "Carregando preço..."}
+              {priceLabel || "R$ 79,90"}
               <span className="text-sm font-medium text-muted-foreground">/mês</span>
             </p>
             <ul className="text-xs text-muted-foreground space-y-1 pl-1">
@@ -111,7 +111,7 @@ export function PaywallScreen({ onSubscribed }: PaywallScreenProps) {
             ) : (
               <ShoppingBag className="h-5 w-5 mr-2" />
             )}
-            {priceLabel ? `Assinar — ${priceLabel}/mês` : "Assinar via App Store"}
+            {priceLabel ? `Assinar — ${priceLabel}/mês` : "Assinar — R$ 79,90/mês"}
           </Button>
 
           <Button
