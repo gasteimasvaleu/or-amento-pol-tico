@@ -7,13 +7,13 @@ const config: CapacitorConfig = {
   ios: {
     backgroundColor: '#FFFFFF',
     scheme: 'mandatointeligente',
-    buildNumber: '11',
+    buildNumber: '12',
   },
   plugins: {
     Camera: {
-      NSCameraUsageDescription: 'Este app precisa acessar a câmera para capturar fotos.',
-      NSPhotoLibraryUsageDescription: 'Este app precisa acessar suas fotos para enviar mídias.',
-      NSPhotoLibraryAddUsageDescription: 'Este app precisa salvar fotos na sua galeria.',
+      NSCameraUsageDescription: 'O Mandato Intelligence usa a câmera para que você possa fotografar comprovantes de despesas, registros de atividades parlamentares e documentos para anexar aos seus cadastros.',
+      NSPhotoLibraryUsageDescription: 'O Mandato Intelligence acessa sua galeria de fotos para que você possa selecionar imagens e anexá-las a cadastros de eleitores, mídias de cidades e registros de atividades parlamentares.',
+      NSPhotoLibraryAddUsageDescription: 'O Mandato Intelligence salva na sua galeria as imagens e mídias geradas pelo app, como postagens para redes sociais e materiais de divulgação parlamentar.',
     },
     LiveUpdates: {
       appId: '0ec0d586',
