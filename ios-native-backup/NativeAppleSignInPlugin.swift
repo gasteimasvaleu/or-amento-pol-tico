@@ -44,21 +44,26 @@ public class NativeAppleSignInPlugin: CAPPlugin, ASAuthorizationControllerDelega
     }
 
     public func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
-        defer { self.authController = nil }
+        NSLog("[NativeAppleSignIn] didCompleteWithAuthorization")
+        defer {
+            self.authController = nil
+            self.savedCall = nil
+        }
         guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential else {
-            call?.reject("Invalid credential type")
+            savedCall?.reject("Invalid credential type")
             return
         }
         guard let identityTokenData = credential.identityToken,
               let identityToken = String(data: identityTokenData, encoding: .utf8) else {
-            call?.reject("Missing identity token")
+            savedCall?.reject("Missing identity token")
             return
         }
         guard let authCodeData = credential.authorizationCode,
               let authorizationCode = String(data: authCodeData, encoding: .utf8) else {
-            call?.reject("Missing authorization code")
+            savedCall?.reject("Missing authorization code")
             return
         }
+        NSLog("[NativeAppleSignIn] success, token length: \(identityToken.count)")
         var result: [String: Any] = [
             "identityToken": identityToken,
             "authorizationCode": authorizationCode
@@ -66,16 +71,19 @@ public class NativeAppleSignInPlugin: CAPPlugin, ASAuthorizationControllerDelega
         result["givenName"] = credential.fullName?.givenName as Any? ?? NSNull()
         result["familyName"] = credential.fullName?.familyName as Any? ?? NSNull()
         result["email"] = credential.email as Any? ?? NSNull()
-        call?.resolve(result)
+        savedCall?.resolve(result)
     }
 
     public func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
-        defer { self.authController = nil }
-        NSLog("[NativeAppleSignIn] authorizationController error: \(error)")
+        NSLog("[NativeAppleSignIn] didCompleteWithError: \(error.localizedDescription)")
+        defer {
+            self.authController = nil
+            self.savedCall = nil
+        }
         if let authError = error as? ASAuthorizationError, authError.code == .canceled {
-            call?.reject("User cancelled", "1001")
+            savedCall?.reject("User cancelled", "1001")
         } else {
-            call?.reject(error.localizedDescription)
+            savedCall?.reject(error.localizedDescription)
         }
     }
 }
