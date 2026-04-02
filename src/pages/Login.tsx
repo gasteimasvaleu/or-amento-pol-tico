@@ -72,7 +72,6 @@ const Login = () => {
         const { data: signInData, error } = await supabase.auth.signInWithIdToken({
           provider: "apple",
           token: result.identityToken,
-          nonce: "nonce", // Supabase requires a nonce param but Apple native flow doesn't use one
         });
 
         if (error) {
