@@ -72,7 +72,6 @@ const Login = () => {
         const { data: signInData, error } = await supabase.auth.signInWithIdToken({
           provider: "apple",
           token: result.identityToken,
-          nonce: "nonce", // Supabase requires a nonce param but Apple native flow doesn't use one
         });
 
         if (error) {
@@ -96,13 +95,16 @@ const Login = () => {
         await supabase.auth.signInWithOAuth({ provider: "apple" });
       }
     } catch (error: any) {
-      console.error("[Login] Apple Sign In full error:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
-      if (error?.message?.includes("1001") || error?.message?.includes("cancelled") || error?.message?.includes("canceled")) return;
-      if (error?.message?.includes("1000")) {
+      const msg = error?.message || error?.errorMessage || String(error);
+      console.error("[Login] Apple Sign In error:", msg);
+      // User cancelled — silent
+      if (msg.includes("1001") || msg.toLowerCase().includes("cancel")) return;
+      // Plugin/network error
+      if (msg.includes("1000")) {
         toast({ title: "Erro ao entrar", description: "Não foi possível conectar ao Apple Sign In. Tente novamente.", variant: "destructive" });
         return;
       }
-      toast({ title: "Erro ao entrar", description: error?.message || "Falha na autenticação", variant: "destructive" });
+      toast({ title: "Erro ao entrar", description: "Falha na autenticação com Apple. Tente novamente.", variant: "destructive" });
     } finally {
       setAppleLoading(false);
     }
