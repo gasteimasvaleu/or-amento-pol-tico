@@ -5,11 +5,13 @@ import AuthenticationServices
 @objc(NativeAppleSignInPlugin)
 public class NativeAppleSignInPlugin: CAPPlugin, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
 
-    var call: CAPPluginCall?
-    var authController: ASAuthorizationController?
+    private var savedCall: CAPPluginCall?
+    private var authController: ASAuthorizationController?
 
     @objc func authorize(_ call: CAPPluginCall) {
-        self.call = call
+        call.keepAlive = true
+        self.savedCall = call
+        NSLog("[NativeAppleSignIn] authorize() called")
         let request = ASAuthorizationAppleIDProvider().createRequest()
         request.requestedScopes = [.fullName, .email]
         let controller = ASAuthorizationController(authorizationRequests: [request])
