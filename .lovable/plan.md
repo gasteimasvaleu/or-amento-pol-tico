@@ -1,36 +1,18 @@
+## Objetivo
 
-
-# Criar cron job `expire-subscriptions-daily`
+Adicionar um campo de foto da pessoa vinculada à despesa, posicionado acima do campo "Município" no formulário (`/despesas/nova` e também na edição, já que ambos usam o mesmo componente).
 
 ## O que será feito
 
-Inserir um job no `pg_cron` que roda diariamente às 03:00 UTC, atualizando registros na tabela `subscribers` onde `expires_at < now()` e `status` é `active` ou `cancelled`, marcando-os como `expired`.
+1. **Banco de dados**: adicionar a coluna `foto_url` (texto, opcional) na tabela `despesas_politicas`.
+2. **Storage**: criar o bucket público `despesas-fotos` com políticas RLS permitindo que cada usuário faça upload/exclusão apenas na sua própria pasta (`{user_id}/...`), com leitura pública.
+3. **Formulário** (`DespesaForm.tsx`): novo bloco no topo, acima de "Município", com avatar circular (mostra preview ou ícone de usuário) e botão "Adicionar foto" / "Trocar foto" + opção de remover. Usa a função `pickImage` do `capacitorCamera.ts` (câmera nativa no iOS, seletor de arquivo na web), padrão já usado no app.
+4. **Upload**: a imagem é enviada ao Storage no momento do salvamento (ou ao selecionar), e a URL pública é salva em `foto_url`.
+5. **Exibição**: mostrar a foto (avatar pequeno) no detalhe mobile da despesa (Sheet) e como avatar na coluna "Responsável" da tabela.
 
-## Implementacao
+## Detalhes técnicos
 
-Usar o **supabase insert tool** para executar o seguinte SQL (contém dados específicos do projeto, não deve ser migration):
-
-```sql
-SELECT cron.schedule(
-  'expire-subscriptions-daily',
-  '0 3 * * *',
-  $$
-    UPDATE public.subscribers
-    SET status = 'expired',
-        updated_at = now()
-    WHERE expires_at < now()
-      AND status IN ('active', 'cancelled');
-  $$
-);
-```
-
-## Verificacao
-
-Após inserir, consultar `cron.job` para confirmar que o job foi criado corretamente.
-
-## Notas
-
-- As extensoes `pg_cron` e `pg_net` ja estao habilitadas (o job `extrair-noticias-diario` ja existe)
-- Este e um UPDATE direto no banco, nao precisa de edge function nem `pg_net`
-- Nao requer alteracao de codigo no frontend
-
+- `src/types/despesa.ts`: adicionar `foto_url?: string` em `Despesa` e `DespesaFormData`.
+- `src/hooks/useDespesas.ts`: incluir `foto_url` no insert (`useCreateDespesa`) e no update.
+- Conversão de DataURL → Blob via `dataUrlToBlob` antes do upload; caminho `${user.id}/${Date.now()}.jpg`.
+- Campo totalmente opcional — despesas existentes continuam funcionando sem foto.
