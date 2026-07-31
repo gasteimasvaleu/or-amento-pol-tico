@@ -494,6 +494,7 @@ export type Database = {
           cargo: string
           conta_pix: string
           created_at: string | null
+          foto_url: string | null
           id: string
           municipio: string
           observacao: string | null
@@ -510,6 +511,7 @@ export type Database = {
           cargo: string
           conta_pix: string
           created_at?: string | null
+          foto_url?: string | null
           id?: string
           municipio: string
           observacao?: string | null
@@ -526,6 +528,7 @@ export type Database = {
           cargo?: string
           conta_pix?: string
           created_at?: string | null
+          foto_url?: string | null
           id?: string
           municipio?: string
           observacao?: string | null
