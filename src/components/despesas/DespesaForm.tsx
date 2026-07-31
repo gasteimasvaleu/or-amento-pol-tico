@@ -13,6 +13,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { DespesaFormData } from "@/types/despesa";
+import { FotoResponsavelField } from "./FotoResponsavelField";
 
 const formSchema = z.object({
   municipio: z.string().min(2, "Município é obrigatório").max(100),
@@ -28,6 +29,7 @@ const formSchema = z.object({
   }),
   pagamento_agendado: z.date().optional(),
   observacao: z.string().max(1000).optional(),
+  foto_url: z.string().nullable().optional(),
 }).refine((data) => {
   // Se for Recorrente, pagamento_agendado é obrigatório
   if (data.tipo === 'Recorrente' && !data.pagamento_agendado) {
