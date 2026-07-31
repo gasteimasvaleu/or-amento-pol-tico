@@ -10,6 +10,7 @@ export interface Despesa {
   pagamento_feito_em?: string;
   valor: number;
   observacao?: string;
+  foto_url?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -24,6 +25,7 @@ export interface DespesaFormData {
   pagamento_agendado?: Date;
   valor: number;
   observacao?: string;
+  foto_url?: string | null;
 }
 
 export interface DespesaFilters {

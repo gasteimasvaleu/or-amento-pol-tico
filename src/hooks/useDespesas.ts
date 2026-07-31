@@ -128,6 +128,7 @@ export function useCreateDespesa() {
             : data.ultimo_pagamento.toISOString().split('T')[0],
           valor: data.valor,
           observacao: data.observacao,
+          foto_url: data.foto_url || null,
           user_id: userData.user.id,
         }])
         .select()
