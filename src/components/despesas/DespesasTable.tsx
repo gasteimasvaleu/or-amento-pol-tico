@@ -231,8 +231,20 @@ export function DespesasTable({ despesas, selectedMonth, selectedYear }: Despesa
           {selectedDespesa && selectedPaymentStatus && (
             <div className="space-y-4">
               <SheetHeader className="text-left">
-                <SheetTitle>{selectedDespesa.municipio}</SheetTitle>
-                <SheetDescription>{selectedDespesa.responsavel} · {selectedDespesa.cargo}</SheetDescription>
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-12 w-12">
+                    {selectedDespesa.foto_url ? (
+                      <AvatarImage src={selectedDespesa.foto_url} alt={selectedDespesa.responsavel} />
+                    ) : null}
+                    <AvatarFallback className="bg-muted text-xs">
+                      {selectedDespesa.responsavel.slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <SheetTitle>{selectedDespesa.municipio}</SheetTitle>
+                    <SheetDescription>{selectedDespesa.responsavel} · {selectedDespesa.cargo}</SheetDescription>
+                  </div>
+                </div>
               </SheetHeader>
 
               <Separator />
