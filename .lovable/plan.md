@@ -1,18 +1,15 @@
-## Objetivo
+## Contexto
 
-Adicionar um campo de foto da pessoa vinculada à despesa, posicionado acima do campo "Município" no formulário (`/despesas/nova` e também na edição, já que ambos usam o mesmo componente).
+O build no Appflow compilou e assinou com sucesso; a falha foi apenas no envio para a App Store Connect (`upload_ipa_to_app_store`, erro Apple `-22938`) — app-specific password inválida/expirada nas credenciais do Appflow. Nenhum problema no código do app.
 
-## O que será feito
+## Mudança no projeto
 
-1. **Banco de dados**: adicionar a coluna `foto_url` (texto, opcional) na tabela `despesas_politicas`.
-2. **Storage**: criar o bucket público `despesas-fotos` com políticas RLS permitindo que cada usuário faça upload/exclusão apenas na sua própria pasta (`{user_id}/...`), com leitura pública.
-3. **Formulário** (`DespesaForm.tsx`): novo bloco no topo, acima de "Município", com avatar circular (mostra preview ou ícone de usuário) e botão "Adicionar foto" / "Trocar foto" + opção de remover. Usa a função `pickImage` do `capacitorCamera.ts` (câmera nativa no iOS, seletor de arquivo na web), padrão já usado no app.
-4. **Upload**: a imagem é enviada ao Storage no momento do salvamento (ou ao selecionar), e a URL pública é salva em `foto_url`.
-5. **Exibição**: mostrar a foto (avatar pequeno) no detalhe mobile da despesa (Sheet) e como avatar na coluna "Responsável" da tabela.
+- `capacitor.config.ts`: alterar `ios.buildNumber` de `'14'` para `'15'`, garantindo um número de build limpo para a próxima tentativa de upload.
 
-## Detalhes técnicos
+Nenhuma outra alteração de código é necessária.
 
-- `src/types/despesa.ts`: adicionar `foto_url?: string` em `Despesa` e `DespesaFormData`.
-- `src/hooks/useDespesas.ts`: incluir `foto_url` no insert (`useCreateDespesa`) e no update.
-- Conversão de DataURL → Blob via `dataUrlToBlob` antes do upload; caminho `${user.id}/${Date.now()}.jpg`.
-- Campo totalmente opcional — despesas existentes continuam funcionando sem foto.
+## Ação sua (fora do Lovable)
+
+1. Gerar nova app-specific password em account.apple.com (Sign-In and Security → App-Specific Passwords) — ou, preferencialmente, criar uma App Store Connect API Key (Issuer ID + Key ID + .p8), que não expira ao trocar a senha da Apple ID.
+2. Atualizar a credencial na Destination "App Store Connect" do Appflow.
+3. Fazer git pull, commit e push para disparar o novo build.
