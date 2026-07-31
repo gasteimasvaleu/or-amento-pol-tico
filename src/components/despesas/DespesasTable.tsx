@@ -12,6 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { getScheduledPaymentDate } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface DespesasTableProps {
   despesas: Despesa[];
@@ -114,7 +115,17 @@ export function DespesasTable({ despesas, selectedMonth, selectedYear }: Despesa
               return (
                 <TableRow key={despesa.id} className="odd:bg-background even:bg-muted/40 dark:odd:bg-card dark:even:bg-muted/20">
                   <TableCell className="font-medium p-2 md:p-4 max-w-[100px] md:max-w-none truncate">{despesa.municipio}</TableCell>
-                  <TableCell className="p-2 md:p-4 max-w-[100px] md:max-w-none truncate">{despesa.responsavel}</TableCell>
+                  <TableCell className="p-2 md:p-4 max-w-[100px] md:max-w-none truncate">
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-7 w-7 shrink-0">
+                        {despesa.foto_url ? <AvatarImage src={despesa.foto_url} alt={despesa.responsavel} /> : null}
+                        <AvatarFallback className="bg-muted text-[10px]">
+                          {despesa.responsavel.slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="truncate">{despesa.responsavel}</span>
+                    </div>
+                  </TableCell>
                   <TableCell className="p-2 md:p-4 max-w-[80px] md:max-w-none truncate">{despesa.cargo}</TableCell>
                   <TableCell className="hidden md:table-cell">
                     <Badge variant={despesa.tipo === 'Recorrente' ? 'default' : 'secondary'}>
@@ -220,8 +231,20 @@ export function DespesasTable({ despesas, selectedMonth, selectedYear }: Despesa
           {selectedDespesa && selectedPaymentStatus && (
             <div className="space-y-4">
               <SheetHeader className="text-left">
-                <SheetTitle>{selectedDespesa.municipio}</SheetTitle>
-                <SheetDescription>{selectedDespesa.responsavel} · {selectedDespesa.cargo}</SheetDescription>
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-12 w-12">
+                    {selectedDespesa.foto_url ? (
+                      <AvatarImage src={selectedDespesa.foto_url} alt={selectedDespesa.responsavel} />
+                    ) : null}
+                    <AvatarFallback className="bg-muted text-xs">
+                      {selectedDespesa.responsavel.slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <SheetTitle>{selectedDespesa.municipio}</SheetTitle>
+                    <SheetDescription>{selectedDespesa.responsavel} · {selectedDespesa.cargo}</SheetDescription>
+                  </div>
+                </div>
               </SheetHeader>
 
               <Separator />
