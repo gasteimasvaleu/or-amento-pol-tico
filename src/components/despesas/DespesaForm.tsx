@@ -58,6 +58,7 @@ export function DespesaForm({ onSubmit, defaultValues, isLoading }: DespesaFormP
       conta_pix: "",
       valor: undefined,
       observacao: "",
+      foto_url: null,
     },
   });
 
@@ -66,6 +67,18 @@ export function DespesaForm({ onSubmit, defaultValues, isLoading }: DespesaFormP
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="foto_url"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Foto do responsável</FormLabel>
+              <FotoResponsavelField value={field.value} onChange={field.onChange} />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
