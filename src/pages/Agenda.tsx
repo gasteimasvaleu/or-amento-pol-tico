@@ -79,12 +79,26 @@ const Agenda = () => {
     setDialogOpen(true);
   };
 
+  const toISO = (dateStr: string, timeStr: string) => {
+    const [y, m, d] = dateStr.split("-").map(Number);
+    const [hh, mm] = timeStr.split(":").map(Number);
+    return new Date(y, (m ?? 1) - 1, d ?? 1, hh ?? 0, mm ?? 0, 0, 0);
+  };
+
   const handleSubmit = async () => {
     if (!form.titulo || !form.data_inicio_date || !form.data_inicio_time) return;
-    const data_inicio = `${form.data_inicio_date}T${form.data_inicio_time}:00`;
-    const data_fim = form.data_fim_date && form.data_fim_time
-      ? `${form.data_fim_date}T${form.data_fim_time}:00`
+    const startDate = toISO(form.data_inicio_date, form.data_inicio_time);
+    const endDate = form.data_fim_date && form.data_fim_time
+      ? toISO(form.data_fim_date, form.data_fim_time)
       : null;
+
+    if (endDate && endDate < startDate) {
+      toast({ title: "A data/hora de fim deve ser após o início", variant: "destructive" });
+      return;
+    }
+
+    const data_inicio = startDate.toISOString();
+    const data_fim = endDate ? endDate.toISOString() : null;
 
     if (editingId) {
       await update({
@@ -107,8 +121,10 @@ const Agenda = () => {
         tipo: form.tipo,
       });
     }
+    setSelectedDate(startDate);
     setDialogOpen(false);
   };
+
 
   const tipoLabel = (tipo: string) =>
     TIPO_COMPROMISSO.find((t) => t.value === tipo)?.label ?? tipo;
