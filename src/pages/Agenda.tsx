@@ -234,8 +234,8 @@ const Agenda = () => {
             </div>
           )}
         </div>
-        </div>
       </div>
+
 
 
       {/* Form Dialog */}
