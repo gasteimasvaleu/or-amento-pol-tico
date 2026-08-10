@@ -13,6 +13,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Badge } from "@/components/ui/badge";
 import { useCompromissos } from "@/hooks/useCompromissos";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+
 import { TIPO_COMPROMISSO, TIPO_COLORS } from "@/types/compromisso";
 import type { Compromisso } from "@/types/compromisso";
 import { format, isSameDay, parseISO } from "date-fns";
@@ -33,6 +35,8 @@ const emptyForm = {
 
 const Agenda = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
+
   const { compromissos, isLoading, create, update, remove, isCreating, isUpdating } = useCompromissos();
   const { containerRef, refreshing, pullDistance } = usePullToRefresh({ queryKeys: [['compromissos']] });
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
