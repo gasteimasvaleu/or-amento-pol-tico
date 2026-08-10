@@ -1,15 +1,25 @@
-## Contexto
+# Corrigir edição de data/hora do compromisso
 
-O build no Appflow compilou e assinou com sucesso; a falha foi apenas no envio para a App Store Connect (`upload_ipa_to_app_store`, erro Apple `-22938`) — app-specific password inválida/expirada nas credenciais do Appflow. Nenhum problema no código do app.
+## O que acontece hoje
 
-## Mudança no projeto
+No modal de edição, a data e a hora são enviadas como texto sem fuso horário (ex: `2026-08-22T12:00:00`). O banco grava em `timestamptz` e interpreta esse texto no fuso da conexão, que não é necessariamente o do usuário. Nos registros atuais isso já aparece de forma inconsistente: alguns compromissos ficaram gravados com deslocamento de 3 horas em relação ao horário digitado, outros não.
 
-- `capacitor.config.ts`: alterar `ios.buildNumber` de `'14'` para `'15'`, garantindo um número de build limpo para a próxima tentativa de upload.
+Além disso, quando a data é alterada para outro dia, o compromisso sai da lista do dia que está selecionado no calendário — então parece que "nada mudou".
 
-Nenhuma outra alteração de código é necessária.
+## Correções
 
-## Ação sua (fora do Lovable)
+1. **Enviar data/hora com fuso explícito**
+   Montar um `Date` local a partir dos campos de data e hora e enviar em ISO com offset (`toISOString()`), tanto na criação quanto na edição. Assim o horário digitado é sempre o horário salvo e exibido.
 
-1. Gerar nova app-specific password em account.apple.com (Sign-In and Security → App-Specific Passwords) — ou, preferencialmente, criar uma App Store Connect API Key (Issuer ID + Key ID + .p8), que não expira ao trocar a senha da Apple ID.
-2. Atualizar a credencial na Destination "App Store Connect" do Appflow.
-3. Fazer git pull, commit e push para disparar o novo build.
+2. **Mostrar o resultado após salvar**
+   Ao salvar, mover a seleção do calendário para a data de início do compromisso editado e forçar o recarregamento da lista, para que a alteração fique visível imediatamente.
+
+3. **Validação de fim antes do início**
+   Se a data/hora de fim ficar antes da de início, avisar por toast e não salvar.
+
+## Detalhes técnicos
+
+- Arquivo: `src/pages/Agenda.tsx` (`handleSubmit`, `openEdit`, `openNew`).
+- Criar helper local `toISO(dateStr, timeStr)` que faz `new Date(y, m-1, d, hh, mm).toISOString()`.
+- Após `update`/`create`: `setSelectedDate(startDate)` e fechar o modal (o hook já invalida a query `compromissos`).
+- Nenhuma mudança de banco de dados é necessária; registros antigos com deslocamento continuam como estão (podem ser reeditados manualmente).
