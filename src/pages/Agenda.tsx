@@ -147,14 +147,19 @@ const Agenda = () => {
           </Button>
         </div>
 
+        <div className="grid gap-4 items-start lg:grid-cols-[380px_1fr]">
         {/* Calendar */}
-        <div className="bg-card rounded-xl border border-border p-2">
+        <div className="bg-card rounded-xl border border-border p-2 w-full max-w-sm mx-auto lg:max-w-none lg:mx-0">
           <Calendar
             mode="single"
             selected={selectedDate}
             onSelect={(d) => d && setSelectedDate(d)}
             locale={ptBR}
             className="p-2 pointer-events-auto w-full"
+            classNames={{
+              cell: "h-10 sm:h-11 flex-1 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+              day: "inline-flex items-center justify-center rounded-md h-10 sm:h-11 w-full p-0 font-normal hover:bg-accent hover:text-accent-foreground aria-selected:opacity-100",
+            }}
             modifiers={{ hasEvent: (date: Date) => daysWithEvents.has(format(date, "yyyy-MM-dd")) }}
             modifiersClassNames={{ hasEvent: "relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1 after:w-1 after:rounded-full after:bg-primary" }}
           />
@@ -162,6 +167,7 @@ const Agenda = () => {
 
         {/* Day events */}
         <div>
+
           <h2 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
             <CalendarDays className="h-4 w-4 text-primary" />
             {format(selectedDate, "dd 'de' MMMM, EEEE", { locale: ptBR })}
